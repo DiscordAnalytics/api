@@ -33,7 +33,6 @@ pub enum LogCode {
 }
 
 impl LogCode {
-    /// Get the string representation for log formatting
     pub fn as_str(&self) -> &'static str {
         match self {
             LogCode::Server => "SERVER",
@@ -50,28 +49,6 @@ impl LogCode {
             LogCode::System => "SYS",
             LogCode::DbError => "DB_ERR",
             LogCode::Mail => "MAIL",
-        }
-    }
-
-    /// Get color for terminal output (optional, for dev mode)
-    #[cfg(feature = "colored-logs")]
-    pub fn color(&self) -> colored::Color {
-        use fern::colors::Color;
-        match self {
-            LogCode::Server => Color::Blue,
-            LogCode::Request => Color::Cyan,
-            LogCode::Database => Color::Magenta,
-            LogCode::Auth => Color::Green,
-            LogCode::Unauthorized => Color::Yellow,
-            LogCode::AdminAction => Color::BrightMagenta,
-            LogCode::Bot => Color::BrightBlue,
-            LogCode::BotExpiration => Color::BrightYellow,
-            LogCode::User => Color::BrightCyan,
-            LogCode::Achievement => Color::BrightGreen,
-            LogCode::Info => Color::White,
-            LogCode::System => Color::BrightRed,
-            LogCode::DbError => Color::Red,
-            LogCode::Mail => Color::BrightWhite,
         }
     }
 }

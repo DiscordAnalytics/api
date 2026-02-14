@@ -8,7 +8,11 @@ use std::{
 };
 
 use chrono::Local;
-use fern::{Dispatch, log_file};
+use fern::{
+    Dispatch,
+    colors::{Color, ColoredLevelConfig},
+    log_file,
+};
 use log::LevelFilter;
 
 pub struct Logger {
@@ -57,12 +61,19 @@ impl Logger {
     }
 
     pub fn init(self) -> Result<(), LoggerError> {
+        let colors = ColoredLevelConfig::new()
+            .error(Color::Red)
+            .warn(Color::Yellow)
+            .info(Color::Green)
+            .debug(Color::Blue)
+            .trace(Color::BrightBlack);
+
         let mut base_config = Dispatch::new()
             .format(move |out, message, record| {
                 out.finish(format_args!(
                     "[{}] [{}] {}",
                     Local::now().format("%Y-%m-%d %H:%M:%S"),
-                    record.level(),
+                    colors.color(record.level()),
                     message
                 ))
             })

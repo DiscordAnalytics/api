@@ -15,6 +15,8 @@ use crate::{
 async fn main() -> Result<()> {
     let dev_mode = cfg!(debug_assertions);
 
+    init_env().expect("Failed to initialize environment variables");
+
     Logger::new()
         .level(if dev_mode { Level::DEBUG } else { Level::INFO })
         .init()
@@ -33,9 +35,6 @@ async fn main() -> Result<()> {
             }
         )
     );
-
-    init_env().expect("Failed to initialize environment variables");
-    info!("[{}] {}", LogCode::Server, "Environment initialized");
 
     let http_server = HttpServer::new(move || {
         App::new()

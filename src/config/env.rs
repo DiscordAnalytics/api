@@ -13,6 +13,11 @@ pub struct EnvConfig {
     // Database
     pub database_url: String,
 
+    // OpenTelemetry
+    pub otlp_endpoint: String,
+    pub otlp_token: String,
+    pub otlp_stream: String,
+
     // Tokens
     pub admin_token: String,
     pub discord_token: String,
@@ -69,6 +74,10 @@ pub fn init_env() -> Result<&'static EnvConfig, String> {
 
     let database_url = get_var("DATABASE_URL")?;
 
+    let otlp_endpoint = get_var("OTLP_ENDPOINT")?;
+    let otlp_token = get_var("OTLP_TOKEN")?;
+    let otlp_stream = get_var("OTLP_STREAM")?;
+
     let admin_token = get_var("ADMIN_TOKEN")?;
     let discord_token = get_var("DISCORD_TOKEN")?;
     let jwt_secret = get_var("JWT_SECRET")?;
@@ -97,6 +106,9 @@ pub fn init_env() -> Result<&'static EnvConfig, String> {
         client_url,
         admins,
         database_url,
+        otlp_endpoint,
+        otlp_token,
+        otlp_stream,
         admin_token,
         discord_token,
         jwt_secret,

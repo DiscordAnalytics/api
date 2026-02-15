@@ -1,6 +1,7 @@
 mod codes;
 mod error;
 
+use std::collections::HashMap;
 use std::{
     fs::{create_dir_all, read_dir},
     io,
@@ -9,6 +10,9 @@ use std::{
 
 use anyhow::Result;
 use chrono::Local;
+use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+use opentelemetry_otlp::{Protocol, WithExportConfig, WithHttpConfig};
+use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use tracing::{Level, level_filters::LevelFilter};
 use tracing_appender::{
     non_blocking::WorkerGuard,
@@ -16,13 +20,14 @@ use tracing_appender::{
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, prelude::*, registry};
 
+use crate::app_env;
+
 pub struct Logger {
     level: Level,
     log_to_file: bool,
     log_dir: PathBuf,
     dev_mode: bool,
 }
-
 pub use codes::LogCode;
 pub use error::LoggerError;
 
@@ -47,6 +52,30 @@ impl Logger {
             .with_ansi(self.dev_mode)
             .with_filter(LevelFilter::from_level(self.level));
 
+        let mut headers = HashMap::new();
+        headers.insert(
+            String::from("Authorization"),
+            String::from(format!("Basic {}", app_env!().otlp_token)),
+        );
+        headers.insert("stream-name".to_string(), app_env!().otlp_stream.clone());
+
+        let exporter = opentelemetry_otlp::LogExporter::builder()
+            .with_http()
+            .with_protocol(Protocol::HttpBinary)
+            .with_headers(headers)
+            .with_endpoint(format!("{}/v1/logs", app_env!().otlp_endpoint))
+            .build()?;
+
+        let resource = Resource::builder()
+            .with_service_name(if self.dev_mode { "api-dev" } else { "api" })
+            .build();
+
+        let provider = SdkLoggerProvider::builder()
+            .with_batch_exporter(exporter)
+            .with_resource(resource)
+            .build();
+        let otel_layer = OpenTelemetryTracingBridge::new(&provider);
+
         let guard = if self.log_to_file {
             create_dir_all(&self.log_dir).map_err(|e| LoggerError::FileCreation(e.to_string()))?;
 
@@ -62,11 +91,15 @@ impl Logger {
                 .with_ansi(false)
                 .with_filter(LevelFilter::from_level(self.level));
 
-            registry().with(stdout_layer).with(file_layer).init();
+            registry()
+                .with(stdout_layer)
+                .with(file_layer)
+                .with(otel_layer)
+                .init();
 
             Some(guard)
         } else {
-            registry().with(stdout_layer).init();
+            registry().with(stdout_layer).with(otel_layer).init();
             None
         };
 

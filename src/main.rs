@@ -1,14 +1,10 @@
-mod config;
-mod domain;
-mod repository;
-mod utils;
-
 use actix_web::{App, HttpServer, dev::Service, web};
 use anyhow::Result;
 use tokio::try_join;
 use tracing::{Level, info};
 
-use crate::{
+use api::{
+    app_env,
     config::env::init_env,
     repository::Repositories,
     utils::logger::{LogCode, Logger},

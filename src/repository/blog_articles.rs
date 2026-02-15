@@ -1,7 +1,6 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    action::Update,
     bson::{doc, serialize_to_document},
     error::Result,
     results::{DeleteResult, UpdateResult},

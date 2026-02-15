@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::CustomEvent, utils::constants::CUSTOM_EVENTS_COLLECTION};
@@ -20,9 +20,13 @@ impl CustomEventsRepository {
         }
     }
 
-    pub async fn get_all_for_bot(&self, bot_id: &str) -> Result<Vec<CustomEvent>> {
+    pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<CustomEvent>> {
         let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
         cursor.try_collect().await
+    }
+
+    pub async fn insert(&self, custom_event: &CustomEvent) -> Result<InsertOneResult> {
+        self.collection.insert_one(custom_event).await
     }
 
     pub async fn update(&self, custom_event: &CustomEvent) -> Result<UpdateResult> {

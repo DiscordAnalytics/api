@@ -10,10 +10,7 @@ use std::{
 use anyhow::Result;
 use chrono::Local;
 use tracing::{Level, level_filters::LevelFilter};
-use tracing_appender::{
-    non_blocking::WorkerGuard,
-    rolling::{RollingFileAppender, Rotation},
-};
+use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::{fmt, layer::SubscriberExt, prelude::*, registry};
 
 pub struct Logger {
@@ -41,13 +38,13 @@ impl Logger {
         self
     }
 
-    pub fn init(self) -> Result<Option<WorkerGuard>> {
+    pub fn init(self) -> Result<()> {
         let stdout_layer = fmt::layer()
             .with_writer(io::stdout)
             .with_ansi(self.dev_mode)
             .with_filter(LevelFilter::from_level(self.level));
 
-        let guard = if self.log_to_file {
+        if self.log_to_file {
             create_dir_all(&self.log_dir).map_err(|e| LoggerError::FileCreation(e.to_string()))?;
 
             let file_appender = RollingFileAppender::builder()
@@ -55,7 +52,7 @@ impl Logger {
                 .filename_suffix("api.log")
                 .build(self.log_dir)
                 .map_err(|e| LoggerError::Initialization(e.to_string()))?;
-            let (file_writter, guard) = tracing_appender::non_blocking(file_appender);
+            let (file_writter, _guard) = tracing_appender::non_blocking(file_appender);
 
             let file_layer = fmt::layer()
                 .with_writer(file_writter)
@@ -63,14 +60,11 @@ impl Logger {
                 .with_filter(LevelFilter::from_level(self.level));
 
             registry().with(stdout_layer).with(file_layer).init();
-
-            Some(guard)
         } else {
             registry().with(stdout_layer).init();
-            None
         };
 
-        Ok(guard)
+        Ok(())
     }
 }
 

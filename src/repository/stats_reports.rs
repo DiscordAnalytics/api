@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::StatsReport, utils::constants::STATS_REPORTS_COLLECTION};
@@ -20,19 +20,23 @@ impl StatsReportsRepository {
         }
     }
 
-    pub async fn get_all(&self) -> Result<Vec<StatsReport>> {
+    pub async fn find_all(&self) -> Result<Vec<StatsReport>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_for_bot(&self, bot_id: &str) -> Result<Vec<StatsReport>> {
+    pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<StatsReport>> {
         let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_for_user(&self, user_id: &str) -> Result<Vec<StatsReport>> {
+    pub async fn find_by_user(&self, user_id: &str) -> Result<Vec<StatsReport>> {
         let cursor = self.collection.find(doc! { "user_id": user_id }).await?;
         cursor.try_collect().await
+    }
+
+    pub async fn insert(&self, stats_report: &StatsReport) -> Result<InsertOneResult> {
+        self.collection.insert_one(stats_report).await
     }
 
     pub async fn update(&self, stats_report: &StatsReport) -> Result<UpdateResult> {

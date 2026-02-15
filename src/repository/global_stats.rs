@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::GlobalStats, utils::constants::GLOBAL_STATS_COLLECTION};
@@ -20,13 +20,17 @@ impl GlobalStatsRepository {
         }
     }
 
-    pub async fn get_all(&self) -> Result<Vec<GlobalStats>> {
+    pub async fn find_all(&self) -> Result<Vec<GlobalStats>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_for_date(&self, date: &DateTime) -> Result<Option<GlobalStats>> {
+    pub async fn find_by_date(&self, date: &DateTime) -> Result<Option<GlobalStats>> {
         self.collection.find_one(doc! { "date": date }).await
+    }
+
+    pub async fn insert(&self, global_stats: &GlobalStats) -> Result<InsertOneResult> {
+        self.collection.insert_one(global_stats).await
     }
 
     pub async fn update(&self, global_stats: &GlobalStats) -> Result<UpdateResult> {

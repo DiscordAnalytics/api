@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::Vote, utils::constants::VOTES_COLLECTION};
@@ -20,17 +20,17 @@ impl VotesRepository {
         }
     }
 
-    pub async fn get_all(&self) -> Result<Vec<Vote>> {
+    pub async fn find_all(&self) -> Result<Vec<Vote>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_by_bot_id(&self, bot_id: &str) -> Result<Vec<Vote>> {
+    pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<Vote>> {
         let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_by_bot_id_and_date(
+    pub async fn find_by_bot_and_date(
         &self,
         bot_id: &str,
         date: &DateTime,
@@ -38,6 +38,10 @@ impl VotesRepository {
         self.collection
             .find_one(doc! { "botId": bot_id, "date": date })
             .await
+    }
+
+    pub async fn insert(&self, vote: &Vote) -> Result<InsertOneResult> {
+        self.collection.insert_one(vote).await
     }
 
     pub async fn update(&self, vote: &Vote) -> Result<UpdateResult> {

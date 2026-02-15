@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
@@ -20,15 +20,19 @@ impl BlogArticlesRepository {
         }
     }
 
+    pub async fn find_all(&self) -> Result<Vec<BlogArticle>> {
+        let cursor = self.collection.find(doc! {}).await?;
+        cursor.try_collect().await
+    }
+
     pub async fn find_by_id(&self, article_id: &str) -> Result<Option<BlogArticle>> {
         self.collection
             .find_one(doc! { "articleId": article_id })
             .await
     }
 
-    pub async fn get_all(&self) -> Result<Vec<BlogArticle>> {
-        let cursor = self.collection.find(doc! {}).await?;
-        cursor.try_collect().await
+    pub async fn insert(&self, article: &BlogArticle) -> Result<InsertOneResult> {
+        self.collection.insert_one(article).await
     }
 
     pub async fn update(

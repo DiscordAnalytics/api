@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::BotStats, utils::constants::BOT_STATS_COLLECTION};
@@ -20,17 +20,21 @@ impl BotStatsRepository {
         }
     }
 
-    pub async fn get_for_bot(&self, bot_id: &str) -> Result<Vec<BotStats>> {
+    pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<BotStats>> {
         let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_for_date(&self, bot_id: &str, date: &DateTime) -> Result<Vec<BotStats>> {
+    pub async fn find_by_date(&self, bot_id: &str, date: &DateTime) -> Result<Vec<BotStats>> {
         let cursor = self
             .collection
             .find(doc! { "botId": bot_id, "date": date })
             .await?;
         cursor.try_collect().await
+    }
+
+    pub async fn insert(&self, bot_stats: &BotStats) -> Result<InsertOneResult> {
+        self.collection.insert_one(bot_stats).await
     }
 
     pub async fn update(&self, bot_stats: &BotStats) -> Result<UpdateResult> {

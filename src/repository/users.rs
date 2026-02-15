@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{doc, serialize_to_document},
     error::Result,
-    results::{DeleteResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::User, utils::constants::USERS_COLLECTION};
@@ -20,13 +20,17 @@ impl UsersRepository {
         }
     }
 
-    pub async fn get_all(&self) -> Result<Vec<User>> {
+    pub async fn find_all(&self) -> Result<Vec<User>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await
     }
 
-    pub async fn get_user(&self, user_id: &str) -> Result<Option<User>> {
+    pub async fn find_user(&self, user_id: &str) -> Result<Option<User>> {
         self.collection.find_one(doc! { "userId": user_id }).await
+    }
+
+    pub async fn insert(&self, user: &User) -> Result<InsertOneResult> {
+        self.collection.insert_one(user).await
     }
 
     pub async fn update(&self, user: &User) -> Result<UpdateResult> {

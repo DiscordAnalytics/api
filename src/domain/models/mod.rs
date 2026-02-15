@@ -15,7 +15,7 @@ pub use bot::{Bot, Framework, Language};
 pub use bot_stats::{BotStats, Guild, GuildMembers, Interaction, Locale, UserType};
 pub use custom_event::CustomEvent;
 pub use global_stats::GlobalStats;
-pub use stats_report::StatsReport;
+pub use stats_report::{StatsReport, StatsReportFrequency};
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;

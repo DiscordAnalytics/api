@@ -21,13 +21,34 @@ impl StatsReport {
         self
     }
 
-    pub fn with_frequency(mut self, frequency: String) -> Self {
-        self.frequency = frequency;
+    pub fn with_frequency(mut self, frequency: StatsReportFrequency) -> Self {
+        self.frequency = frequency.into();
         self
     }
 
     pub fn with_user_id(mut self, user_id: String) -> Self {
         self.user_id = user_id;
         self
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StatsReportFrequency {
+    Weekly,
+    Monthly,
+}
+
+impl StatsReportFrequency {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            StatsReportFrequency::Weekly => "weekly",
+            StatsReportFrequency::Monthly => "monthly",
+        }
+    }
+}
+
+impl From<StatsReportFrequency> for String {
+    fn from(frequency: StatsReportFrequency) -> Self {
+        frequency.as_str().to_string()
     }
 }

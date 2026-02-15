@@ -1,13 +1,15 @@
 mod config;
+mod repository;
 mod utils;
 
-use actix_web::{App, HttpServer, dev::Service};
+use actix_web::{App, HttpServer, dev::Service, web};
 use anyhow::Result;
 use tokio::try_join;
 use tracing::{Level, info};
 
 use crate::{
     config::env::init_env,
+    repository::Repositories,
     utils::logger::{LogCode, Logger},
 };
 
@@ -17,8 +19,7 @@ async fn main() -> Result<()> {
 
     Logger::new()
         .level(if dev_mode { Level::DEBUG } else { Level::INFO })
-        .init()
-        .expect("Failed to initialize logger");
+        .init()?;
 
     info!("[{}] {:-^50}", LogCode::Server, " Starting app ");
     info!(
@@ -34,11 +35,15 @@ async fn main() -> Result<()> {
         )
     );
 
-    init_env().expect("Failed to initialize environment variables");
+    init_env()?;
     info!("[{}] {}", LogCode::Server, "Environment initialized");
+
+    let repos = Repositories::init().await?;
+    info!("[{}] {}", LogCode::Server, "Database connected");
 
     let http_server = HttpServer::new(move || {
         App::new()
+            .app_data(web::Data::new(repos.clone()))
             .route("/", actix_web::web::get().to(|| async { "Hello, world!" }))
             .wrap_fn(move |req, srv| {
                 let fut = srv.call(req);

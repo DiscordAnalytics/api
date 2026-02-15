@@ -1,0 +1,53 @@
+use futures::stream::TryStreamExt as _;
+use mongodb::{
+    Collection, Database,
+    bson::{doc, serialize_to_document},
+    error::Result,
+};
+
+use crate::utils::{constants::BLOG_ARTICLES_COLLECTION, model::BlogArticle};
+
+#[derive(Clone)]
+pub struct BlogArticlesRepository {
+    collection: Collection<BlogArticle>,
+}
+
+impl BlogArticlesRepository {
+    pub fn new(db: &Database) -> Self {
+        Self {
+            collection: db.collection(BLOG_ARTICLES_COLLECTION),
+        }
+    }
+
+    pub async fn find_by_id(&self, article_id: &str) -> Result<Option<BlogArticle>> {
+        self.collection
+            .find_one(doc! { "articleId": article_id })
+            .await
+    }
+
+    pub async fn get_all(&self) -> Result<Vec<BlogArticle>> {
+        let mut cursor = self.collection.find(doc! {}).await?;
+        let mut articles = Vec::new();
+        while let Some(article) = cursor.try_next().await? {
+            articles.push(article);
+        }
+        Ok(articles)
+    }
+
+    pub async fn update(&self, article_id: &str, updated_article: &BlogArticle) -> Result<()> {
+        self.collection
+            .update_one(
+                doc! { "articleId": article_id },
+                doc! { "$set": serialize_to_document(updated_article)? },
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub async fn delete(&self, article_id: &str) -> Result<()> {
+        self.collection
+            .delete_one(doc! { "articleId": article_id })
+            .await?;
+        Ok(())
+    }
+}

@@ -1,5 +1,6 @@
 use std::{env, sync::OnceLock};
 
+use anyhow::{Error, Result};
 use dotenvy::dotenv;
 
 #[derive(Debug)]
@@ -43,12 +44,13 @@ pub struct EnvConfig {
 
 pub static ENV: OnceLock<EnvConfig> = OnceLock::new();
 
-fn get_var(key: &str) -> Result<String, String> {
-    env::var(key).map_err(|_| format!("Environment variable {} not set", key))
+fn get_var(key: &str) -> Result<String> {
+    env::var(key)
+        .map_err(|e| Error::new(e).context(format!("Environment variable {} not set", key)))
 }
 
-pub fn init_env() -> Result<&'static EnvConfig, String> {
-    dotenv().map_err(|e| format!("Failed to load .env file: {}", e))?;
+pub fn init_env() -> Result<&'static EnvConfig> {
+    dotenv().ok();
 
     if let Some(config) = ENV.get() {
         return Ok(config);

@@ -8,7 +8,7 @@
 .env
 .env.{local,development,production,test}
 
-/logs/*.log
+/logs/*.log*
 
 .DS_Store
 Thumbs.db

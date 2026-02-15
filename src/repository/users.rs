@@ -25,7 +25,7 @@ impl UsersRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_user(&self, user_id: &str) -> Result<Option<User>> {
+    pub async fn find_by_id(&self, user_id: &str) -> Result<Option<User>> {
         self.collection.find_one(doc! { "userId": user_id }).await
     }
 

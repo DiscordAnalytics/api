@@ -7,6 +7,7 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::Result;
 use chrono::Local;
 use tracing::{Level, level_filters::LevelFilter};
 use tracing_appender::{
@@ -40,7 +41,7 @@ impl Logger {
         self
     }
 
-    pub fn init(self) -> Result<Option<WorkerGuard>, LoggerError> {
+    pub fn init(self) -> Result<Option<WorkerGuard>> {
         let stdout_layer = fmt::layer()
             .with_writer(io::stdout)
             .with_ansi(self.dev_mode)

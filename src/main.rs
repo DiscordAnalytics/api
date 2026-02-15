@@ -1,9 +1,8 @@
 mod config;
 mod utils;
 
-use std::io;
-
 use actix_web::{App, HttpServer, dev::Service};
+use anyhow::Result;
 use tokio::try_join;
 use tracing::{Level, info};
 
@@ -13,7 +12,7 @@ use crate::{
 };
 
 #[actix_web::main]
-async fn main() -> io::Result<()> {
+async fn main() -> Result<()> {
     let dev_mode = cfg!(debug_assertions);
 
     Logger::new()

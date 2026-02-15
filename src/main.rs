@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use actix_web::{App, HttpServer, dev::Service, web};
+use actix_cors::Cors;
+use actix_web::{App, HttpServer, dev::Service, http, web};
 use anyhow::Result;
 use tokio::{sync::Mutex, try_join};
 use tracing::{Level, info};
@@ -53,9 +54,21 @@ async fn main() -> Result<()> {
     );
 
     let http_server = HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin(&app_env!().client_url)
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "PATCH"])
+            .allowed_headers(vec![
+                http::header::AUTHORIZATION,
+                http::header::ACCEPT,
+                http::header::CONTENT_TYPE,
+            ])
+            .supports_credentials()
+            .max_age(3600);
+
         App::new()
             .app_data(web::Data::new(repos.clone()))
             .app_data(votes_webhooks_manager.clone())
+            .wrap(cors)
             .wrap_fn(move |req, srv| {
                 let fut = srv.call(req);
                 Box::pin(async move {

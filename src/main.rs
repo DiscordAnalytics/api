@@ -1,11 +1,14 @@
+use std::sync::Arc;
+
 use actix_web::{App, HttpServer, dev::Service, web};
 use anyhow::Result;
-use tokio::try_join;
+use tokio::{sync::Mutex, try_join};
 use tracing::{Level, info};
 
 use api::{
     app_env,
     config::env::init_env,
+    managers::webhook::VotesWebhooksManager,
     repository::Repositories,
     utils::logger::{LogCode, Logger},
 };
@@ -36,12 +39,23 @@ async fn main() -> Result<()> {
     info!("[{}] {}", LogCode::Server, "Environment initialized");
 
     let repos = Repositories::init().await?;
-    info!("[{}] {}", LogCode::Server, "Database connected");
+    info!(
+        "[{}] {}",
+        LogCode::Server,
+        "Database and R2 storage initialized"
+    );
+
+    let votes_webhooks_manager = web::Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
+    info!(
+        "[{}] {}",
+        LogCode::Server,
+        "VotesWebhooksManager initialized and wrapped in Arc<Mutex<>>"
+    );
 
     let http_server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(repos.clone()))
-            .route("/", actix_web::web::get().to(|| async { "Hello, world!" }))
+            .app_data(votes_webhooks_manager.clone())
             .wrap_fn(move |req, srv| {
                 let fut = srv.call(req);
                 Box::pin(async move {
@@ -58,6 +72,7 @@ async fn main() -> Result<()> {
                     Ok(res)
                 })
             })
+            .route("/", actix_web::web::get().to(|| async { "Hello, world!" }))
     })
     .bind(("0.0.0.0", app_env!().port))?
     .run();

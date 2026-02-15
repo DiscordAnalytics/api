@@ -8,6 +8,7 @@ mod stats_report;
 mod team_invitation;
 mod user;
 mod vote;
+mod webhook;
 
 pub use achievement::{Achievement, AchievementObjective, AchievementType};
 pub use blog_article::BlogArticle;
@@ -19,3 +20,4 @@ pub use stats_report::{StatsReport, StatsReportFrequency};
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;
+pub use webhook::{Provider, Webhook, WebhookData, WebhookSendData};

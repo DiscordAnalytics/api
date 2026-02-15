@@ -5,6 +5,7 @@ mod bots;
 mod connection;
 mod custom_events;
 mod global_stats;
+mod r2;
 mod stats_reports;
 mod team_invitations;
 mod users;
@@ -18,6 +19,7 @@ pub struct Repositories {
     pub bot_stats: bot_stats::BotStatsRepository,
     pub custom_events: custom_events::CustomEventsRepository,
     pub global_stats: global_stats::GlobalStatsRepository,
+    pub r2: r2::R2Repository,
     pub stats_reports: stats_reports::StatsReportsRepository,
     pub team_invitations: team_invitations::TeamInvitationsRepository,
     pub users: users::UsersRepository,
@@ -25,7 +27,7 @@ pub struct Repositories {
 }
 
 impl Repositories {
-    pub async fn init() -> mongodb::error::Result<Self> {
+    pub async fn init() -> anyhow::Result<Self> {
         let connection = connection::DbConnection::init().await?;
         let db = connection.database();
 
@@ -36,6 +38,7 @@ impl Repositories {
             bot_stats: bot_stats::BotStatsRepository::new(db),
             custom_events: custom_events::CustomEventsRepository::new(db),
             global_stats: global_stats::GlobalStatsRepository::new(db),
+            r2: r2::R2Repository::new()?,
             stats_reports: stats_reports::StatsReportsRepository::new(db),
             team_invitations: team_invitations::TeamInvitationsRepository::new(db),
             users: users::UsersRepository::new(db),

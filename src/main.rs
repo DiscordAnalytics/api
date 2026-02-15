@@ -11,6 +11,7 @@ use api::{
     config::env::init_env,
     managers::webhook::VotesWebhooksManager,
     repository::Repositories,
+    services::Services,
     utils::logger::{LogCode, Logger},
 };
 
@@ -46,11 +47,14 @@ async fn main() -> Result<()> {
         "Database and R2 storage initialized"
     );
 
+    let services = Services::new(repos.clone());
+    info!("[{}] {}", LogCode::Server, "Services initialized");
+
     let votes_webhooks_manager = web::Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
     info!(
         "[{}] {}",
         LogCode::Server,
-        "VotesWebhooksManager initialized and wrapped in Arc<Mutex<>>"
+        "VotesWebhooksManager initialized"
     );
 
     let http_server = HttpServer::new(move || {
@@ -67,6 +71,7 @@ async fn main() -> Result<()> {
 
         App::new()
             .app_data(web::Data::new(repos.clone()))
+            .app_data(web::Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
             .wrap(cors)
             .wrap_fn(move |req, srv| {

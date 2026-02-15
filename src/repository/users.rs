@@ -29,6 +29,10 @@ impl UsersRepository {
         self.collection.find_one(doc! { "userId": user_id }).await
     }
 
+    pub async fn find_by_token(&self, token: &str) -> Result<Option<User>> {
+        self.collection.find_one(doc! { "token": token }).await
+    }
+
     pub async fn insert(&self, user: &User) -> Result<InsertOneResult> {
         self.collection.insert_one(user).await
     }

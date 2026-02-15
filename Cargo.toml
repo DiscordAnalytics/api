@@ -24,6 +24,7 @@ chrono = { version = "0.4.43", default-features = false, features = [
 ] }
 dotenvy = { version = "0.15.7", default-features = false }
 futures = { version = "0.3.32", default-features = false, features = ["alloc"] }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 mongodb = { version = "3.5.1", default-features = false, features = [
   "bson-3",
   "compat-3-3-0",
@@ -31,6 +32,7 @@ mongodb = { version = "3.5.1", default-features = false, features = [
   "rustls-tls",
 ] }
 reqwest = { version = "0.13.2", default-features = false, features = ["json", "http2", "rustls"] }
+ring = { version = "0.17.14", default-features = false, features = ["alloc"] }
 s3 = { version = "0.1.15", default-features = false, features = [
   "async",
   "rustls",

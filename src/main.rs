@@ -1,4 +1,5 @@
 mod config;
+mod domain;
 mod repository;
 mod utils;
 
@@ -18,7 +19,7 @@ async fn main() -> Result<()> {
     let dev_mode = cfg!(debug_assertions);
 
     Logger::new()
-        .level(if dev_mode { Level::DEBUG } else { Level::INFO })
+        .with_level(if dev_mode { Level::DEBUG } else { Level::INFO })
         .init()?;
 
     info!("[{}] {:-^50}", LogCode::Server, " Starting app ");

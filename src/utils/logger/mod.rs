@@ -36,7 +36,7 @@ impl Logger {
         }
     }
 
-    pub fn level(mut self, level: Level) -> Self {
+    pub fn with_level(mut self, level: Level) -> Self {
         self.level = level;
         self
     }

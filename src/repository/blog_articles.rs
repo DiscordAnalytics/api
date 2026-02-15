@@ -6,7 +6,7 @@ use mongodb::{
     results::{DeleteResult, UpdateResult},
 };
 
-use crate::utils::{constants::BLOG_ARTICLES_COLLECTION, model::BlogArticle};
+use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
 
 #[derive(Clone)]
 pub struct BlogArticlesRepository {

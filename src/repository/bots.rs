@@ -1,7 +1,12 @@
 use futures::stream::TryStreamExt as _;
-use mongodb::{Collection, Database, bson::doc, error::Result, results::DeleteResult};
+use mongodb::{
+    Collection, Database,
+    bson::{doc, serialize_to_document},
+    error::Result,
+    results::{DeleteResult, UpdateResult},
+};
 
-use crate::utils::{constants::BOTS_COLLECTION, model::Bot};
+use crate::{domain::models::Bot, utils::constants::BOTS_COLLECTION};
 
 #[derive(Clone)]
 pub struct BotsRepository {
@@ -22,6 +27,15 @@ impl BotsRepository {
     pub async fn find_by_owner(&self, owner_id: &str) -> Result<Vec<Bot>> {
         let cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
         cursor.try_collect().await
+    }
+
+    pub async fn update(&self, updated_bot: &Bot) -> Result<UpdateResult> {
+        self.collection
+            .update_one(
+                doc! { "botId": &updated_bot.bot_id },
+                doc! { "$set": serialize_to_document(updated_bot)? },
+            )
+            .await
     }
 
     pub async fn delete(&self, bot_id: &str) -> Result<DeleteResult> {

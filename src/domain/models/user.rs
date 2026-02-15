@@ -13,7 +13,7 @@ pub struct User {
     #[serde(rename = "joinedAt")]
     pub joined_at: DateTime,
     pub mail: String,
-    pub token: String,
+    pub(crate) token: String,
     pub username: String,
     #[serde(rename = "userId")]
     pub user_id: String,

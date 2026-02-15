@@ -1,7 +1,5 @@
 use std::fmt;
 
-use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthType {
     Admin,
@@ -37,12 +35,6 @@ impl fmt::Display for AuthType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Claims {
-    pub sub: String,
-    pub exp: usize,
 }
 
 #[derive(Debug, Clone)]

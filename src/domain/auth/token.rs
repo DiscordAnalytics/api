@@ -1,10 +1,48 @@
 use anyhow::Result;
+use chrono::{Duration, Utc};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use ring::{
     aead,
     rand::{SecureRandom, SystemRandom},
 };
+use serde::{Deserialize, Serialize};
 
-pub fn generate_token(user_id: &str) -> Result<String> {
+use crate::app_env;
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
+}
+
+impl Claims {
+    pub fn new(user_id: String, exp_hours: u64) -> Self {
+        let exp = (Utc::now() + Duration::hours(exp_hours as i64)).timestamp() as usize;
+
+        Self { sub: user_id, exp }
+    }
+}
+
+pub fn generate_jwt(user_id: &str) -> Result<String> {
+    let claims = Claims::new(user_id.to_string(), 24 * 7);
+
+    let header = Header::default();
+    let encoding_key = EncodingKey::from_secret(app_env!().jwt_secret.as_ref());
+
+    jsonwebtoken::encode(&header, &claims, &encoding_key)
+        .map_err(|e| anyhow::anyhow!("Failed to generate JWT: {:?}", e))
+}
+
+pub fn decode_jwt(token: &str) -> Result<Claims> {
+    let decoding_key = DecodingKey::from_secret(app_env!().jwt_secret.as_ref());
+    let validation = Validation::default();
+
+    jsonwebtoken::decode::<Claims>(token, &decoding_key, &validation)
+        .map(|data| data.claims)
+        .map_err(|e| anyhow::anyhow!("Failed to decode JWT: {:?}", e))
+}
+
+pub fn generate_bot_token(user_id: &str) -> Result<String> {
     let rng = SystemRandom::new();
     let mut key = [0u8; 32];
     rng.fill(&mut key)

@@ -1,5 +1,5 @@
 use futures::stream::TryStreamExt as _;
-use mongodb::{Collection, Database, bson::doc, error::Result};
+use mongodb::{Collection, Database, bson::doc, error::Result, results::DeleteResult};
 
 use crate::utils::{constants::BOTS_COLLECTION, model::Bot};
 
@@ -20,31 +20,11 @@ impl BotsRepository {
     }
 
     pub async fn find_by_owner(&self, owner_id: &str) -> Result<Vec<Bot>> {
-        let mut cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
-        let mut bots = Vec::new();
-        while let Some(bot) = cursor.try_next().await? {
-            bots.push(bot);
-        }
-        Ok(bots)
+        let cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
+        cursor.try_collect().await
     }
 
-    pub async fn is_suspended(&self, bot_id: &str) -> Result<bool> {
-        let bot = self.find_by_id(bot_id).await?;
-        Ok(bot.map_or(false, |b| b.suspended))
-    }
-
-    pub async fn update_framework(&self, bot_id: &str, framework: Option<String>) -> Result<()> {
-        self.collection
-            .update_one(
-                doc! { "botId": bot_id },
-                doc! { "$set": { "framework": framework } },
-            )
-            .await?;
-        Ok(())
-    }
-
-    pub async fn delete(&self, bot_id: &str) -> Result<()> {
-        self.collection.delete_one(doc! { "botId": bot_id }).await?;
-        Ok(())
+    pub async fn delete(&self, bot_id: &str) -> Result<DeleteResult> {
+        self.collection.delete_one(doc! { "botId": bot_id }).await
     }
 }

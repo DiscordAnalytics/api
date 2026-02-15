@@ -1,8 +1,10 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
+    action::Update,
     bson::{doc, serialize_to_document},
     error::Result,
+    results::{DeleteResult, UpdateResult},
 };
 
 use crate::utils::{constants::BLOG_ARTICLES_COLLECTION, model::BlogArticle};
@@ -26,28 +28,26 @@ impl BlogArticlesRepository {
     }
 
     pub async fn get_all(&self) -> Result<Vec<BlogArticle>> {
-        let mut cursor = self.collection.find(doc! {}).await?;
-        let mut articles = Vec::new();
-        while let Some(article) = cursor.try_next().await? {
-            articles.push(article);
-        }
-        Ok(articles)
+        let cursor = self.collection.find(doc! {}).await?;
+        cursor.try_collect().await
     }
 
-    pub async fn update(&self, article_id: &str, updated_article: &BlogArticle) -> Result<()> {
+    pub async fn update(
+        &self,
+        article_id: &str,
+        updated_article: &BlogArticle,
+    ) -> Result<UpdateResult> {
         self.collection
             .update_one(
                 doc! { "articleId": article_id },
                 doc! { "$set": serialize_to_document(updated_article)? },
             )
-            .await?;
-        Ok(())
+            .await
     }
 
-    pub async fn delete(&self, article_id: &str) -> Result<()> {
+    pub async fn delete(&self, article_id: &str) -> Result<DeleteResult> {
         self.collection
             .delete_one(doc! { "articleId": article_id })
-            .await?;
-        Ok(())
+            .await
     }
 }

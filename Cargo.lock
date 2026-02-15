@@ -224,24 +224,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f0e0fee31ef5ed1ba1316088939cea399010ed7731dba877ed44aeb407a75ea"
 
 [[package]]
-name = "api"
-version = "3.0.0"
-dependencies = [
- "actix-web",
- "anyhow",
- "chrono",
- "dotenvy",
- "futures",
- "mongodb",
- "s3",
- "serde",
- "tokio",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "async-trait"
 version = "0.1.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -640,6 +622,24 @@ dependencies = [
  "block-buffer",
  "crypto-common",
  "subtle",
+]
+
+[[package]]
+name = "discord-analytics-api"
+version = "3.0.0"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "chrono",
+ "dotenvy",
+ "futures",
+ "mongodb",
+ "s3",
+ "serde",
+ "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
 ]
 
 [[package]]

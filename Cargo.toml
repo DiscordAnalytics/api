@@ -1,5 +1,5 @@
 [package]
-name = "api"
+name = "discord-analytics-api"
 version = "3.0.0"
 authors = ["ValDesign"]
 edition = "2024"
@@ -29,7 +29,11 @@ mongodb = { version = "3.5.1", default-features = false, features = [
   "dns-resolver",
   "rustls-tls",
 ] }
-s3 = { version = "0.1.15", default-features = false, features = ["async", "rustls", "providers"] }
+s3 = { version = "0.1.15", default-features = false, features = [
+  "async",
+  "rustls",
+  "providers",
+] }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 tokio = { version = "1.49.0", default-features = false, features = [
   "rt-multi-thread",

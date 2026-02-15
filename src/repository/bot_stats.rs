@@ -25,10 +25,15 @@ impl BotStatsRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_date(&self, bot_id: &str, date: &DateTime) -> Result<Vec<BotStats>> {
+    pub async fn find_by_date_range(
+        &self,
+        bot_id: &str,
+        start_date: &DateTime,
+        end_date: &DateTime,
+    ) -> Result<Vec<BotStats>> {
         let cursor = self
             .collection
-            .find(doc! { "botId": bot_id, "date": date })
+            .find(doc! { "botId": bot_id, "date": { "$gte": start_date, "$lte": end_date } })
             .await?;
         cursor.try_collect().await
     }

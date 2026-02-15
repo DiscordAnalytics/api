@@ -25,8 +25,14 @@ impl GlobalStatsRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_date(&self, date: &DateTime) -> Result<Option<GlobalStats>> {
-        self.collection.find_one(doc! { "date": date }).await
+    pub async fn find_by_date_range(
+        &self,
+        start_date: &DateTime,
+        end_date: &DateTime,
+    ) -> Result<Option<GlobalStats>> {
+        self.collection
+            .find_one(doc! { "date": { "$gte": start_date, "$lte": end_date } })
+            .await
     }
 
     pub async fn insert(&self, global_stats: &GlobalStats) -> Result<InsertOneResult> {

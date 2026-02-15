@@ -30,13 +30,14 @@ impl VotesRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_bot_and_date(
+    pub async fn find_by_bot_and_date_range(
         &self,
         bot_id: &str,
-        date: &DateTime,
+        start_date: &DateTime,
+        end_date: &DateTime,
     ) -> Result<Option<Vote>> {
         self.collection
-            .find_one(doc! { "botId": bot_id, "date": date })
+            .find_one(doc! { "botId": bot_id, "date": { "$gte": start_date, "$lte": end_date } })
             .await
     }
 

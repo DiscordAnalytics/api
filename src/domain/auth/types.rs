@@ -3,7 +3,6 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthType {
     Admin,
-    Api,
     Bot,
     Unknown,
     User,
@@ -12,21 +11,19 @@ pub enum AuthType {
 impl AuthType {
     pub fn from_str(s: &str) -> Self {
         match s {
-            "Api" => AuthType::Api,
-            "User" => AuthType::User,
-            "Bot" => AuthType::Bot,
             "Admin" => AuthType::Admin,
+            "Bot" => AuthType::Bot,
+            "User" => AuthType::User,
             _ => AuthType::Unknown,
         }
     }
 
     pub fn as_str(&self) -> &'static str {
         match self {
-            AuthType::Unknown => "Unknown",
-            AuthType::Api => "Api",
-            AuthType::User => "User",
-            AuthType::Bot => "Bot",
             AuthType::Admin => "Admin",
+            AuthType::Bot => "Bot",
+            AuthType::User => "User",
+            _ => "Unknown",
         }
     }
 }

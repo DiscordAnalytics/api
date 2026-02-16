@@ -16,14 +16,6 @@ impl AuthService {
         Self { repos }
     }
 
-    pub fn verify_api_token(&self, token: &str) -> Result<AuthContext> {
-        if token == app_env!().admin_token.as_str() {
-            Ok(AuthContext::new(AuthType::Api))
-        } else {
-            bail!("Invalid API token");
-        }
-    }
-
     pub async fn verify_bot_token(&self, token: &str, bot_id: &str) -> Result<AuthContext> {
         let bot = self.repos.bots.find_by_id(bot_id).await?;
         match bot {

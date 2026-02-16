@@ -17,12 +17,14 @@ static DISCORD_WEBHOOK_REGEX: OnceLock<Regex> = OnceLock::new();
 
 pub struct VotesWebhooksManager {
     pub waitlist: Vec<Webhook>,
+    client: Client,
 }
 
 impl VotesWebhooksManager {
     pub fn new() -> Self {
         Self {
             waitlist: Vec::new(),
+            client: Client::new(),
         }
     }
 
@@ -55,7 +57,6 @@ impl VotesWebhooksManager {
     }
 
     pub async fn send_webhook(&mut self, webhook: Webhook) -> Result<()> {
-        let client = Client::new();
         let mut headers = HeaderMap::new();
         headers.insert(
             "Authorization",
@@ -84,7 +85,7 @@ impl VotesWebhooksManager {
             None
         };
 
-        let res = client
+        let res = self.client
             .post(&webhook.webhook_url)
             .json(&WebhookSendData {
                 bot_id: webhook.data.bot_id.clone(),

@@ -46,64 +46,52 @@ impl Logger {
         self
     }
 
-    pub fn init(self) -> Result<Option<WorkerGuard>> {
+    pub fn init(self) -> Result<()> {
         let stdout_layer = fmt::layer()
             .with_writer(io::stdout)
             .with_ansi(self.dev_mode)
             .with_filter(LevelFilter::from_level(self.level));
 
-        let mut headers = HashMap::new();
-        headers.insert(
-            String::from("Authorization"),
-            String::from(format!("Basic {}", app_env!().otlp_token)),
-        );
-        headers.insert("stream-name".to_string(), app_env!().otlp_stream.clone());
+        if app_env!().otlp_endpoint.is_some() {
+            let mut headers = HashMap::new();
+            headers.insert(
+                String::from("Authorization"),
+                String::from(format!(
+                    "Basic {}",
+                    app_env!().otlp_token.clone().unwrap_or("".to_string())
+                )),
+            );
+            headers.insert(
+                "stream-name".to_string(),
+                app_env!().otlp_stream.clone().unwrap_or("".to_string()),
+            );
 
-        let exporter = opentelemetry_otlp::LogExporter::builder()
-            .with_http()
-            .with_protocol(Protocol::HttpBinary)
-            .with_headers(headers)
-            .with_endpoint(format!("{}/v1/logs", app_env!().otlp_endpoint))
-            .build()?;
+            let exporter = opentelemetry_otlp::LogExporter::builder()
+                .with_http()
+                .with_protocol(Protocol::HttpBinary)
+                .with_headers(headers)
+                .with_endpoint(format!(
+                    "{}/v1/logs",
+                    app_env!().otlp_endpoint.clone().unwrap_or("".to_string())
+                ))
+                .build()?;
 
-        let resource = Resource::builder()
-            .with_service_name(if self.dev_mode { "api-dev" } else { "api" })
-            .build();
+            let resource = Resource::builder()
+                .with_service_name(if self.dev_mode { "api-dev" } else { "api" })
+                .build();
 
-        let provider = SdkLoggerProvider::builder()
-            .with_batch_exporter(exporter)
-            .with_resource(resource)
-            .build();
-        let otel_layer = OpenTelemetryTracingBridge::new(&provider);
+            let provider = SdkLoggerProvider::builder()
+                .with_batch_exporter(exporter)
+                .with_resource(resource)
+                .build();
+            let otlp_layer = OpenTelemetryTracingBridge::new(&provider);
 
-        let guard = if self.log_to_file {
-            create_dir_all(&self.log_dir).map_err(|e| LoggerError::FileCreation(e.to_string()))?;
-
-            let file_appender = RollingFileAppender::builder()
-                .rotation(Rotation::DAILY)
-                .filename_suffix("api.log")
-                .build(self.log_dir)
-                .map_err(|e| LoggerError::Initialization(e.to_string()))?;
-            let (file_writter, guard) = tracing_appender::non_blocking(file_appender);
-
-            let file_layer = fmt::layer()
-                .with_writer(file_writter)
-                .with_ansi(false)
-                .with_filter(LevelFilter::from_level(self.level));
-
-            registry()
-                .with(stdout_layer)
-                .with(file_layer)
-                .with(otel_layer)
-                .init();
-
-            Some(guard)
+            registry().with(stdout_layer).with(otlp_layer).init();
         } else {
-            registry().with(stdout_layer).with(otel_layer).init();
-            None
-        };
+            registry().with(stdout_layer).init()
+        }
 
-        Ok(guard)
+        Ok(())
     }
 }
 

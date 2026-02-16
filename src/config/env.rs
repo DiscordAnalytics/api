@@ -14,9 +14,9 @@ pub struct EnvConfig {
     pub database_url: String,
 
     // OpenTelemetry
-    pub otlp_endpoint: String,
-    pub otlp_token: String,
-    pub otlp_stream: String,
+    pub otlp_endpoint: Option<String>,
+    pub otlp_token: Option<String>,
+    pub otlp_stream: Option<String>,
 
     // Tokens
     pub admin_token: String,
@@ -74,9 +74,18 @@ pub fn init_env() -> Result<&'static EnvConfig, String> {
 
     let database_url = get_var("DATABASE_URL")?;
 
-    let otlp_endpoint = get_var("OTLP_ENDPOINT")?;
-    let otlp_token = get_var("OTLP_TOKEN")?;
-    let otlp_stream = get_var("OTLP_STREAM")?;
+    let otlp_endpoint = get_var("OTLP_ENDPOINT").ok();
+    let otlp_token = get_var("OTLP_TOKEN").ok();
+    let otlp_stream = get_var("OTLP_STREAM").ok();
+    // Throw error if not all vars are defined
+    if !((otlp_endpoint.is_some() && otlp_token.is_some() && otlp_stream.is_some())
+        && (otlp_endpoint.is_none() && otlp_token.is_none() && otlp_stream.is_none()))
+    {
+        return Err(
+            "One of these env vars are missing: OTLP_ENDPOINT, OTLP_TOKEN or OTLP_STREAM"
+                .to_string(),
+        );
+    }
 
     let admin_token = get_var("ADMIN_TOKEN")?;
     let discord_token = get_var("DISCORD_TOKEN")?;

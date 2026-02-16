@@ -31,7 +31,6 @@ tokio = { version = "1.49.0", default-features = false, features = [
   "macros",
 ] }
 tracing = { version = "0.1.44", default-features = false, features = ["std"] }
-tracing-appender = { version = "0.2.4", default-features = false }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "ansi",
   "fmt",

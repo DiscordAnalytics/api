@@ -1,4 +1,7 @@
+use std::sync::OnceLock;
+
 use anyhow::Result;
+use regex::Regex;
 use reqwest::{
     Client, StatusCode,
     header::{HeaderMap, HeaderValue},
@@ -10,6 +13,8 @@ use crate::{
     utils::logger::LogCode,
 };
 
+static DISCORD_WEBHOOK_REGEX: OnceLock<Regex> = OnceLock::new();
+
 pub struct VotesWebhooksManager {
     pub waitlist: Vec<Webhook>,
 }
@@ -19,6 +24,15 @@ impl VotesWebhooksManager {
         Self {
             waitlist: Vec::new(),
         }
+    }
+
+    fn is_discord_webhook(url: &str) -> bool {
+        DISCORD_WEBHOOK_REGEX.get_or_init(|| {
+            Regex::new(
+                r"^https:\/\/([a-z]+\.)?discord\.com\/api\/webhooks\/\d+\/[\w-]+$"
+            ).expect("Invalid Discord webhook regex")
+        })
+        .is_match(url)
     }
 
     pub fn increment_tries(&mut self, webhook: Webhook) {
@@ -50,10 +64,7 @@ impl VotesWebhooksManager {
 
         let provider_str = webhook.data.provider.as_str();
 
-        let content = if webhook
-            .webhook_url
-            .starts_with("https://discord.com/api/webhooks/")
-        {
+        let content = if is_discord_webhook(&webhook.webhook_url) {
             match &webhook.data.provider {
                 Provider::Test => Some(format!(
                     "Test received for <@{}> ({}) from Discord Analytics dashboard.",

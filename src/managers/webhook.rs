@@ -2,15 +2,12 @@ use std::sync::OnceLock;
 
 use anyhow::Result;
 use regex::Regex;
-use reqwest::{
-    Client, StatusCode,
-    header::{HeaderMap, HeaderValue},
-};
+use reqwest::{Client, header::{HeaderMap, HeaderValue}};
 use tracing::info;
 
 use crate::{
     domain::models::{Provider, Webhook, WebhookSendData},
-    utils::logger::LogCode,
+    utils::{constants::MAX_WEBHOOK_RETRIES, logger::LogCode},
 };
 
 static DISCORD_WEBHOOK_REGEX: OnceLock<Regex> = OnceLock::new();
@@ -37,17 +34,21 @@ impl VotesWebhooksManager {
         .is_match(url)
     }
 
-    pub fn increment_tries(&mut self, webhook: Webhook) {
-        let entry = self.waitlist.iter_mut().find(|w| {
+    pub fn retry(&mut self, webhook: Webhook) {
+        if let Some(idx) = self.waitlist.iter().position(|w| {
             w.data.bot_id == webhook.data.bot_id
                 && w.data.voter_id == webhook.data.voter_id
                 && w.data.provider == webhook.data.provider
                 && w.data.date == webhook.data.date
                 && w.data.raw_data == webhook.data.raw_data
-        });
+        }) {
+            if let Some(w) = self.waitlist.get_mut(idx) {
+                w.try_count += 1;
 
-        if let Some(w) = entry {
-            w.try_count += 1;
+                if w.try_count > MAX_WEBHOOK_RETRIES {
+                    self.waitlist.remove(idx);
+                }
+            }
         } else {
             self.waitlist.push(Webhook {
                 try_count: 1,
@@ -100,8 +101,8 @@ impl VotesWebhooksManager {
             .await;
 
         match res {
-            Ok(res) => match res.status() {
-                StatusCode::OK => {
+            Ok(res) =>  {
+                if res.status().is_success() {
                     info!(
                         "[{}] Vote webhook of bot {} for provider {} has been sent",
                         LogCode::Request,
@@ -109,24 +110,14 @@ impl VotesWebhooksManager {
                         webhook.data.provider.as_str()
                     );
                     self.waitlist.retain(|w| *w != webhook);
-                }
-                StatusCode::NO_CONTENT => {
-                    info!(
-                        "[{}] Vote webhook of bot {} for provider {} has been sent to a discord webhook",
-                        LogCode::Request,
-                        webhook.data.bot_id.as_str(),
-                        webhook.data.provider.as_str()
-                    );
-                    self.waitlist.retain(|w| *w != webhook);
-                }
-                _ => {
+                } else {
                     info!(
                         "[{}] Vote webhook of bot {} for provider {} did not return a successful status code",
                         LogCode::Request,
                         webhook.data.bot_id.as_str(),
                         webhook.data.provider.as_str()
                     );
-                    self.increment_tries(webhook)
+                    self.retry(webhook)
                 }
             },
             Err(_) => {
@@ -136,7 +127,7 @@ impl VotesWebhooksManager {
                     webhook.data.bot_id.as_str(),
                     webhook.data.provider.as_str()
                 );
-                self.increment_tries(webhook)
+                self.retry(webhook)
             }
         }
 

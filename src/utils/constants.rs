@@ -5,6 +5,8 @@ pub const PUBLIC_ROUTES: [&str; 3] = ["/api/articles", "/api/articles/{id}", "/a
 pub const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 pub const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
+pub const MAX_WEBHOOK_RETRIES: u8 = 15;
+
 pub const TAG_LEN: usize = 16;
 
 pub const DISCORD_EPOCH: i64 = 1420070400000;

@@ -22,7 +22,7 @@ impl Provider {
             Provider::BotListMe => "botlistme",
             Provider::DBList => "dblist",
             Provider::DiscordPlace => "discordplace",
-            Provider::Test => "test",
+            _ => "test",
         }
     }
 
@@ -34,7 +34,6 @@ impl Provider {
             "botlistme" => Provider::BotListMe,
             "dblist" => Provider::DBList,
             "discordplace" => Provider::DiscordPlace,
-            "test" => Provider::Test,
             _ => Provider::Test,
         }
     }

@@ -25,6 +25,7 @@ mongodb = { version = "3.5.1", default-features = false, features = [
   "rustls-tls",
 ] }
 opentelemetry-appender-tracing = { version = "0.31.1", default-features = false }
+opentelemetry-otlp = { version = "0.31.0", default-features = false, features = ["logs", "http-proto", "reqwest-rustls"] }
 opentelemetry_sdk = { version = "0.31.0", default-features = false, features = ["logs"] }
 tokio = { version = "1.49.0", default-features = false, features = [
   "rt-multi-thread",
@@ -36,7 +37,6 @@ tracing-subscriber = { version = "0.3.22", default-features = false, features = 
   "fmt",
   "std",
 ] }
-opentelemetry-otlp = { version = "0.31.0", default-features = false, features = ["logs", "http-proto", "reqwest-rustls"] }
 
 [profile.dev]
 opt-level = 1

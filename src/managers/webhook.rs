@@ -64,7 +64,7 @@ impl VotesWebhooksManager {
 
         let provider_str = webhook.data.provider.as_str();
 
-        let content = if is_discord_webhook(&webhook.webhook_url) {
+        let content = if Self::is_discord_webhook(&webhook.webhook_url) {
             match &webhook.data.provider {
                 Provider::Test => Some(format!(
                     "Test received for <@{}> ({}) from Discord Analytics dashboard.",

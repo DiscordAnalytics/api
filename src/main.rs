@@ -19,42 +19,43 @@ use api::{
 async fn main() -> Result<()> {
     let dev_mode = cfg!(debug_assertions);
 
+    init_env().expect("Failed to initialize environment variables");
+
     Logger::new()
         .with_level(if dev_mode { Level::DEBUG } else { Level::INFO })
-        .init()?;
+        .init()
+        .expect("Failed to initialize logger");
 
-    info!("[{}] {:-^50}", LogCode::Server, " Starting app ");
     info!(
-        "[{}] {}",
-        LogCode::Server,
-        format!(
-            "Running in {} mode",
-            if dev_mode {
-                "development"
-            } else {
-                "production"
-            }
-        )
+        code = %LogCode::Server,
+        "Starting app",
     );
-
-    init_env()?;
-    info!("[{}] {}", LogCode::Server, "Environment initialized");
+    info!(
+        code = %LogCode::Server,
+        "Running in {} mode",
+        if dev_mode {
+            "development"
+        } else {
+            "production"
+        }
+    );
 
     let repos = Repositories::init().await?;
     info!(
-        "[{}] {}",
-        LogCode::Server,
-        "Database and R2 storage initialized"
+        code = %LogCode::Server,
+        "Repositories initialized",
     );
 
     let services = Services::new(repos.clone());
-    info!("[{}] {}", LogCode::Server, "Services initialized");
+    info!(
+        code = %LogCode::Server,
+        "Services initialized",
+    );
 
     let votes_webhooks_manager = web::Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
     info!(
-        "[{}] {}",
-        LogCode::Server,
-        "VotesWebhooksManager initialized"
+        code = %LogCode::Server,
+        "VotesWebhooksManager initialized",
     );
 
     let http_server = HttpServer::new(move || {
@@ -95,21 +96,24 @@ async fn main() -> Result<()> {
     .bind(("0.0.0.0", app_env!().port))?
     .run();
 
-    info!("[{}] {:-^50}", LogCode::Server, " App started ");
     info!(
-        "[{}] {}",
-        LogCode::Server,
-        format!("Listening on port {}", app_env!().port)
+        code = %LogCode::Server,
+        "App started",
     );
     info!(
-        "[{}] {}",
-        LogCode::Server,
-        format!("Access the API at {}", app_env!().api_url)
+        code = %LogCode::Server,
+        "Listening on port {}",
+        app_env!().port,
     );
     info!(
-        "[{}] {}",
-        LogCode::Server,
-        format!("Access the client at {}", app_env!().client_url)
+        code = %LogCode::Server,
+        "Access the API at {}",
+        app_env!().api_url,
+    );
+    info!(
+        code = %LogCode::Server,
+        "Access the client at {}",
+        app_env!().client_url,
     );
 
     try_join!(http_server)?;

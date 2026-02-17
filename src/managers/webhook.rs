@@ -104,16 +104,16 @@ impl VotesWebhooksManager {
             Ok(res) =>  {
                 if res.status().is_success() {
                     info!(
-                        "[{}] Vote webhook of bot {} for provider {} has been sent",
-                        LogCode::Request,
+                        code = %LogCode::Request,
+                        "Vote webhook of bot {} for provider {} has been sent",
                         webhook.data.bot_id.as_str(),
                         webhook.data.provider.as_str()
                     );
                     self.waitlist.retain(|w| *w != webhook);
                 } else {
                     info!(
-                        "[{}] Vote webhook of bot {} for provider {} did not return a successful status code",
-                        LogCode::Request,
+                        code = %LogCode::Request,
+                        "Vote webhook of bot {} for provider {} did not return a successful status code",
                         webhook.data.bot_id.as_str(),
                         webhook.data.provider.as_str()
                     );
@@ -122,8 +122,8 @@ impl VotesWebhooksManager {
             },
             Err(_) => {
                 info!(
-                    "[{}] Vote webhook of bot {} for provider {} has failed to be sent",
-                    LogCode::Request,
+                    code = %LogCode::Request,
+                    "Vote webhook of bot {} for provider {} has failed to be sent",
                     webhook.data.bot_id.as_str(),
                     webhook.data.provider.as_str()
                 );

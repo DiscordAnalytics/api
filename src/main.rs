@@ -7,6 +7,7 @@ use tokio::{sync::Mutex, try_join};
 use tracing::{Level, info};
 
 use api::{
+    api::middleware::AuthMiddleware,
     app_env,
     config::env::init_env,
     managers::webhook::VotesWebhooksManager,
@@ -75,6 +76,7 @@ async fn main() -> Result<()> {
             .app_data(web::Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
             .wrap(cors)
+            .wrap(AuthMiddleware)
             .wrap_fn(move |req, srv| {
                 let fut = srv.call(req);
                 Box::pin(async move {

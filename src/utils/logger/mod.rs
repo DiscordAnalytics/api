@@ -36,33 +36,27 @@ impl Logger {
             .with_ansi(self.dev_mode)
             .with_filter(LevelFilter::from_level(self.level));
 
-        if app_env!().otlp_endpoint.is_some() {
+        if let (Some(endpoint), Some(token), Some(stream)) = (
+            app_env!().otlp_endpoint.clone(),
+            app_env!().otlp_token.clone(),
+            app_env!().otlp_stream.clone(),
+        ) && !self.dev_mode
+        {
             let mut headers = HashMap::new();
             headers.insert(
                 String::from("Authorization"),
-                String::from(format!(
-                    "Basic {}",
-                    app_env!().otlp_token.clone().unwrap_or("".to_string())
-                )),
+                String::from(format!("Basic {}", token)),
             );
-            headers.insert(
-                "stream-name".to_string(),
-                app_env!().otlp_stream.clone().unwrap_or("".to_string()),
-            );
+            headers.insert("stream-name".to_string(), stream);
 
             let exporter = opentelemetry_otlp::LogExporter::builder()
                 .with_http()
                 .with_protocol(Protocol::HttpBinary)
                 .with_headers(headers)
-                .with_endpoint(format!(
-                    "{}/v1/logs",
-                    app_env!().otlp_endpoint.clone().unwrap_or("".to_string())
-                ))
+                .with_endpoint(format!("{}/v1/logs", endpoint))
                 .build()?;
 
-            let resource = Resource::builder()
-                .with_service_name(if self.dev_mode { "api-dev" } else { "api" })
-                .build();
+            let resource = Resource::builder().with_service_name("api").build();
 
             let provider = SdkLoggerProvider::builder()
                 .with_batch_exporter(exporter)

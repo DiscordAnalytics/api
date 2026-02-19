@@ -2,7 +2,10 @@ use std::sync::OnceLock;
 
 use anyhow::Result;
 use regex::Regex;
-use reqwest::{Client, header::{HeaderMap, HeaderValue}};
+use reqwest::{
+    Client,
+    header::{HeaderMap, HeaderValue},
+};
 use tracing::info;
 
 use crate::{
@@ -26,12 +29,12 @@ impl VotesWebhooksManager {
     }
 
     fn is_discord_webhook(url: &str) -> bool {
-        DISCORD_WEBHOOK_REGEX.get_or_init(|| {
-            Regex::new(
-                r"^https:\/\/([a-z]+\.)?discord\.com\/api\/webhooks\/\d+\/[\w-]+$"
-            ).expect("Invalid Discord webhook regex")
-        })
-        .is_match(url)
+        DISCORD_WEBHOOK_REGEX
+            .get_or_init(|| {
+                Regex::new(r"^https:\/\/([a-z]+\.)?discord(app)?\.com\/api(\/v\d+)?\/webhooks\/\d+\/[\w-]+$")
+                    .expect("Invalid Discord webhook regex")
+            })
+            .is_match(url)
     }
 
     pub fn retry(&mut self, webhook: Webhook) {
@@ -86,7 +89,8 @@ impl VotesWebhooksManager {
             None
         };
 
-        let res = self.client
+        let res = self
+            .client
             .post(&webhook.webhook_url)
             .json(&WebhookSendData {
                 bot_id: webhook.data.bot_id.clone(),
@@ -101,7 +105,7 @@ impl VotesWebhooksManager {
             .await;
 
         match res {
-            Ok(res) =>  {
+            Ok(res) => {
                 if res.status().is_success() {
                     info!(
                         code = %LogCode::Request,
@@ -119,7 +123,7 @@ impl VotesWebhooksManager {
                     );
                     self.retry(webhook)
                 }
-            },
+            }
             Err(_) => {
                 info!(
                     code = %LogCode::Request,

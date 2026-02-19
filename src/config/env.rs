@@ -19,7 +19,6 @@ pub struct EnvConfig {
     pub otlp_stream: Option<String>,
 
     // Tokens
-    pub admin_token: String,
     pub discord_token: String,
     pub jwt_secret: String,
 
@@ -48,12 +47,13 @@ pub struct EnvConfig {
 
 pub static ENV: OnceLock<EnvConfig> = OnceLock::new();
 
-fn get_var(key: &str) -> Result<String, String> {
-    env::var(key).map_err(|_| format!("Environment variable {} not set", key))
+fn get_var(key: &str) -> Result<String> {
+    env::var(key)
+        .map_err(|e| Error::new(e).context(format!("Environment variable {} not set", key)))
 }
 
-pub fn init_env() -> Result<&'static EnvConfig, String> {
-    dotenv().map_err(|e| format!("Failed to load .env file: {}", e))?;
+pub fn init_env() -> Result<&'static EnvConfig> {
+    dotenv().ok();
 
     if let Some(config) = ENV.get() {
         return Ok(config);
@@ -74,18 +74,20 @@ pub fn init_env() -> Result<&'static EnvConfig, String> {
 
     let database_url = get_var("DATABASE_URL")?;
 
-    let otlp_endpoint = get_var("OTLP_ENDPOINT").ok();
-    let otlp_token = get_var("OTLP_TOKEN").ok();
-    let otlp_stream = get_var("OTLP_STREAM").ok();
-    // Throw error if not all vars are defined
-    if !((otlp_endpoint.is_some() && otlp_token.is_some() && otlp_stream.is_some())
-        && (otlp_endpoint.is_none() && otlp_token.is_none() && otlp_stream.is_none()))
-    {
-        return Err(
-            "One of these env vars are missing: OTLP_ENDPOINT, OTLP_TOKEN or OTLP_STREAM"
-                .to_string(),
-        );
+  let (otlp_endpoint, otlp_token, otlp_stream) = match (
+    get_var("OTLP_ENDPOINT"),
+    get_var("OTLP_TOKEN"),
+    get_var("OTLP_STREAM"),
+  ) {
+    (Ok(endpoint), Ok(token), Ok(stream)) => (Some(endpoint), Some(token), Some(stream)),
+    (Err(_), Err(_), Err(_)) => (None, None, None),
+    _ => {
+      return Err(
+        "One of these env vars are missing: OTLP_ENDPOINT, OTLP_TOKEN or OTLP_STREAM"
+          .to_string(),
+      );
     }
+  };
 
     let admin_token = get_var("ADMIN_TOKEN")?;
     let discord_token = get_var("DISCORD_TOKEN")?;

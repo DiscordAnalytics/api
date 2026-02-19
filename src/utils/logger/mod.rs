@@ -1,6 +1,6 @@
 mod codes;
 
-use std::{collections::HashMap, io, path::PathBuf};
+use std::{collections::HashMap, io};
 
 use anyhow::Result;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
@@ -13,7 +13,6 @@ use crate::app_env;
 
 pub struct Logger {
     level: Level,
-    log_dir: PathBuf,
     dev_mode: bool,
 }
 pub use codes::LogCode;
@@ -22,12 +21,11 @@ impl Logger {
     pub fn new() -> Self {
         Self {
             level: Level::INFO,
-            log_dir: PathBuf::from("logs/"),
             dev_mode: cfg!(debug_assertions),
         }
     }
 
-    pub fn level(mut self, level: Level) -> Self {
+    pub fn with_level(mut self, level: Level) -> Self {
         self.level = level;
         self
     }

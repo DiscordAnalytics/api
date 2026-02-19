@@ -1,5 +1,5 @@
 [package]
-name = "api"
+name = "discord-analytics-api"
 version = "3.0.0"
 authors = ["ValDesign"]
 edition = "2024"
@@ -8,7 +8,12 @@ readme = "README.md"
 homepage = "https://discordanalytics.xyz"
 repository = "https://github.com/DiscordAnalytics/api"
 
+[lib]
+name = "api"
+path = "src/lib.rs"
+
 [dependencies]
+actix-cors = { version = "0.7.1", default-features = false }
 actix-web = { version = "4.12.1", default-features = false, features = [
   "macros",
 ] }
@@ -18,12 +23,25 @@ chrono = { version = "0.4.43", default-features = false, features = [
   "serde",
 ] }
 dotenvy = { version = "0.15.7", default-features = false }
+futures = { version = "0.3.32", default-features = false, features = ["alloc"] }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+jsonwebtoken = { version = "10.3.0", default-features = false, features = ["rust_crypto"] }
 mongodb = { version = "3.5.1", default-features = false, features = [
   "bson-3",
   "compat-3-3-0",
   "dns-resolver",
   "rustls-tls",
 ] }
+regex = { version = "1.12.3", default-features = false, features = ["std"] }
+reqwest = { version = "0.13.2", default-features = false, features = ["json", "http2", "rustls"] }
+ring = { version = "0.17.14", default-features = false, features = ["alloc"] }
+s3 = { version = "0.1.15", default-features = false, features = [
+  "async",
+  "rustls",
+  "providers",
+] }
+serde = { version = "1.0.228", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0.149", default-features = false }
 opentelemetry-appender-tracing = { version = "0.31.1", default-features = false }
 opentelemetry-otlp = { version = "0.31.0", default-features = false, features = ["logs", "http-proto", "reqwest-rustls"] }
 opentelemetry_sdk = { version = "0.31.0", default-features = false, features = ["logs"] }
@@ -32,6 +50,7 @@ tokio = { version = "1.49.0", default-features = false, features = [
   "macros",
 ] }
 tracing = { version = "0.1.44", default-features = false, features = ["std"] }
+tracing-actix-web = { version = "0.7.21", default-features = false, features = ["emit_event_on_error"] }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "ansi",
   "fmt",

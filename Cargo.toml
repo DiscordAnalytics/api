@@ -47,6 +47,7 @@ tokio = { version = "1.49.0", default-features = false, features = [
   "macros",
 ] }
 tracing = { version = "0.1.44", default-features = false, features = ["std"] }
+tracing-actix-web = { version = "0.7.21", default-features = false, features = ["emit_event_on_error"] }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "ansi",
   "fmt",

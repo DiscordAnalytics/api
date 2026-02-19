@@ -15,6 +15,7 @@ use api::{
     services::Services,
     utils::logger::{LogCode, Logger},
 };
+use tracing_actix_web::TracingLogger;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -75,6 +76,7 @@ async fn main() -> Result<()> {
             .app_data(web::Data::new(repos.clone()))
             .app_data(web::Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
+            .wrap(TracingLogger::default())
             .wrap(cors)
             .wrap(AuthMiddleware)
             .wrap_fn(move |req, srv| {

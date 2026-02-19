@@ -33,11 +33,6 @@ pub struct EnvConfig {
     pub smtp_user: String,
     pub smtp_password: String,
 
-    // Octokit
-    pub github_client_id: String,
-    pub github_app_private_key: String,
-    pub github_install_id: String,
-
     // R2
     pub r2_bucket_name: String,
     pub r2_account_id: String,
@@ -100,10 +95,6 @@ pub fn init_env() -> Result<&'static EnvConfig> {
     let smtp_user = get_var("SMTP_USER")?;
     let smtp_password = get_var("SMTP_PASSWORD")?;
 
-    let github_client_id = get_var("GITHUB_CLIENT_ID")?;
-    let github_app_private_key = get_var("GITHUB_APP_PRIVATE_KEY")?;
-    let github_install_id = get_var("GITHUB_INSTALL_ID")?;
-
     let r2_bucket_name = get_var("R2_BUCKET_NAME")?;
     let r2_account_id = get_var("R2_ACCOUNT_ID")?;
     let r2_public_bucket_endpoint = get_var("R2_PUBLIC_BUCKET_ENDPOINT")?;
@@ -127,9 +118,6 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         smtp_mail,
         smtp_user,
         smtp_password,
-        github_client_id,
-        github_app_private_key,
-        github_install_id,
         r2_bucket_name,
         r2_account_id,
         r2_public_bucket_endpoint,

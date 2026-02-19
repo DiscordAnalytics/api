@@ -4,7 +4,7 @@ use std::{collections::HashMap, io};
 
 use anyhow::Result;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::{Protocol, WithExportConfig, WithHttpConfig};
+use opentelemetry_otlp::{Protocol, WithExportConfig, WithHttpConfig, LogExporter};
 use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use tracing::{Level, level_filters::LevelFilter};
 use tracing_subscriber::{fmt, layer::SubscriberExt, prelude::*, registry};
@@ -15,6 +15,7 @@ pub struct Logger {
     level: Level,
     dev_mode: bool,
 }
+
 pub use codes::LogCode;
 
 impl Logger {
@@ -49,7 +50,7 @@ impl Logger {
             );
             headers.insert("stream-name".to_string(), stream);
 
-            let exporter = opentelemetry_otlp::LogExporter::builder()
+            let exporter = LogExporter::builder()
                 .with_http()
                 .with_protocol(Protocol::HttpBinary)
                 .with_headers(headers)

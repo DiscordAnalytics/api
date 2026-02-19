@@ -1,6 +1,6 @@
 use std::{env, sync::OnceLock};
 
-use anyhow::{Error, Result};
+use anyhow::{Error, Result, anyhow};
 use dotenvy::dotenv;
 
 #[derive(Debug)]
@@ -13,6 +13,11 @@ pub struct EnvConfig {
 
     // Database
     pub database_url: String,
+
+    // OpenTelemetry
+    pub otlp_endpoint: Option<String>,
+    pub otlp_token: Option<String>,
+    pub otlp_stream: Option<String>,
 
     // Tokens
     pub discord_token: String,
@@ -70,6 +75,20 @@ pub fn init_env() -> Result<&'static EnvConfig> {
 
     let database_url = get_var("DATABASE_URL")?;
 
+    let (otlp_endpoint, otlp_token, otlp_stream) = match (
+        get_var("OTLP_ENDPOINT"),
+        get_var("OTLP_TOKEN"),
+        get_var("OTLP_STREAM"),
+    ) {
+        (Ok(endpoint), Ok(token), Ok(stream)) => (Some(endpoint), Some(token), Some(stream)),
+        (Err(_), Err(_), Err(_)) => (None, None, None),
+        _ => {
+            return Err(anyhow!(
+                "One of these env vars are missing: OTLP_ENDPOINT, OTLP_TOKEN or OTLP_STREAM"
+            ));
+        }
+    };
+
     let discord_token = get_var("DISCORD_TOKEN")?;
     let jwt_secret = get_var("JWT_SECRET")?;
 
@@ -97,6 +116,9 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         client_url,
         admins,
         database_url,
+        otlp_endpoint,
+        otlp_token,
+        otlp_stream,
         discord_token,
         jwt_secret,
         client_secret,

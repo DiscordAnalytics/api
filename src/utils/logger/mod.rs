@@ -1,10 +1,15 @@
 mod codes;
 
-use std::io;
+use std::{collections::HashMap, io};
 
 use anyhow::Result;
+use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+use opentelemetry_otlp::{Protocol, WithExportConfig, WithHttpConfig, LogExporter};
+use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use tracing::{Level, level_filters::LevelFilter};
 use tracing_subscriber::{fmt, layer::SubscriberExt, prelude::*, registry};
+
+use crate::app_env;
 
 pub struct Logger {
     level: Level,
@@ -32,7 +37,38 @@ impl Logger {
             .with_ansi(self.dev_mode)
             .with_filter(LevelFilter::from_level(self.level));
 
-        registry().with(stdout_layer).init();
+        if let (Some(endpoint), Some(token), Some(stream)) = (
+            app_env!().otlp_endpoint.clone(),
+            app_env!().otlp_token.clone(),
+            app_env!().otlp_stream.clone(),
+        ) && !self.dev_mode
+        {
+            let mut headers = HashMap::new();
+            headers.insert(
+                String::from("Authorization"),
+                String::from(format!("Basic {}", token)),
+            );
+            headers.insert("stream-name".to_string(), stream);
+
+            let exporter = LogExporter::builder()
+                .with_http()
+                .with_protocol(Protocol::HttpBinary)
+                .with_headers(headers)
+                .with_endpoint(format!("{}/v1/logs", endpoint))
+                .build()?;
+
+            let resource = Resource::builder().with_service_name("api").build();
+
+            let provider = SdkLoggerProvider::builder()
+                .with_batch_exporter(exporter)
+                .with_resource(resource)
+                .build();
+            let otlp_layer = OpenTelemetryTracingBridge::new(&provider);
+
+            registry().with(stdout_layer).with(otlp_layer).init();
+        } else {
+            registry().with(stdout_layer).init()
+        }
 
         Ok(())
     }

@@ -1,16 +1,18 @@
-use std::sync::Arc;
+use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, dev::Service, http, web};
 use anyhow::Result;
+use apistos::{app::OpenApiWrapper, web::scope};
 use tokio::{sync::Mutex, try_join};
 use tracing::{Level, info};
 
 use api::{
-    api::middleware::AuthMiddleware,
+    api::{middleware::AuthMiddleware, routes},
     app_env,
     config::env::init_env,
     managers::webhook::VotesWebhooksManager,
+    openapi::build_spec,
     repository::Repositories,
     services::Services,
     utils::logger::{LogCode, Logger},
@@ -72,7 +74,10 @@ async fn main() -> Result<()> {
             .supports_credentials()
             .max_age(3600);
 
+        let spec = build_spec();
+
         App::new()
+            .document(spec)
             .app_data(web::Data::new(repos.clone()))
             .app_data(web::Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
@@ -95,9 +100,10 @@ async fn main() -> Result<()> {
                     Ok(res)
                 })
             })
-            .route("/", actix_web::web::get().to(|| async { "Hello, world!" }))
+            .service(scope("/api").service(routes::routes()))
+            .build("/openapi.json")
     })
-    .bind(("0.0.0.0", app_env!().port))?
+    .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?
     .run();
 
     info!(

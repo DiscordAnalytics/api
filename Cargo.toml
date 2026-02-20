@@ -14,10 +14,11 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-cors = { version = "0.7.1", default-features = false }
-actix-web = { version = "4.12.1", default-features = false, features = [
+actix-web = { version = "4.13.0", default-features = false, features = [
   "macros",
 ] }
-anyhow = { version = "1.0.101", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.102", default-features = false, features = ["std"] }
+apistos = { version = "0.6.0", default-features = false, features = ["query"] }
 chrono = { version = "0.4.43", default-features = false, features = [
   "clock",
   "serde",
@@ -25,32 +26,50 @@ chrono = { version = "0.4.43", default-features = false, features = [
 dotenvy = { version = "0.15.7", default-features = false }
 futures = { version = "0.3.32", default-features = false, features = ["alloc"] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
-jsonwebtoken = { version = "10.3.0", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "10.3.0", default-features = false, features = [
+  "rust_crypto",
+] }
 mongodb = { version = "3.5.1", default-features = false, features = [
   "bson-3",
   "compat-3-3-0",
   "dns-resolver",
   "rustls-tls",
 ] }
+opentelemetry-appender-tracing = { version = "0.31.1", default-features = false }
+opentelemetry-otlp = { version = "0.31.0", default-features = false, features = [
+  "logs",
+  "http-proto",
+  "reqwest-rustls",
+] }
+opentelemetry_sdk = { version = "0.31.0", default-features = false, features = [
+  "logs",
+] }
 regex = { version = "1.12.3", default-features = false, features = ["std"] }
-reqwest = { version = "0.13.2", default-features = false, features = ["json", "http2", "rustls"] }
+reqwest = { version = "0.13.2", default-features = false, features = [
+  "json",
+  "http2",
+  "rustls",
+] }
 ring = { version = "0.17.14", default-features = false, features = ["alloc"] }
 s3 = { version = "0.1.15", default-features = false, features = [
   "async",
   "rustls",
   "providers",
 ] }
+schemars = { package = "apistos-schemars", version = "0.8.22", default-features = false, features = [
+  "derive",
+  "schemars_derive",
+] }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.149", default-features = false }
-opentelemetry-appender-tracing = { version = "0.31.1", default-features = false }
-opentelemetry-otlp = { version = "0.31.0", default-features = false, features = ["logs", "http-proto", "reqwest-rustls"] }
-opentelemetry_sdk = { version = "0.31.0", default-features = false, features = ["logs"] }
 tokio = { version = "1.49.0", default-features = false, features = [
   "rt-multi-thread",
   "macros",
 ] }
 tracing = { version = "0.1.44", default-features = false, features = ["std"] }
-tracing-actix-web = { version = "0.7.21", default-features = false, features = ["emit_event_on_error"] }
+tracing-actix-web = { version = "0.7.21", default-features = false, features = [
+  "emit_event_on_error",
+] }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "ansi",
   "fmt",

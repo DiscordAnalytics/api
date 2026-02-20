@@ -1,7 +1,7 @@
 mod health;
 
-use apistos::web::{Scope, scope};
+use apistos::web::{ServiceConfig, scope};
 
-pub fn routes() -> Scope {
-    scope("").service(health::routes())
+pub fn configure(cfg: &mut ServiceConfig) {
+    cfg.service(scope("").configure(health::configure));
 }

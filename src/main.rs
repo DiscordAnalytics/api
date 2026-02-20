@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
                     Ok(res)
                 })
             })
-            .service(scope("/api").service(routes::routes()))
+            .service(scope("/api").configure(routes::configure))
             .build("/openapi.json")
     })
     .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?

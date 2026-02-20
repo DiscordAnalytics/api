@@ -1,7 +1,7 @@
 use actix_web::web::Json;
 use apistos::{
     ApiComponent, api_operation,
-    web::{Scope, get, resource, scope},
+    web::{ServiceConfig, get, resource, scope},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -35,6 +35,6 @@ async fn get_health() -> ApiResult<Json<HealthResponse>> {
     }))
 }
 
-pub fn routes() -> Scope {
-    scope("/health").service(resource("").route(get().to(get_health)))
+pub fn configure(cfg: &mut ServiceConfig) {
+    cfg.service(scope("/health").service(resource("").route(get().to(get_health))));
 }

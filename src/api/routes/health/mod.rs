@@ -36,5 +36,5 @@ async fn get_health() -> ApiResult<Json<HealthResponse>> {
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/health").service(resource("").route(get().to(get_health))));
+    cfg.route("/health", get().to(get_health));
 }

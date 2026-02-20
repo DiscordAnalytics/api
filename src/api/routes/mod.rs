@@ -1,7 +1,7 @@
 mod health;
 
-use apistos::web::{ServiceConfig, scope};
+use apistos::web::ServiceConfig;
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.service(scope("").configure(health::configure));
+    cfg.configure(health::configure);
 }

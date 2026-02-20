@@ -1,7 +1,7 @@
 use actix_web::web::Json;
 use apistos::{
     ApiComponent, api_operation,
-    web::{ServiceConfig, get, resource, scope},
+    web::{ServiceConfig, get},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

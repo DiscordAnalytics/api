@@ -1,8 +1,10 @@
+mod bot;
+
 use actix_web::web::{self, Json};
 use anyhow::Result;
 use apistos::{
     api_operation,
-    web::{ServiceConfig, get},
+    web::{ServiceConfig, get, resource, scope},
 };
 
 use crate::{
@@ -53,5 +55,9 @@ async fn get_all_bots(
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.route("/bots", get().to(get_all_bots));
+    cfg.service(
+        scope("/bots")
+            .service(resource("").route(get().to(get_all_bots)))
+            .configure(bot::configure),
+    );
 }

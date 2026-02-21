@@ -3,7 +3,7 @@ use std::fmt;
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use anyhow::Error as AnyError;
 use apistos::ApiErrorComponent;
-use mongodb::error::Error as MongoError;
+use mongodb::{bson::error::Error as BsonError, error::Error as MongoError};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ApiErrorComponent)]
@@ -104,6 +104,12 @@ impl ResponseError for ApiError {
 
 impl From<MongoError> for ApiError {
     fn from(err: MongoError) -> Self {
+        ApiError::DatabaseError(err.to_string())
+    }
+}
+
+impl From<BsonError> for ApiError {
+    fn from(err: BsonError) -> Self {
         ApiError::DatabaseError(err.to_string())
     }
 }

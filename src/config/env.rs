@@ -1,4 +1,4 @@
-use std::{env, sync::OnceLock};
+use std::{env, net::Ipv4Addr, sync::OnceLock};
 
 use anyhow::{Error, Result, anyhow};
 use dotenvy::dotenv;
@@ -59,7 +59,8 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(3001);
-    let api_url = env::var("API_URL").unwrap_or_else(|_| format!("http://localhost:{}", port));
+    let api_url =
+        env::var("API_URL").unwrap_or_else(|_| format!("{}:{}", Ipv4Addr::UNSPECIFIED, port));
     let client_url = get_var("CLIENT_URL")?;
     let admins = env::var("ADMINS")
         .unwrap_or_default()

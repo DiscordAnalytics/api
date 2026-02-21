@@ -1,11 +1,12 @@
 use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, dev::Service, http, web};
+use actix_web::{App, HttpServer, http, web};
 use anyhow::Result;
 use apistos::{app::OpenApiWrapper, web::scope};
 use tokio::{sync::Mutex, try_join};
 use tracing::{Level, info};
+use tracing_actix_web::TracingLogger;
 
 use api::{
     api::{middleware::AuthMiddleware, routes},
@@ -17,7 +18,6 @@ use api::{
     services::Services,
     utils::logger::{LogCode, Logger},
 };
-use tracing_actix_web::TracingLogger;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -84,22 +84,6 @@ async fn main() -> Result<()> {
             .wrap(TracingLogger::default())
             .wrap(cors)
             .wrap(AuthMiddleware)
-            .wrap_fn(move |req, srv| {
-                let fut = srv.call(req);
-                Box::pin(async move {
-                    let res = fut.await?;
-
-                    info!(
-                        "[{}] {} {} {}",
-                        LogCode::Request,
-                        res.request().method(),
-                        res.request().uri(),
-                        res.status()
-                    );
-
-                    Ok(res)
-                })
-            })
             .service(scope("/api").configure(routes::configure))
             .build("/openapi.json")
     })

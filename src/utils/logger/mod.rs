@@ -4,10 +4,16 @@ use std::{collections::HashMap, io};
 
 use anyhow::Result;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::{Protocol, WithExportConfig, WithHttpConfig, LogExporter};
+use opentelemetry_otlp::{LogExporter, Protocol, WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
-use tracing::{Level, level_filters::LevelFilter};
-use tracing_subscriber::{fmt, layer::SubscriberExt, prelude::*, registry};
+use tracing::Level;
+use tracing_subscriber::{
+    filter::EnvFilter,
+    fmt::{self, format::FmtSpan},
+    layer::SubscriberExt,
+    prelude::*,
+    registry,
+};
 
 use crate::app_env;
 
@@ -32,10 +38,13 @@ impl Logger {
     }
 
     pub fn init(self) -> Result<()> {
+        let filter = EnvFilter::from_default_env().add_directive(self.level.into());
+
         let stdout_layer = fmt::layer()
             .with_writer(io::stdout)
             .with_ansi(self.dev_mode)
-            .with_filter(LevelFilter::from_level(self.level));
+            .with_span_events(FmtSpan::CLOSE)
+            .with_filter(filter);
 
         if let (Some(endpoint), Some(token), Some(stream)) = (
             app_env!().otlp_endpoint.clone(),

@@ -72,6 +72,7 @@ tracing-actix-web = { version = "0.7.21", default-features = false, features = [
 ] }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "ansi",
+  "env-filter",
   "fmt",
   "std",
 ] }

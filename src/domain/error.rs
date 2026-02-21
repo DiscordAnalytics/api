@@ -7,7 +7,27 @@ use mongodb::error::Error as MongoError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ApiErrorComponent)]
-#[openapi_error(status(code = 404, description = "Resource not found"))]
+#[openapi_error(
+    status(
+        code = 400,
+        description = "Bad request due to invalid input or validation errors"
+    ),
+    status(
+        code = 401,
+        description = "Unauthorized access due to missing or invalid authentication"
+    ),
+    status(
+        code = 403,
+        description = "Forbidden access due to insufficient permissions"
+    ),
+    status(code = 404, description = "Resource not found"),
+    status(code = 409, description = "Conflict due to resource already existing"),
+    status(code = 429, description = "Too many requests due to rate limiting"),
+    status(
+        code = 500,
+        description = "Internal server error due to unexpected conditions"
+    )
+)]
 pub enum ApiError {
     // Database errors
     DatabaseError(String),

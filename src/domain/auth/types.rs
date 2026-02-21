@@ -1,6 +1,9 @@
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use apistos::ApiComponent;
+use schemars::JsonSchema;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, JsonSchema, ApiComponent)]
 pub enum AuthType {
     Admin,
     Bot,
@@ -55,7 +58,7 @@ impl Authorization {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, JsonSchema, ApiComponent)]
 pub struct AuthContext {
     pub auth_type: AuthType,
     pub user_id: Option<String>,

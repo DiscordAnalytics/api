@@ -1,3 +1,5 @@
+pub mod schemas;
+
 use apistos::{
     info::{Contact, Info},
     paths::ExternalDocumentation,
@@ -29,7 +31,7 @@ pub fn build_spec() -> Spec {
         },
         servers: vec![Server {
             url: if cfg!(debug_assertions) {
-                app_env!().api_url.clone()
+                app_env!().api_url.to_owned()
             } else {
                 "https://discordanalytics.xyz".to_string()
             },

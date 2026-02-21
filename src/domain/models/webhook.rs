@@ -49,13 +49,13 @@ pub struct WebhookData {
 }
 
 #[derive(Clone, Serialize)]
-pub struct WebhookSendData {
-    pub bot_id: String,
-    pub voter_id: String,
-    pub provider: String,
+pub struct WebhookSendData<'a> {
+    pub bot_id: &'a str,
+    pub voter_id: &'a str,
+    pub provider: &'a str,
     pub date: DateTime<Utc>,
-    pub raw_data: Option<Value>,
-    pub content: Option<String>,
+    pub raw_data: Option<&'a Value>,
+    pub content: Option<&'a str>,
 }
 
 #[derive(Clone)]

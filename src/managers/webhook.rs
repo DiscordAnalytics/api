@@ -60,7 +60,7 @@ impl VotesWebhooksManager {
         }
     }
 
-    pub async fn send_webhook(&mut self, webhook: Webhook) -> Result<()> {
+    pub async fn send_webhook(&mut self, webhook: &Webhook) -> Result<()> {
         let mut headers = HeaderMap::new();
         headers.insert(
             "Authorization",
@@ -89,17 +89,19 @@ impl VotesWebhooksManager {
             None
         };
 
+        let data = WebhookSendData {
+            bot_id: &webhook.data.bot_id,
+            voter_id: &webhook.data.voter_id,
+            provider: provider_str,
+            date: webhook.data.date,
+            raw_data: webhook.data.raw_data.as_ref(),
+            content: content.as_deref(),
+        };
+
         let res = self
             .client
             .post(&webhook.webhook_url)
-            .json(&WebhookSendData {
-                bot_id: webhook.data.bot_id.clone(),
-                voter_id: webhook.data.voter_id.clone(),
-                provider: provider_str.to_string(),
-                date: webhook.data.date,
-                raw_data: webhook.data.raw_data.clone(),
-                content,
-            })
+            .json(&data)
             .headers(headers)
             .send()
             .await;
@@ -113,25 +115,17 @@ impl VotesWebhooksManager {
                         webhook.data.bot_id.as_str(),
                         webhook.data.provider.as_str()
                     );
-                    self.waitlist.retain(|w| *w != webhook);
-                } else {
-                    info!(
-                        code = %LogCode::Request,
-                        "Vote webhook of bot {} for provider {} did not return a successful status code",
-                        webhook.data.bot_id.as_str(),
-                        webhook.data.provider.as_str()
-                    );
-                    self.retry(webhook)
+                    self.waitlist.retain(|w| *w != *webhook);
                 }
             }
-            Err(_) => {
+            _ => {
                 info!(
                     code = %LogCode::Request,
                     "Vote webhook of bot {} for provider {} has failed to be sent",
                     webhook.data.bot_id.as_str(),
                     webhook.data.provider.as_str()
                 );
-                self.retry(webhook)
+                self.retry(webhook.clone());
             }
         }
 

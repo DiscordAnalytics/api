@@ -6,7 +6,7 @@ use actix_web::{
     http::header::{self, HeaderValue},
 };
 use futures::future::LocalBoxFuture;
-use tracing::warn;
+use tracing::{info, warn};
 
 use crate::{
     domain::auth::{AuthContext, AuthType, Authorization, decode_jwt},
@@ -58,12 +58,22 @@ where
                 if matches!(authorization.auth_type, AuthType::Admin | AuthType::User) {
                     match decode_jwt(&authorization.token) {
                         Ok(claims) => {
-                            let auth_context = AuthContext::new(authorization.auth_type)
-                                .with_user_id(claims.sub.clone());
+                            let sub = claims.sub;
+
+                            info!(
+                              code = %LogCode::Auth,
+                              "Decoded JWT for user_id: {} with auth type: {:?}",
+                              sub,
+                              authorization.auth_type
+                            );
+
+                            let new_auth = format!("{} {}", authorization.auth_type, sub);
+
+                            let auth_context =
+                                AuthContext::new(authorization.auth_type).with_user_id(sub);
 
                             req.extensions_mut().insert(auth_context);
 
-                            let new_auth = format!("{} {}", authorization.auth_type, claims.sub);
                             if let Ok(header_value) = HeaderValue::from_str(&new_auth) {
                                 req.headers_mut()
                                     .insert(header::AUTHORIZATION, header_value);

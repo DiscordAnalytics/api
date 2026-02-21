@@ -46,10 +46,12 @@ impl Logger {
             .with_span_events(FmtSpan::CLOSE)
             .with_filter(filter);
 
+        let env = app_env!();
+
         if let (Some(endpoint), Some(token), Some(stream)) = (
-            app_env!().otlp_endpoint.clone(),
-            app_env!().otlp_token.clone(),
-            app_env!().otlp_stream.clone(),
+            env.otlp_endpoint.as_ref(),
+            env.otlp_token.as_ref(),
+            env.otlp_stream.as_ref(),
         ) && !self.dev_mode
         {
             let mut headers = HashMap::new();
@@ -57,7 +59,7 @@ impl Logger {
                 String::from("Authorization"),
                 String::from(format!("Basic {}", token)),
             );
-            headers.insert("stream-name".to_string(), stream);
+            headers.insert("stream-name".to_string(), stream.clone());
 
             let exporter = LogExporter::builder()
                 .with_http()

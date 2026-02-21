@@ -22,7 +22,30 @@ impl FromRequest for Authenticated {
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         match req.extensions().get::<AuthContext>() {
-            Some(context) => ready(Ok(Authenticated(context.clone()))),
+            Some(context) => {
+                let ctx = context.clone();
+
+                if ctx.is_admin() {
+                    let services = match req.app_data::<web::Data<Services>>() {
+                        Some(services) => services,
+                        None => {
+                            return ready(Err(ErrorInternalServerError(ApiError::InternalError(
+                                "Services not available".to_string(),
+                            ))));
+                        }
+                    };
+
+                    if let Some(user_id) = ctx.user_id.as_deref() {
+                        if !services.auth.is_admin(user_id) {
+                            return ready(Err(ErrorForbidden(ApiError::Forbidden)));
+                        }
+                    } else {
+                        return ready(Err(ErrorUnauthorized(ApiError::Unauthorized)));
+                    }
+                }
+
+                ready(Ok(Authenticated(ctx)))
+            }
             None => ready(Err(ErrorUnauthorized(ApiError::Unauthorized))),
         }
     }

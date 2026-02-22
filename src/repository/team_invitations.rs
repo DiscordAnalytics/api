@@ -1,12 +1,27 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{doc, serialize_to_document},
+    bson::{Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::TeamInvitation, utils::constants::TEAM_INVITATIONS_COLLECTION};
+
+#[derive(Clone, Default)]
+pub struct TeamInvitationUpdate {
+    updates: Document,
+}
+
+impl TeamInvitationUpdate {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Document {
+        self.updates
+    }
+}
 
 #[derive(Clone)]
 pub struct TeamInvitationsRepository {
@@ -45,18 +60,38 @@ impl TeamInvitationsRepository {
         self.collection.insert_one(team_invitation).await
     }
 
-    pub async fn update(&self, team_invitation: &TeamInvitation) -> Result<UpdateResult> {
+    pub async fn update(
+        &self,
+        invitation_id: &str,
+        updated_team_invitation: TeamInvitationUpdate,
+    ) -> Result<UpdateResult> {
+        let updates = updated_team_invitation.build();
+
+        if updates.is_empty() {
+            return Ok(UpdateResult::default());
+        }
+
         self.collection
             .update_one(
-                doc! { "invitation_id": &team_invitation.invitation_id },
-                doc! { "$set": serialize_to_document(team_invitation)? },
+                doc! { "invitation_id": invitation_id },
+                doc! { "$set": updates },
             )
             .await
     }
 
-    pub async fn delete(&self, team_invitation_id: &str) -> Result<DeleteResult> {
+    pub async fn delete_by_id(&self, team_invitation_id: &str) -> Result<DeleteResult> {
         self.collection
             .delete_one(doc! { "invitation_id": team_invitation_id })
+            .await
+    }
+
+    pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
+        self.collection.delete_many(doc! { "bot_id": bot_id }).await
+    }
+
+    pub async fn delete_by_user_id(&self, user_id: &str) -> Result<DeleteResult> {
+        self.collection
+            .delete_many(doc! { "user_id": user_id })
             .await
     }
 }

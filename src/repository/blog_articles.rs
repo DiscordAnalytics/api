@@ -1,12 +1,27 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{doc, serialize_to_document},
+    bson::{Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
+
+#[derive(Clone, Default)]
+pub struct BlogArticleUpdate {
+    updates: Document,
+}
+
+impl BlogArticleUpdate {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Document {
+        self.updates
+    }
+}
 
 #[derive(Clone)]
 pub struct BlogArticlesRepository {
@@ -38,13 +53,16 @@ impl BlogArticlesRepository {
     pub async fn update(
         &self,
         article_id: &str,
-        updated_article: &BlogArticle,
+        updated_article: BlogArticleUpdate,
     ) -> Result<UpdateResult> {
+        let updates = updated_article.build();
+
+        if updates.is_empty() {
+            return Ok(UpdateResult::default());
+        }
+
         self.collection
-            .update_one(
-                doc! { "articleId": article_id },
-                doc! { "$set": serialize_to_document(updated_article)? },
-            )
+            .update_one(doc! { "articleId": article_id }, doc! { "$set": updates })
             .await
     }
 

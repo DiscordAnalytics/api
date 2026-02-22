@@ -1,20 +1,10 @@
 use actix_web::web::Json;
 use apistos::{
-    ApiComponent, api_operation,
+    api_operation,
     web::{ServiceConfig, get},
 };
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-use crate::domain::error::ApiResult;
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-struct HealthResponse {
-    status: String,
-    service: String,
-    version: String,
-    environment: String,
-}
+use crate::{domain::error::ApiResult, openapi::schemas::HealthResponse};
 
 #[api_operation(
     summary = "Get API health status",

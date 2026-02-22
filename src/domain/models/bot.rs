@@ -29,84 +29,29 @@ pub struct Bot {
 }
 
 impl Bot {
-    pub fn with_advanced_stats(mut self, advanced_stats: bool) -> Self {
-        self.advanced_stats = advanced_stats;
-        self
+    pub fn new(bot_id: &str, owner_id: &str, token: String) -> Self {
+        Bot {
+            advanced_stats: false,
+            avatar: None,
+            bot_id: bot_id.to_string(),
+            framework: None,
+            goals_limit: None,
+            language: None,
+            last_push: None,
+            owner_id: owner_id.to_string(),
+            suspended: false,
+            team: Vec::new(),
+            token,
+            username: String::new(),
+            version: None,
+            votes_webhook_url: None,
+            warn_level: None,
+            watched_since: None,
+        }
     }
 
-    pub fn with_avatar(mut self, avatar: Option<String>) -> Self {
-        self.avatar = avatar;
-        self
-    }
-
-    pub fn with_bot_id(mut self, bot_id: String) -> Self {
-        self.bot_id = bot_id;
-        self
-    }
-
-    pub fn with_framework(mut self, framework: Framework) -> Self {
-        self.framework = Some(framework.into());
-        self
-    }
-
-    pub fn with_goals_limit(mut self, goals_limit: Option<i32>) -> Self {
-        self.goals_limit = goals_limit;
-        self
-    }
-
-    pub fn with_language(mut self, language: Language) -> Self {
-        self.language = Some(language.into());
-        self
-    }
-
-    pub fn with_last_push(mut self, last_push: Option<DateTime>) -> Self {
-        self.last_push = last_push;
-        self
-    }
-
-    pub fn with_owner_id(mut self, owner_id: String) -> Self {
-        self.owner_id = owner_id;
-        self
-    }
-
-    pub fn with_suspended(mut self, suspended: bool) -> Self {
-        self.suspended = suspended;
-        self
-    }
-
-    pub fn with_team(mut self, team: Vec<String>) -> Self {
-        self.team = team;
-        self
-    }
-
-    pub fn with_token(mut self, token: String) -> Self {
-        self.token = token;
-        self
-    }
-
-    pub fn with_username(mut self, username: String) -> Self {
-        self.username = username;
-        self
-    }
-
-    pub fn with_version(mut self, version: Option<String>) -> Self {
-        self.version = version;
-        self
-    }
-
-    pub fn with_votes_webhook_url(mut self, votes_webhook_url: Option<String>) -> Self {
-        self.votes_webhook_url = votes_webhook_url;
-        self
-    }
-
-    pub fn with_warn_level(mut self, warn_level: Option<i32>) -> Self {
-        self.warn_level = warn_level;
-        self
-    }
-
-    pub fn with_watched_since(mut self, watched_since: Option<DateTime>) -> Self {
-        self.watched_since = watched_since;
-        self
+    pub fn token(self) -> String {
+        self.token
     }
 
     pub fn is_owner(&self, user_id: &str) -> bool {
@@ -119,18 +64,6 @@ impl Bot {
 
     pub fn has_access(&self, user_id: &str) -> bool {
         self.is_owner(user_id) || self.is_team_member(user_id)
-    }
-
-    pub fn add_team_member(mut self, user_id: String) -> Self {
-        if !self.team.contains(&user_id) {
-            self.team.push(user_id);
-        }
-        self
-    }
-
-    pub fn remove_team_member(mut self, user_id: &str) -> Self {
-        self.team.retain(|id| id != user_id);
-        self
     }
 }
 

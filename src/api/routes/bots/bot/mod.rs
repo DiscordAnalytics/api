@@ -1,15 +1,19 @@
 use actix_web::web::{self, Json};
 use apistos::{
     api_operation,
-    web::{ServiceConfig, get, resource, scope},
+    web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,
-    domain::error::{ApiError, ApiResult},
-    openapi::schemas::BotResponse,
-    repository::Repositories,
+    domain::{
+        auth::generate_bot_token,
+        error::{ApiError, ApiResult},
+        models::Bot,
+    },
+    openapi::schemas::{BotCreationBody, BotDeletionResponse, BotResponse, BotUpdateBody},
+    repository::{BotUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
 };
@@ -29,62 +33,312 @@ async fn get_bot(
 
     info!(
       code = %LogCode::Request,
-      "Fetching details for bot with ID: {}",
-      bot_id,
+      bot_id = %bot_id,
+      "Fetching details for bot",
     );
 
-    if auth.0.is_user()
-        && !services
-            .auth
-            .user_has_bot_access(&auth.0.user_id.clone().unwrap_or_default(), &bot_id)
-            .await?
-    {
-        return Err(ApiError::Forbidden);
-    }
+    let ctx = &auth.0;
 
-    if auth.0.is_bot() && auth.0.bot_id.as_deref() != Some(&bot_id) {
-        return Err(ApiError::Forbidden);
-    }
-
-    let bot = repos.bots.find_by_id(&bot_id).await?;
-    if bot.is_none() {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
           code = %LogCode::Request,
-          "Bot with ID {} not found",
-          bot_id,
+          bot_id = %bot_id,
+          "Bot not found",
         );
-        return Err(ApiError::NotFound(format!(
-            "Bot with ID {} not found",
-            bot_id
-        )));
-    }
-    let bot = bot.unwrap();
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
 
-    Ok(Json(BotResponse {
-        advanced_stats: bot.advanced_stats.into(),
-        avatar: bot.avatar,
-        banned: bot.suspended.into(),
-        bot_id: bot.bot_id,
-        framework: bot.framework,
-        goals_limit: bot.goals_limit,
-        language: bot.language,
-        last_push: bot
-            .last_push
-            .map(|dt| dt.try_to_rfc3339_string())
-            .transpose()?,
-        owner_id: bot.owner_id.into(),
-        team: bot.team.into(),
-        token: bot.token.into(),
-        username: bot.username.into(),
-        version: bot.version,
-        votes_webhook_url: bot.votes_webhook_url,
-        watched_since: bot
-            .watched_since
-            .map(|dt| dt.try_to_rfc3339_string())
-            .transpose()?,
+    if ctx.is_admin() {
+        info!(
+          code = %LogCode::AdminAction,
+          bot_id = %bot_id,
+          "Admin access granted for bot details",
+        );
+    } else if auth.0.is_bot() && auth.0.bot_id.as_deref() != Some(&bot_id) {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          "Bot attempting to access details of another bot",
+        );
+        return Err(ApiError::Forbidden);
+    } else if auth.0.is_user() {
+        let user_id = auth.0.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+            warn!(
+              code = %LogCode::Forbidden,
+              bot_id = %bot_id,
+              user_id = %user_id,
+              "User does not have access to bot details",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          "Access denied for bot details",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Bot details fetched successfully",
+    );
+
+    Ok(Json(BotResponse::try_from(bot)?))
+}
+
+#[api_operation(
+    summary = "Create a new bot",
+    description = "Register a new bot in the Discord Analytics API. This endpoint generates a unique token for the bot, which is required for authentication in future requests.",
+    tag = "Bots"
+)]
+async fn post_bot(
+    auth: Authenticated,
+    services: web::Data<Services>,
+    repos: web::Data<Repositories>,
+    body: Json<BotCreationBody>,
+    id: web::Path<String>,
+) -> ApiResult<Json<BotResponse>> {
+    let bot_id = id.into_inner();
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Attempting to create bot",
+    );
+
+    let ctx = &auth.0;
+
+    if !ctx.is_admin() && !ctx.is_user() {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          auth_type = ?ctx.auth_type,
+          "Unauthorized bot creation attempt",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    let body_data = body.into_inner();
+
+    if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if user_id != body_data.user_id {
+            warn!(
+              code = %LogCode::Forbidden,
+              bot_id = %bot_id,
+              user_id = %user_id,
+              "User ID in request does not match authenticated user",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    }
+
+    if services
+        .users
+        .has_reached_bots_limit(&body_data.user_id)
+        .await?
+    {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          user_id = %body_data.user_id,
+          "User has reached bots limit and cannot create more",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    let token = generate_bot_token(&bot_id)?;
+    let bot = Bot::new(&bot_id, &body_data.user_id, token);
+
+    repos.bots.insert(&bot).await?;
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Bot created successfully",
+    );
+
+    Ok(Json(BotResponse::try_from(bot)?))
+}
+
+#[api_operation(
+    summary = "Update bot details",
+    description = "Update specific details of a bot registered in the Discord Analytics API. Only certain fields can be updated.",
+    tag = "Bots"
+)]
+async fn patch_bot(
+    auth: Authenticated,
+    repos: web::Data<Repositories>,
+    body: Json<BotUpdateBody>,
+    id: web::Path<String>,
+) -> ApiResult<Json<BotResponse>> {
+    let bot_id = id.into_inner();
+    let update_data = body.into_inner();
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Attempting to update bot",
+    );
+
+    let ctx = &auth.0;
+
+    if !ctx.is_admin() && !(ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          auth_type = ?ctx.auth_type,
+          "Unauthorized bot update attempt",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+          code = %LogCode::Request,
+          bot_id = %bot_id,
+          "Bot not found for update",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    if ctx.is_bot() {
+        let auth_token = ctx.token.as_deref().ok_or(ApiError::InvalidToken)?;
+        if bot.token() != auth_token {
+            warn!(
+              code = %LogCode::InvalidToken,
+              bot_id = %bot_id,
+              "Bot token mismatch during update",
+            );
+            return Err(ApiError::InvalidToken);
+        }
+    }
+
+    let mut update = BotUpdate::new();
+    if let Some(avatar) = update_data.avatar {
+        update = update.with_avatar(avatar);
+    }
+    if let Some(framework) = update_data.framework {
+        update = update.with_framework(framework);
+    }
+    if let Some(team) = update_data.team {
+        update = update.with_team(team);
+    }
+    if let Some(username) = update_data.username {
+        update = update.with_username(username);
+    }
+    if let Some(version) = update_data.version {
+        update = update.with_version(version);
+    }
+
+    repos.bots.update(&bot_id, update).await?;
+
+    let updated_bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        warn!(
+          code = %LogCode::DbError,
+          bot_id = %bot_id,
+          "Bot not found after update",
+        );
+        ApiError::DatabaseError(format!("Bot with ID {} not found after update", bot_id))
+    })?;
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Bot update successful",
+    );
+
+    Ok(Json(BotResponse::try_from(updated_bot)?))
+}
+
+#[api_operation(
+    summary = "Delete a bot",
+    description = "Delete a specific bot from the Discord Analytics API. This action is irreversible.",
+    tag = "Bots"
+)]
+async fn delete_bot(
+    auth: Authenticated,
+    services: web::Data<Services>,
+    repos: web::Data<Repositories>,
+    id: web::Path<String>,
+) -> ApiResult<Json<BotDeletionResponse>> {
+    let bot_id = id.into_inner();
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Attempting to delete bot",
+    );
+
+    let ctx = &auth.0;
+
+    if ctx.is_admin() {
+        info!(
+          code = %LogCode::AdminAction,
+          bot_id = %bot_id,
+          "Admin access granted for bot deletion",
+        );
+    } else if ctx.is_bot() {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          "Bot attempting to delete a bot",
+        );
+        return Err(ApiError::Forbidden);
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !services.auth.user_owns_bot(user_id, &bot_id).await? {
+            warn!(
+              code = %LogCode::Forbidden,
+              bot_id = %bot_id,
+              user_id = %user_id,
+              "User does not own bot and cannot delete",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
+        warn!(
+          code = %LogCode::Forbidden,
+          bot_id = %bot_id,
+          "Access denied for bot deletion",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+          code = %LogCode::Request,
+          bot_id = %bot_id,
+          "Bot not found for deletion",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    services.bots.delete_bot(&bot_id).await?;
+
+    info!(
+      code = %LogCode::Request,
+      bot_id = %bot_id,
+      "Bot successfully deleted",
+    );
+
+    Ok(Json(BotDeletionResponse {
+        message: format!("Bot with ID {} has been deleted", bot_id),
     }))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/{id}").service(resource("").route(get().to(get_bot))));
+    cfg.service(
+        scope("/{id}").service(
+            resource("")
+                .route(get().to(get_bot))
+                .route(post().to(post_bot))
+                .route(patch().to(patch_bot))
+                .route(delete().to(delete_bot)),
+        ),
+    );
 }

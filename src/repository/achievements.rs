@@ -1,12 +1,27 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{doc, serialize_to_document},
+    bson::{Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::Achievement, utils::constants::ACHIEVEMENTS_COLLECTION};
+
+#[derive(Clone, Default)]
+pub struct AchievementUpdate {
+    updates: Document,
+}
+
+impl AchievementUpdate {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Document {
+        self.updates
+    }
+}
 
 #[derive(Clone)]
 pub struct AchievementsRepository {
@@ -31,22 +46,38 @@ impl AchievementsRepository {
             .await
     }
 
+    pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<Achievement>> {
+        let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
+        cursor.try_collect().await
+    }
+
     pub async fn insert(&self, achievement: &Achievement) -> Result<InsertOneResult> {
         self.collection.insert_one(achievement).await
     }
 
-    pub async fn update(&self, achievement: &Achievement) -> Result<UpdateResult> {
+    pub async fn update(
+        &self,
+        achievement_id: &str,
+        updated_achievement: AchievementUpdate,
+    ) -> Result<UpdateResult> {
+        let updates = updated_achievement.build();
+
+        if updates.is_empty() {
+            return Ok(UpdateResult::default());
+        }
+
         self.collection
-            .update_one(
-                doc! { "_id": &achievement.id },
-                doc! { "$set": serialize_to_document(achievement)? },
-            )
+            .update_one(doc! { "_id": achievement_id }, doc! { "$set": updates })
             .await
     }
 
-    pub async fn delete(&self, achievement_id: &str) -> Result<DeleteResult> {
+    pub async fn delete_by_id(&self, achievement_id: &str) -> Result<DeleteResult> {
         self.collection
             .delete_one(doc! { "_id": achievement_id })
             .await
+    }
+
+    pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
+        self.collection.delete_many(doc! { "bot_id": bot_id }).await
     }
 }

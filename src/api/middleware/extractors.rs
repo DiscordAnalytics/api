@@ -4,7 +4,7 @@ use actix_web::{
     error::{ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
     web,
 };
-use apistos::ApiComponent;
+use apistos::ApiSecurity;
 use futures::future::{Ready, ready};
 use schemars::JsonSchema;
 
@@ -13,7 +13,11 @@ use crate::{
     services::Services,
 };
 
-#[derive(Clone, JsonSchema, ApiComponent)]
+#[derive(Clone, JsonSchema, ApiSecurity)]
+#[openapi_security(scheme(security_type(api_key(
+    name = "Authorization",
+    api_key_in = "header"
+))))]
 pub struct Authenticated(pub AuthContext);
 
 impl FromRequest for Authenticated {
@@ -51,7 +55,11 @@ impl FromRequest for Authenticated {
     }
 }
 
-#[derive(Clone, JsonSchema, ApiComponent)]
+#[derive(Clone, JsonSchema, ApiSecurity)]
+#[openapi_security(scheme(security_type(api_key(
+    name = "Authorization",
+    api_key_in = "header"
+))))]
 pub struct OptionalAuth(pub Option<AuthContext>);
 
 impl FromRequest for OptionalAuth {
@@ -64,7 +72,11 @@ impl FromRequest for OptionalAuth {
     }
 }
 
-#[derive(Clone, JsonSchema, ApiComponent)]
+#[derive(Clone, JsonSchema, ApiSecurity)]
+#[openapi_security(scheme(security_type(api_key(
+    name = "Authorization",
+    api_key_in = "header"
+))))]
 pub struct RequireAdmin(pub AuthContext);
 
 impl FromRequest for RequireAdmin {

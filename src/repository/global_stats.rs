@@ -1,12 +1,27 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{DateTime, doc, serialize_to_document},
+    bson::{DateTime, Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::GlobalStats, utils::constants::GLOBAL_STATS_COLLECTION};
+
+#[derive(Clone, Default)]
+pub struct GlobalStatsUpdate {
+    updates: Document,
+}
+
+impl GlobalStatsUpdate {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Document {
+        self.updates
+    }
+}
 
 #[derive(Clone)]
 pub struct GlobalStatsRepository {
@@ -39,12 +54,19 @@ impl GlobalStatsRepository {
         self.collection.insert_one(global_stats).await
     }
 
-    pub async fn update(&self, global_stats: &GlobalStats) -> Result<UpdateResult> {
+    pub async fn update(
+        &self,
+        date: &DateTime,
+        updated_global_stats: GlobalStatsUpdate,
+    ) -> Result<UpdateResult> {
+        let updates = updated_global_stats.build();
+
+        if updates.is_empty() {
+            return Ok(UpdateResult::default());
+        }
+
         self.collection
-            .update_one(
-                doc! { "date": &global_stats.date },
-                doc! { "$set": serialize_to_document(global_stats)? },
-            )
+            .update_one(doc! { "date": date }, doc! { "$set": updates })
             .await
     }
 

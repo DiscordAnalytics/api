@@ -1,12 +1,27 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{DateTime, doc, serialize_to_document},
+    bson::{DateTime, Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::Vote, utils::constants::VOTES_COLLECTION};
+
+#[derive(Clone, Default)]
+pub struct VoteUpdate {
+    updates: Document,
+}
+
+impl VoteUpdate {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Document {
+        self.updates
+    }
+}
 
 #[derive(Clone)]
 pub struct VotesRepository {
@@ -45,18 +60,33 @@ impl VotesRepository {
         self.collection.insert_one(vote).await
     }
 
-    pub async fn update(&self, vote: &Vote) -> Result<UpdateResult> {
+    pub async fn update(
+        &self,
+        bot_id: &str,
+        date: &DateTime,
+        updated_vote: VoteUpdate,
+    ) -> Result<UpdateResult> {
+        let updates = updated_vote.build();
+
+        if updates.is_empty() {
+            return Ok(UpdateResult::default());
+        }
+
         self.collection
             .update_one(
-                doc! { "botId": &vote.bot_id, "date": &vote.date },
-                doc! { "$set": serialize_to_document(vote)? },
+                doc! { "botId": bot_id, "date": date },
+                doc! { "$set": updates },
             )
             .await
     }
 
-    pub async fn delete(&self, bot_id: &str, date: &DateTime) -> Result<DeleteResult> {
+    pub async fn delete_by_date(&self, bot_id: &str, date: &DateTime) -> Result<DeleteResult> {
         self.collection
             .delete_one(doc! { "botId": bot_id, "date": date })
             .await
+    }
+
+    pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
+        self.collection.delete_many(doc! { "botId": bot_id }).await
     }
 }

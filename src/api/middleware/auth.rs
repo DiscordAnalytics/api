@@ -10,7 +10,7 @@ use tracing::{info, warn};
 
 use crate::{
     domain::auth::{AuthContext, AuthType, Authorization, decode_jwt},
-    utils::logger::LogCode,
+    utils::{discord::is_valid_snowflake, logger::LogCode},
 };
 
 pub struct AuthMiddleware;
@@ -55,8 +55,8 @@ where
             .and_then(|h| h.to_str().ok());
         if let Some(auth_header) = auth_header {
             if let Some(authorization) = Authorization::parse(auth_header) {
-                if matches!(authorization.auth_type, AuthType::Admin | AuthType::User) {
-                    match decode_jwt(&authorization.token) {
+                match authorization.auth_type {
+                    AuthType::Admin | AuthType::User => match decode_jwt(&authorization.token) {
                         Ok(claims) => {
                             let sub = claims.sub;
 
@@ -69,8 +69,9 @@ where
 
                             let new_auth = format!("{} {}", authorization.auth_type, sub);
 
-                            let auth_context =
-                                AuthContext::new(authorization.auth_type).with_user_id(sub);
+                            let auth_context = AuthContext::new(authorization.auth_type)
+                                .with_user_id(sub)
+                                .with_token(authorization.token.clone());
 
                             req.extensions_mut().insert(auth_context);
 
@@ -86,10 +87,23 @@ where
                               e
                             );
                         }
+                    },
+                    AuthType::Bot => {
+                        let bot_id = extract_bot_id_from_path(req.path());
+
+                        let mut auth_context = AuthContext::new(authorization.auth_type)
+                            .with_token(authorization.token.clone());
+
+                        if let Some(bot_id) = bot_id {
+                            auth_context = auth_context.with_bot_id(bot_id);
+                        }
+
+                        req.extensions_mut().insert(auth_context);
                     }
-                } else {
-                    let auth_context = AuthContext::new(authorization.auth_type);
-                    req.extensions_mut().insert(auth_context);
+                    _ => {
+                        let auth_context = AuthContext::new(authorization.auth_type);
+                        req.extensions_mut().insert(auth_context);
+                    }
                 }
             }
         }
@@ -100,4 +114,17 @@ where
             Ok(res)
         })
     }
+}
+
+fn extract_bot_id_from_path(path: &str) -> Option<String> {
+    let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+    for (i, segment) in segments.iter().enumerate() {
+        if *segment == "bots" && i + 1 < segments.len() {
+            let potential_id = segments[i + 1];
+            if is_valid_snowflake(potential_id) {
+                return Some(potential_id.to_string());
+            }
+        }
+    }
+    None
 }

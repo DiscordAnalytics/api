@@ -11,6 +11,17 @@ mod team_invitations;
 mod users;
 mod votes;
 
+pub use achievements::AchievementUpdate;
+pub use blog_articles::BlogArticleUpdate;
+pub use bot_stats::BotStatsUpdate;
+pub use bots::BotUpdate;
+pub use custom_events::CustomEventUpdate;
+pub use global_stats::GlobalStatsUpdate;
+pub use stats_reports::StatsReportUpdate;
+pub use team_invitations::TeamInvitationUpdate;
+pub use users::UserUpdate;
+pub use votes::VoteUpdate;
+
 #[derive(Clone)]
 pub struct Repositories {
     pub achievements: achievements::AchievementsRepository,

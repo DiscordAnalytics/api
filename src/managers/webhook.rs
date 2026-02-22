@@ -38,13 +38,7 @@ impl VotesWebhooksManager {
     }
 
     pub fn retry(&mut self, webhook: Webhook) {
-        if let Some(idx) = self.waitlist.iter().position(|w| {
-            w.data.bot_id == webhook.data.bot_id
-                && w.data.voter_id == webhook.data.voter_id
-                && w.data.provider == webhook.data.provider
-                && w.data.date == webhook.data.date
-                && w.data.raw_data == webhook.data.raw_data
-        }) {
+        if let Some(idx) = self.waitlist.iter().position(|w| w == &webhook) {
             if let Some(w) = self.waitlist.get_mut(idx) {
                 w.try_count += 1;
 

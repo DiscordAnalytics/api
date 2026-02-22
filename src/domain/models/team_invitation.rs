@@ -11,28 +11,7 @@ pub struct TeamInvitation {
 }
 
 impl TeamInvitation {
-    pub fn with_accepted(mut self, accepted: bool) -> Self {
-        self.accepted = accepted;
-        self
-    }
-
-    pub fn with_bot_id(mut self, bot_id: String) -> Self {
-        self.bot_id = bot_id;
-        self
-    }
-
-    pub fn with_expiration(mut self, expiration: DateTime) -> Self {
-        self.expiration = expiration;
-        self
-    }
-
-    pub fn with_invitation_id(mut self, invitation_id: String) -> Self {
-        self.invitation_id = invitation_id;
-        self
-    }
-
-    pub fn with_user_id(mut self, user_id: String) -> Self {
-        self.user_id = user_id;
-        self
+    pub fn is_expired(&self) -> bool {
+        self.expiration < DateTime::now()
     }
 }

@@ -13,30 +13,3 @@ pub struct GlobalStats {
     #[serde(rename = "userCount")]
     pub user_count: i32,
 }
-
-impl GlobalStats {
-    pub fn with_bot_count(mut self, bot_count: i32) -> Self {
-        self.bot_count = bot_count;
-        self
-    }
-
-    pub fn with_date(mut self, date: DateTime) -> Self {
-        self.date = date;
-        self
-    }
-
-    pub fn with_logs_entry_count(mut self, logs_entry_count: i32) -> Self {
-        self.logs_entry_count = logs_entry_count;
-        self
-    }
-
-    pub fn with_registered_bots(mut self, registered_bots: i32) -> Self {
-        self.registered_bots = registered_bots;
-        self
-    }
-
-    pub fn with_user_count(mut self, user_count: i32) -> Self {
-        self.user_count = user_count;
-        self
-    }
-}

@@ -10,28 +10,6 @@ pub struct StatsReport {
     pub user_id: String,
 }
 
-impl StatsReport {
-    pub fn with_id(mut self, id: ObjectId) -> Self {
-        self.id = Some(id);
-        self
-    }
-
-    pub fn with_bot_id(mut self, bot_id: String) -> Self {
-        self.bot_id = bot_id;
-        self
-    }
-
-    pub fn with_frequency(mut self, frequency: StatsReportFrequency) -> Self {
-        self.frequency = frequency.into();
-        self
-    }
-
-    pub fn with_user_id(mut self, user_id: String) -> Self {
-        self.user_id = user_id;
-        self
-    }
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StatsReportFrequency {
     Weekly,

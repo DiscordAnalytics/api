@@ -42,7 +42,7 @@ pub fn decode_jwt(token: &str) -> Result<Claims> {
         .map_err(|e| anyhow::anyhow!("Failed to decode JWT: {:?}", e))
 }
 
-pub fn generate_bot_token(user_id: &str) -> Result<String> {
+pub fn generate_bot_token(bot_id: &str) -> Result<String> {
     let rng = SystemRandom::new();
     let mut key = [0u8; 32];
     rng.fill(&mut key)
@@ -56,8 +56,8 @@ pub fn generate_bot_token(user_id: &str) -> Result<String> {
         .map_err(|e| anyhow::anyhow!("Failed to create unbound key: {:?}", e))?;
     let sealing_key = aead::LessSafeKey::new(key);
 
-    let mut in_out = format!("token:{}", user_id).as_bytes().to_vec();
-    in_out.extend_from_slice(&[0u8; 16]); // space for tag
+    let mut in_out = format!("token:{}", bot_id).as_bytes().to_vec();
+    in_out.extend_from_slice(&[0u8; 16]);
 
     sealing_key
         .seal_in_place_append_tag(

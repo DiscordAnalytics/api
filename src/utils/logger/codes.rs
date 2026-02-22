@@ -12,6 +12,10 @@ pub enum LogCode {
     Auth,
     /// Unauthorized access attempts
     Unauthorized,
+    /// Forbidden access attempts
+    Forbidden,
+    /// Invalid token or authentication failures
+    InvalidToken,
     /// Admin actions
     AdminAction,
     /// Bot-related events
@@ -40,6 +44,8 @@ impl LogCode {
             LogCode::Database => "DB",
             LogCode::Auth => "AUTH",
             LogCode::Unauthorized => "UNAUTH",
+            LogCode::Forbidden => "FORBID",
+            LogCode::InvalidToken => "INV_TOKEN",
             LogCode::AdminAction => "ADMIN",
             LogCode::Bot => "BOT",
             LogCode::BotExpiration => "BOT_EXP",

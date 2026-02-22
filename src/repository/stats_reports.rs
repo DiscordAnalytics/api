@@ -41,12 +41,12 @@ impl StatsReportsRepository {
     }
 
     pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<StatsReport>> {
-        let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
+        let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
         cursor.try_collect().await
     }
 
     pub async fn find_by_user(&self, user_id: &str) -> Result<Vec<StatsReport>> {
-        let cursor = self.collection.find(doc! { "user_id": user_id }).await?;
+        let cursor = self.collection.find(doc! { "userId": user_id }).await?;
         cursor.try_collect().await
     }
 
@@ -56,7 +56,7 @@ impl StatsReportsRepository {
         user_id: &str,
     ) -> Result<Option<StatsReport>> {
         self.collection
-            .find_one(doc! { "bot_id": bot_id, "user_id": user_id })
+            .find_one(doc! { "botId": bot_id, "userId": user_id })
             .await
     }
 
@@ -78,7 +78,7 @@ impl StatsReportsRepository {
 
         self.collection
             .update_one(
-                doc! { "bot_id": bot_id, "user_id": user_id },
+                doc! { "botId": bot_id, "userId": user_id },
                 doc! { "$set": updates },
             )
             .await
@@ -91,12 +91,12 @@ impl StatsReportsRepository {
     }
 
     pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
-        self.collection.delete_many(doc! { "bot_id": bot_id }).await
+        self.collection.delete_many(doc! { "botId": bot_id }).await
     }
 
     pub async fn delete_by_user_id(&self, user_id: &str) -> Result<DeleteResult> {
         self.collection
-            .delete_many(doc! { "user_id": user_id })
+            .delete_many(doc! { "userId": user_id })
             .await
     }
 }

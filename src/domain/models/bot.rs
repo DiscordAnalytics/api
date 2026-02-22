@@ -2,29 +2,23 @@ use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Bot {
-    #[serde(rename = "advancedStats")]
     pub advanced_stats: bool,
     pub avatar: Option<String>,
-    #[serde(rename = "botId")]
     pub bot_id: String,
     pub framework: Option<String>,
     pub goals_limit: Option<i32>,
     pub language: Option<String>,
-    #[serde(rename = "lastPush")]
     pub last_push: Option<DateTime>,
-    #[serde(rename = "ownerId")]
     pub owner_id: String,
     pub suspended: bool,
     pub team: Vec<String>,
     pub(crate) token: String,
     pub username: String,
     pub version: Option<String>,
-    #[serde(rename = "votesWebhookUrl")]
     pub votes_webhook_url: Option<String>,
-    #[serde(rename = "warnLevel")]
     pub warn_level: Option<i32>,
-    #[serde(rename = "watchedSince")]
     pub watched_since: Option<DateTime>,
 }
 

@@ -4,34 +4,27 @@ use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BotStats {
-    #[serde(rename = "addedGuilds")]
     pub added_guilds: i32,
-    #[serde(rename = "botId")]
     pub bot_id: String,
     pub custom_events: Option<HashMap<String, i32>>,
     pub date: DateTime,
     pub guilds: Option<Vec<Guild>>,
-    #[serde(rename = "guildCount")]
     pub guild_count: i32,
-    #[serde(rename = "guildLocales")]
     pub guild_locales: Vec<Locale>,
-    #[serde(rename = "guildMembers")]
     pub guild_members: GuildMembers,
     pub interactions: Vec<Interaction>,
-    #[serde(rename = "interactionsLocales")]
     pub interactions_locales: Vec<Locale>,
-    #[serde(rename = "removedGuilds")]
     pub removed_guilds: i32,
-    #[serde(rename = "userCount")]
     pub user_count: i32,
     pub user_install_count: Option<i32>,
     pub users_type: Option<UserType>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Guild {
-    #[serde(rename = "guildId")]
     pub guild_id: String,
     pub icon: Option<String>,
     pub interactions: i32,
@@ -97,6 +90,7 @@ impl GuildMembers {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Interaction {
     pub command_type: Option<i32>,
     pub name: String,
@@ -146,6 +140,7 @@ impl Locale {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserType {
     pub admin: i32,
     pub moderator: i32,

@@ -5,28 +5,21 @@ use serde::{Deserialize, Serialize};
 use crate::domain::models::Bot;
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct BotResponse {
-    #[serde(rename = "advancedStats")]
     pub advanced_stats: Option<bool>,
     pub avatar: Option<String>,
     pub banned: Option<bool>,
-    #[serde(rename = "botId")]
     pub bot_id: String,
     pub framework: Option<String>,
-    #[serde(rename = "goalsLimit")]
     pub goals_limit: Option<i32>,
     pub language: Option<String>,
-    #[serde(rename = "lastPush")]
     pub last_push: Option<String>,
-    #[serde(rename = "ownerId")]
     pub owner_id: Option<String>,
     pub team: Option<Vec<String>>,
-    pub token: Option<String>,
     pub username: Option<String>,
     pub version: Option<String>,
-    #[serde(rename = "votesWebhookUrl")]
     pub votes_webhook_url: Option<String>,
-    #[serde(rename = "watchedSince")]
     pub watched_since: Option<String>,
 }
 
@@ -48,7 +41,6 @@ impl TryFrom<Bot> for BotResponse {
                 .transpose()?,
             owner_id: Some(bot.owner_id),
             team: Some(bot.team),
-            token: None,
             username: Some(bot.username),
             version: bot.version,
             votes_webhook_url: bot.votes_webhook_url,
@@ -61,8 +53,8 @@ impl TryFrom<Bot> for BotResponse {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct BotCreationBody {
-    #[serde(rename = "userId")]
     pub user_id: String,
 }
 

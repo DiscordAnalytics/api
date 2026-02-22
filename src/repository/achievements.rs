@@ -47,7 +47,7 @@ impl AchievementsRepository {
     }
 
     pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<Achievement>> {
-        let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
+        let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
         cursor.try_collect().await
     }
 
@@ -78,6 +78,6 @@ impl AchievementsRepository {
     }
 
     pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
-        self.collection.delete_many(doc! { "bot_id": bot_id }).await
+        self.collection.delete_many(doc! { "botId": bot_id }).await
     }
 }

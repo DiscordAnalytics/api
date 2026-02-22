@@ -42,12 +42,12 @@ impl CustomEventsRepository {
 
     pub async fn find_by_event_key(&self, event_key: &str) -> Result<Option<CustomEvent>> {
         self.collection
-            .find_one(doc! { "event_key": event_key })
+            .find_one(doc! { "eventKey": event_key })
             .await
     }
 
     pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<CustomEvent>> {
-        let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
+        let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
         cursor.try_collect().await
     }
 
@@ -69,7 +69,7 @@ impl CustomEventsRepository {
 
         self.collection
             .update_one(
-                doc! { "bot_id": bot_id, "event_key": event_key },
+                doc! { "botId": bot_id, "eventKey": event_key },
                 doc! { "$set": updates },
             )
             .await
@@ -77,11 +77,11 @@ impl CustomEventsRepository {
 
     pub async fn delete_by_event_key(&self, bot_id: &str, event_key: &str) -> Result<DeleteResult> {
         self.collection
-            .delete_one(doc! { "bot_id": bot_id, "event_key": event_key })
+            .delete_one(doc! { "botId": bot_id, "eventKey": event_key })
             .await
     }
 
     pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
-        self.collection.delete_many(doc! { "bot_id": bot_id }).await
+        self.collection.delete_many(doc! { "botId": bot_id }).await
     }
 }

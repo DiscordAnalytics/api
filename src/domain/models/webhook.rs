@@ -40,6 +40,7 @@ impl Provider {
 }
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WebhookData {
     pub bot_id: String,
     pub voter_id: String,
@@ -49,6 +50,7 @@ pub struct WebhookData {
 }
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WebhookSendData<'a> {
     pub bot_id: &'a str,
     pub voter_id: &'a str,

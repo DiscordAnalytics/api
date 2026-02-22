@@ -67,6 +67,11 @@ pub fn build_spec() -> Spec {
                 ..Default::default()
             },
             Tag {
+                name: "Invitations".to_string(),
+                description: Some("Endpoints for managing and retrieving invitations".to_string()),
+                ..Default::default()
+            },
+            Tag {
                 name: "Webhooks".to_string(),
                 description: Some("Endpoints for managing webhooks".to_string()),
                 ..Default::default()

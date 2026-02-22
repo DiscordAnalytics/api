@@ -96,6 +96,24 @@ impl BotsRepository {
             .await
     }
 
+    pub async fn add_user_to_team(&self, bot_id: &str, user_id: &str) -> Result<UpdateResult> {
+        self.collection
+            .update_one(
+                doc! { "botId": bot_id },
+                doc! { "$addToSet": { "team": user_id } },
+            )
+            .await
+    }
+
+    pub async fn remove_user_from_team(&self, bot_id: &str, user_id: &str) -> Result<UpdateResult> {
+        self.collection
+            .update_one(
+                doc! { "botId": bot_id },
+                doc! { "$pull": { "team": user_id } },
+            )
+            .await
+    }
+
     pub async fn delete(&self, bot_id: &str) -> Result<DeleteResult> {
         self.collection.delete_one(doc! { "botId": bot_id }).await
     }

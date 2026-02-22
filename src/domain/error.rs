@@ -40,6 +40,10 @@ pub enum ApiError {
     InvalidToken,
     MissingAuth,
 
+    // Invitation errors
+    InvitationExpired,
+    InvitationAlreadyAccepted,
+
     // Validation errors
     InvalidInput(String),
     ValidationError(String),
@@ -67,6 +71,10 @@ impl fmt::Display for ApiError {
             ApiError::Forbidden => write!(f, "Forbidden"),
             ApiError::InvalidToken => write!(f, "Invalid authentication token"),
             ApiError::MissingAuth => write!(f, "Authentication required"),
+            ApiError::InvitationExpired => write!(f, "Invitation has expired"),
+            ApiError::InvitationAlreadyAccepted => {
+                write!(f, "Invitation has already been accepted")
+            }
             ApiError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             ApiError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             ApiError::BotSuspended => write!(f, "Bot is suspended"),
@@ -87,7 +95,10 @@ impl ResponseError for ApiError {
                 StatusCode::UNAUTHORIZED
             }
             ApiError::Forbidden => StatusCode::FORBIDDEN,
-            ApiError::InvalidInput(_) | ApiError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            ApiError::InvalidInput(_)
+            | ApiError::ValidationError(_)
+            | ApiError::InvitationExpired
+            | ApiError::InvitationAlreadyAccepted => StatusCode::BAD_REQUEST,
             ApiError::AlreadyExists(_) => StatusCode::CONFLICT,
             ApiError::LimitExceeded => StatusCode::TOO_MANY_REQUESTS,
             _ => StatusCode::INTERNAL_SERVER_ERROR,

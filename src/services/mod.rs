@@ -2,12 +2,14 @@ use crate::repository::Repositories;
 
 mod auth;
 mod bots;
+mod invitations;
 mod users;
 
 #[derive(Clone)]
 pub struct Services {
     pub auth: auth::AuthService,
     pub bots: bots::BotsService,
+    pub invitations: invitations::InvitationsService,
     pub users: users::UsersService,
 }
 
@@ -16,6 +18,7 @@ impl Services {
         Self {
             auth: auth::AuthService::new(repos.clone()),
             bots: bots::BotsService::new(repos.clone()),
+            invitations: invitations::InvitationsService::new(repos.clone()),
             users: users::UsersService::new(repos.clone()),
         }
     }

@@ -79,6 +79,15 @@ impl TeamInvitationsRepository {
             .await
     }
 
+    pub async fn accept_invitation(&self, invitation_id: &str) -> Result<UpdateResult> {
+        self.collection
+            .update_one(
+                doc! { "invitationId": invitation_id },
+                doc! { "$set": { "accepted": true } },
+            )
+            .await
+    }
+
     pub async fn delete_by_id(&self, team_invitation_id: &str) -> Result<DeleteResult> {
         self.collection
             .delete_one(doc! { "invitationId": team_invitation_id })

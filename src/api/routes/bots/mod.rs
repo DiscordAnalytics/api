@@ -23,17 +23,17 @@ async fn get_all_bots(
     _admin: RequireAdmin,
     repos: web::Data<Repositories>,
 ) -> ApiResult<Json<Vec<BotResponse>>> {
-    let bots = repos.bots.find_all().await?;
-
     info!(
         code = %LogCode::Request,
         "Fetching all bots",
     );
 
-    let bot_responses: Vec<BotResponse> = bots
+    let bots = repos.bots.find_all().await?;
+    
+    let bot_responses = bots
         .into_iter()
-        .map(|bot| -> Result<BotResponse> { Ok(BotResponse::try_from(bot)?) })
-        .collect::<Result<Vec<BotResponse>>>()?;
+        .map(BotResponse::try_from)
+        .collect::<Result<Vec<_>, _>>()?;
 
     info!(
         code = %LogCode::Request,

@@ -1,4 +1,6 @@
+use apistos::ApiComponent;
 use mongodb::bson::{DateTime, oid::ObjectId};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
@@ -30,7 +32,7 @@ impl Achievement {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, ApiComponent, JsonSchema)]
 pub struct AchievementObjective {
     pub value: i64,
     #[serde(rename = "type")]
@@ -49,7 +51,7 @@ impl AchievementObjective {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, ApiComponent, JsonSchema)]
 pub enum AchievementType {
     GuildCount,
     InteractionAverageWeek,

@@ -16,7 +16,8 @@ use crate::{
 #[api_operation(
     summary = "Get all bots",
     description = "Fetch a list of all bots registered in the Discord Analytics API",
-    tag = "Bots"
+    tag = "Bots",
+    skip
 )]
 async fn get_all_bots(
     _admin: RequireAdmin,

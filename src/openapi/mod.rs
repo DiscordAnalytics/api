@@ -72,6 +72,13 @@ pub fn build_spec() -> Spec {
                 ..Default::default()
             },
             Tag {
+                name: "Users".to_string(),
+                description: Some(
+                    "Endpoints for managing and retrieving user information".to_string(),
+                ),
+                ..Default::default()
+            },
+            Tag {
                 name: "Webhooks".to_string(),
                 description: Some("Endpoints for managing webhooks".to_string()),
                 ..Default::default()

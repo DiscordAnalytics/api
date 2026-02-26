@@ -57,7 +57,7 @@ pub struct WebhookSendData<'a> {
     pub provider: &'a str,
     pub date: DateTime<Utc>,
     pub raw_data: Option<&'a Value>,
-    pub content: Option<&'a str>,
+    pub content: Option<String>,
 }
 
 #[derive(Clone)]

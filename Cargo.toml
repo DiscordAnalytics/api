@@ -19,12 +19,15 @@ actix-web = { version = "4.13.0", default-features = false, features = [
 ] }
 anyhow = { version = "1.0.102", default-features = false, features = ["std"] }
 apistos = { version = "0.6.0", default-features = false, features = ["query"] }
-chrono = { version = "0.4.43", default-features = false, features = [
+chrono = { version = "0.4.44", default-features = false, features = [
   "clock",
   "serde",
 ] }
 dotenvy = { version = "0.15.7", default-features = false }
-futures = { version = "0.3.32", default-features = false, features = ["alloc"] }
+futures = { version = "0.3.32", default-features = false, features = [
+  "alloc",
+  "executor",
+] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 jsonwebtoken = { version = "10.3.0", default-features = false, features = [
   "rust_crypto",

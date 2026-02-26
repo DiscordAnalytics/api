@@ -9,7 +9,7 @@ pub fn get_user_creation_date(id: &str) -> Option<DateTime> {
 }
 
 pub fn is_valid_snowflake(id: &str) -> bool {
-    match id.parse::<i64>() {
+    match id.parse::<u64>() {
         Ok(snowflake) => snowflake > 0 && snowflake < (1 << 63),
         Err(_) => false,
     }

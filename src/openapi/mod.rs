@@ -30,11 +30,7 @@ pub fn build_spec() -> Spec {
             ..Default::default()
         },
         servers: vec![Server {
-            url: if cfg!(debug_assertions) {
-                app_env!().api_url.to_owned()
-            } else {
-                "https://discordanalytics.xyz".to_string()
-            },
+            url: app_env!().api_url.to_owned(),
             description: Some("Base URL for the Discord Analytics API".to_string()),
             ..Default::default()
         }],

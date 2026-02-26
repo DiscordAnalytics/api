@@ -4,7 +4,7 @@ use actix_cors::Cors;
 use actix_web::{App, HttpServer, http, web};
 use anyhow::Result;
 use apistos::{app::OpenApiWrapper, web::scope};
-use tokio::{sync::Mutex, try_join};
+use tokio::{spawn, sync::Mutex, try_join};
 use tracing::{Level, info};
 use tracing_actix_web::TracingLogger;
 
@@ -12,7 +12,7 @@ use api::{
     api::{middleware::AuthMiddleware, routes},
     app_env,
     config::env::init_env,
-    managers::webhook::VotesWebhooksManager,
+    managers::{ChatServer, VotesWebhooksManager},
     openapi::build_spec,
     repository::Repositories,
     services::Services,
@@ -62,6 +62,14 @@ async fn main() -> Result<()> {
         "VotesWebhooksManager initialized",
     );
 
+    let (chat_server, chat_server_handle) = ChatServer::new();
+    let chat_server = spawn(chat_server.run());
+    let chat_server_handle = web::Data::new(chat_server_handle);
+    info!(
+        code = %LogCode::Server,
+        "ChatServer initialized",
+    );
+
     let http_server = HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin(&app_env!().client_url)
@@ -81,6 +89,7 @@ async fn main() -> Result<()> {
             .app_data(web::Data::new(repos.clone()))
             .app_data(web::Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
+            .app_data(chat_server_handle.clone())
             .wrap(TracingLogger::default())
             .wrap(cors)
             .wrap(AuthMiddleware)
@@ -110,7 +119,7 @@ async fn main() -> Result<()> {
         app_env!().client_url,
     );
 
-    try_join!(http_server)?;
+    try_join!(http_server, async { chat_server.await? })?;
 
     Ok(())
 }

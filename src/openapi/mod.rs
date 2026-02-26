@@ -83,6 +83,11 @@ pub fn build_spec() -> Spec {
                 description: Some("Endpoints for managing webhooks".to_string()),
                 ..Default::default()
             },
+            Tag {
+                name: "Websocket".to_string(),
+                description: Some("Endpoints related to WebSocket connections".to_string()),
+                ..Default::default()
+            },
         ],
 
         ..Default::default()

@@ -201,6 +201,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-ws"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "decf53c3cdd63dd6f289980b430238f9a2f6d19f8bce8e418272e08d3da43f0f"
+dependencies = [
+ "actix-codec",
+ "actix-http",
+ "actix-web",
+ "bytestring",
+ "futures-core",
+ "futures-sink",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -931,6 +947,7 @@ version = "3.0.0"
 dependencies = [
  "actix-cors",
  "actix-web",
+ "actix-ws",
  "anyhow",
  "apistos",
  "apistos-schemars",
@@ -2497,9 +2514,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.39.1"
+version = "0.39.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd58c6a1fc307e1092aa0bb23d204ca4d1f021764142cd0424dccc84d2d5d106"
+checksum = "958f21e8e7ceb5a1aa7fa87fab28e7c75976e0bfe7e23ff069e0a260f894067d"
 dependencies = [
  "memchr",
  "serde",
@@ -2780,9 +2797,9 @@ dependencies = [
 
 [[package]]
 name = "reqx"
-version = "0.1.20"
+version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9a396559e0954a5a3736b39dcdb47a0b34d3298b9e39df0cff4d9bac3cf41e5"
+checksum = "46737d2301408e032e0bd92a7a86f6bfc7dbfd463331706d700d2bb834a946c6"
 dependencies = [
  "brotli",
  "bytes",
@@ -2990,9 +3007,9 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "s3"
-version = "0.1.15"
+version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04afd783b81fd46d27ebee561620e6f892ec0a3e4ffd5fb3b16fa51c3d331a54"
+checksum = "633988046bf7a816ff14a2b4429fdd48ea906d6d993bd1cb609a5863bf72385c"
 dependencies = [
  "base64",
  "bytes",
@@ -3557,6 +3574,7 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-sink",
+ "futures-util",
  "pin-project-lite",
  "tokio",
 ]

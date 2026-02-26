@@ -17,6 +17,7 @@ actix-cors = { version = "0.7.1", default-features = false }
 actix-web = { version = "4.13.0", default-features = false, features = [
   "macros",
 ] }
+actix-ws = { version = "0.4.0", default-features = false }
 anyhow = { version = "1.0.102", default-features = false, features = ["std"] }
 apistos = { version = "0.6.0", default-features = false, features = ["query"] }
 chrono = { version = "0.4.44", default-features = false, features = [
@@ -54,7 +55,7 @@ reqwest = { version = "0.13.2", default-features = false, features = [
   "rustls",
 ] }
 ring = { version = "0.17.14", default-features = false, features = ["alloc"] }
-s3 = { version = "0.1.15", default-features = false, features = [
+s3 = { version = "0.1.17", default-features = false, features = [
   "async",
   "rustls",
   "providers",

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use actix_web::{HttpResponse, ResponseError, http::StatusCode};
+use actix_web::{Error as ActixError, HttpResponse, ResponseError, http::StatusCode};
 use anyhow::Error as AnyError;
 use apistos::ApiErrorComponent;
 use mongodb::{bson::error::Error as BsonError, error::Error as MongoError};
@@ -122,6 +122,12 @@ impl From<MongoError> for ApiError {
 impl From<BsonError> for ApiError {
     fn from(err: BsonError) -> Self {
         ApiError::DatabaseError(err.to_string())
+    }
+}
+
+impl From<ActixError> for ApiError {
+    fn from(err: ActixError) -> Self {
+        ApiError::InternalError(err.to_string())
     }
 }
 

@@ -3,6 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
+    options::FindOptions,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
@@ -40,14 +41,25 @@ impl GlobalStatsRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_date_range(
+    pub async fn find_from_date_range(
         &self,
         start_date: &DateTime,
         end_date: &DateTime,
-    ) -> Result<Option<GlobalStats>> {
-        self.collection
-            .find_one(doc! { "date": { "$gte": start_date, "$lte": end_date } })
-            .await
+    ) -> Result<Vec<GlobalStats>> {
+        let options = FindOptions::builder().sort(doc! { "date": 1 }).build();
+
+        let cursor = self
+            .collection
+            .find(doc! {
+                    "date": {
+                        "$gte": start_date,
+                        "$lte": end_date,
+                    }
+            })
+            .with_options(options)
+            .await?;
+
+        cursor.try_collect().await
     }
 
     pub async fn insert(&self, global_stats: &GlobalStats) -> Result<InsertOneResult> {

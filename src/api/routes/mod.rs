@@ -2,6 +2,7 @@ mod achievements;
 mod bots;
 mod health;
 mod invitations;
+mod stats;
 mod users;
 mod websocket;
 
@@ -12,6 +13,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
         .configure(bots::configure)
         .configure(health::configure)
         .configure(invitations::configure)
+        .configure(stats::configure)
         .configure(users::configure)
         .configure(websocket::configure);
 }

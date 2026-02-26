@@ -72,6 +72,11 @@ pub fn build_spec() -> Spec {
                 ..Default::default()
             },
             Tag {
+                name: "Stats".to_string(),
+                description: Some("Endpoints for retrieving statistics".to_string()),
+                ..Default::default()
+            },
+            Tag {
                 name: "Users".to_string(),
                 description: Some(
                     "Endpoints for managing and retrieving user information".to_string(),

@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct GlobalStats {
     pub bot_count: i32,
     pub date: DateTime,
-    pub logs_entry_count: i32,
     pub registered_bots: i32,
     pub user_count: i32,
 }

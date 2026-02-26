@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
     let http_server = HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin(&app_env!().client_url)
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "PATCH"])
+            .allowed_methods(vec!["GET", "POST", "DELETE", "PATCH"])
             .allowed_headers(vec![
                 http::header::AUTHORIZATION,
                 http::header::ACCEPT,
@@ -94,7 +94,7 @@ async fn main() -> Result<()> {
             .wrap(cors)
             .wrap(AuthMiddleware)
             .service(scope("/api").configure(routes::configure))
-            .build("/openapi.json")
+            .build("/api/openapi.json")
     })
     .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?
     .run();

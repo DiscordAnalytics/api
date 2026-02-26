@@ -94,7 +94,7 @@ async fn main() -> Result<()> {
             .wrap(cors)
             .wrap(AuthMiddleware)
             .service(scope("/api").configure(routes::configure))
-            .build("/api/openapi.json")
+            .build("/openapi.json")
     })
     .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?
     .run();

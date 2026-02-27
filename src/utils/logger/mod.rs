@@ -1,10 +1,15 @@
 mod codes;
 
-use std::{collections::HashMap, io};
+#[cfg(feature = "otel")]
+use std::collections::HashMap;
+use std::io;
 
 use anyhow::Result;
+#[cfg(feature = "otel")]
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+#[cfg(feature = "otel")]
 use opentelemetry_otlp::{LogExporter, Protocol, WithExportConfig, WithHttpConfig};
+#[cfg(feature = "otel")]
 use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use tracing::Level;
 use tracing_subscriber::{
@@ -15,6 +20,7 @@ use tracing_subscriber::{
     registry,
 };
 
+#[cfg(feature = "otel")]
 use crate::app_env;
 
 pub struct Logger {
@@ -46,41 +52,46 @@ impl Logger {
             .with_span_events(FmtSpan::CLOSE)
             .with_filter(filter);
 
-        let env = app_env!();
-
-        if let (Some(endpoint), Some(token), Some(stream)) = (
-            env.otlp_endpoint.as_ref(),
-            env.otlp_token.as_ref(),
-            env.otlp_stream.as_ref(),
-        ) && !self.dev_mode
+        #[cfg(feature = "otel")]
         {
-            let mut headers = HashMap::new();
-            headers.insert(
-                String::from("Authorization"),
-                String::from(format!("Basic {}", token)),
-            );
-            headers.insert("stream-name".to_string(), stream.clone());
-
-            let exporter = LogExporter::builder()
-                .with_http()
-                .with_protocol(Protocol::HttpBinary)
-                .with_headers(headers)
-                .with_endpoint(format!("{}/v1/logs", endpoint))
-                .build()?;
-
-            let resource = Resource::builder().with_service_name("api").build();
-
-            let provider = SdkLoggerProvider::builder()
-                .with_batch_exporter(exporter)
-                .with_resource(resource)
-                .build();
-            let otlp_layer = OpenTelemetryTracingBridge::new(&provider);
-
-            registry().with(stdout_layer).with(otlp_layer).init();
-        } else {
-            registry().with(stdout_layer).init()
+            let otel_layer = self.otel_layer();
+            registry().with(stdout_layer).with(otel_layer).init();
+        }
+        #[cfg(not(feature = "otel"))]
+        {
+            registry().with(stdout_layer).init();
         }
 
         Ok(())
+    }
+
+    #[cfg(feature = "otel")]
+    fn otel_layer(&self) -> OpenTelemetryTracingBridge<SdkLoggerProvider> {
+        let env = app_env!();
+
+        let mut headers = HashMap::new();
+        headers.insert(
+            String::from("Authorization"),
+            String::from(format!("Basic {}", env.otlp_token)),
+        );
+        headers.insert("stream-name".to_string(), env.otlp_stream.clone());
+
+        let exporter = LogExporter::builder()
+            .with_http()
+            .with_protocol(Protocol::HttpBinary)
+            .with_headers(headers)
+            .with_endpoint(format!("{}/v1/logs", env.otlp_endpoint))
+            .build()
+            .expect("Failed to create OTLP log exporter");
+
+        let resource = Resource::builder().with_service_name("api").build();
+
+        let provider = SdkLoggerProvider::builder()
+            .with_batch_exporter(exporter)
+            .with_resource(resource)
+            .build();
+        let otel_layer = OpenTelemetryTracingBridge::new(&provider);
+
+        otel_layer
     }
 }

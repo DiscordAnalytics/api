@@ -1,6 +1,6 @@
 use std::{env, net::Ipv4Addr, sync::OnceLock};
 
-use anyhow::{Error, Result, anyhow};
+use anyhow::{Error, Result};
 use dotenvy::dotenv;
 
 #[derive(Debug)]
@@ -14,11 +14,6 @@ pub struct EnvConfig {
     // Database
     pub database_url: String,
 
-    // OpenTelemetry
-    pub otlp_endpoint: Option<String>,
-    pub otlp_token: Option<String>,
-    pub otlp_stream: Option<String>,
-
     // Tokens
     pub discord_token: String,
     pub jwt_secret: String,
@@ -28,17 +23,34 @@ pub struct EnvConfig {
     pub client_secret: String,
     pub client_id: String,
 
+    // OpenTelemetry
+    #[cfg(feature = "otel")]
+    pub otlp_endpoint: String,
+    #[cfg(feature = "otel")]
+    pub otlp_token: String,
+    #[cfg(feature = "otel")]
+    pub otlp_stream: String,
+
     // Mail
+    #[cfg(any(feature = "mails", feature = "reports"))]
     pub smtp: String,
+    #[cfg(any(feature = "mails", feature = "reports"))]
     pub smtp_mail: String,
+    #[cfg(any(feature = "mails", feature = "reports"))]
     pub smtp_user: String,
+    #[cfg(any(feature = "mails", feature = "reports"))]
     pub smtp_password: String,
 
     // R2
+    #[cfg(feature = "reports")]
     pub r2_bucket_name: String,
+    #[cfg(feature = "reports")]
     pub r2_account_id: String,
+    #[cfg(feature = "reports")]
     pub r2_public_bucket_endpoint: String,
+    #[cfg(feature = "reports")]
     pub cloudflare_id: String,
+    #[cfg(feature = "reports")]
     pub cloudflare_token: String,
 }
 
@@ -72,20 +84,6 @@ pub fn init_env() -> Result<&'static EnvConfig> {
 
     let database_url = get_var("DATABASE_URL")?;
 
-    let (otlp_endpoint, otlp_token, otlp_stream) = match (
-        get_var("OTLP_ENDPOINT"),
-        get_var("OTLP_TOKEN"),
-        get_var("OTLP_STREAM"),
-    ) {
-        (Ok(endpoint), Ok(token), Ok(stream)) => (Some(endpoint), Some(token), Some(stream)),
-        (Err(_), Err(_), Err(_)) => (None, None, None),
-        _ => {
-            return Err(anyhow!(
-                "One of these env vars are missing: OTLP_ENDPOINT, OTLP_TOKEN or OTLP_STREAM"
-            ));
-        }
-    };
-
     let discord_token = get_var("DISCORD_TOKEN")?;
     let jwt_secret = get_var("JWT_SECRET")?;
     let enable_registrations = env::var("ENABLE_REGISTRATIONS")
@@ -95,15 +93,31 @@ pub fn init_env() -> Result<&'static EnvConfig> {
     let client_secret = get_var("CLIENT_SECRET")?;
     let client_id = get_var("CLIENT_ID")?;
 
+    #[cfg(feature = "otel")]
+    let otlp_endpoint = get_var("OTLP_ENDPOINT")?;
+    #[cfg(feature = "otel")]
+    let otlp_token = get_var("OTLP_TOKEN")?;
+    #[cfg(feature = "otel")]
+    let otlp_stream = get_var("OTLP_STREAM")?;
+
+    #[cfg(feature = "reports")]
     let smtp = get_var("SMTP")?;
+    #[cfg(feature = "reports")]
     let smtp_mail = get_var("SMTP_MAIL")?;
+    #[cfg(feature = "reports")]
     let smtp_user = get_var("SMTP_USER")?;
+    #[cfg(feature = "reports")]
     let smtp_password = get_var("SMTP_PASSWORD")?;
 
+    #[cfg(feature = "reports")]
     let r2_bucket_name = get_var("R2_BUCKET_NAME")?;
+    #[cfg(feature = "reports")]
     let r2_account_id = get_var("R2_ACCOUNT_ID")?;
+    #[cfg(feature = "reports")]
     let r2_public_bucket_endpoint = get_var("R2_PUBLIC_BUCKET_ENDPOINT")?;
+    #[cfg(feature = "reports")]
     let cloudflare_id = get_var("CLOUDFLARE_ID")?;
+    #[cfg(feature = "reports")]
     let cloudflare_token = get_var("CLOUDFLARE_TOKEN")?;
 
     Ok(ENV.get_or_init(|| EnvConfig {
@@ -112,22 +126,34 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         client_url,
         admins,
         database_url,
-        otlp_endpoint,
-        otlp_token,
-        otlp_stream,
         discord_token,
         jwt_secret,
         enable_registrations,
         client_secret,
         client_id,
+        #[cfg(feature = "otel")]
+        otlp_endpoint,
+        #[cfg(feature = "otel")]
+        otlp_token,
+        #[cfg(feature = "otel")]
+        otlp_stream,
+        #[cfg(any(feature = "mails", feature = "reports"))]
         smtp,
+        #[cfg(any(feature = "mails", feature = "reports"))]
         smtp_mail,
+        #[cfg(any(feature = "mails", feature = "reports"))]
         smtp_user,
+        #[cfg(any(feature = "mails", feature = "reports"))]
         smtp_password,
+        #[cfg(feature = "reports")]
         r2_bucket_name,
+        #[cfg(feature = "reports")]
         r2_account_id,
+        #[cfg(feature = "reports")]
         r2_public_bucket_endpoint,
+        #[cfg(feature = "reports")]
         cloudflare_id,
+        #[cfg(feature = "reports")]
         cloudflare_token,
     }))
 }

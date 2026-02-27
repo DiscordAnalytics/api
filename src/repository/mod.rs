@@ -5,8 +5,10 @@ mod bots;
 mod connection;
 mod custom_events;
 mod global_stats;
+#[cfg(feature = "reports")]
 mod r2;
 mod sessions;
+#[cfg(feature = "reports")]
 mod stats_reports;
 mod team_invitations;
 mod users;
@@ -19,6 +21,7 @@ pub use bot_stats::BotStatsUpdate;
 pub use bots::BotUpdate;
 pub use custom_events::CustomEventUpdate;
 pub use global_stats::GlobalStatsUpdate;
+#[cfg(feature = "reports")]
 pub use stats_reports::StatsReportUpdate;
 pub use team_invitations::TeamInvitationUpdate;
 pub use users::UserUpdate;
@@ -33,7 +36,9 @@ pub struct Repositories {
     pub custom_events: custom_events::CustomEventsRepository,
     pub global_stats: global_stats::GlobalStatsRepository,
     pub sessions: sessions::SessionsRepository,
+    #[cfg(feature = "reports")]
     pub r2: r2::R2Repository,
+    #[cfg(feature = "reports")]
     pub stats_reports: stats_reports::StatsReportsRepository,
     pub team_invitations: team_invitations::TeamInvitationsRepository,
     pub users: users::UsersRepository,
@@ -53,7 +58,9 @@ impl Repositories {
             custom_events: custom_events::CustomEventsRepository::new(db),
             global_stats: global_stats::GlobalStatsRepository::new(db),
             sessions: sessions::SessionsRepository::new(db),
+            #[cfg(feature = "reports")]
             r2: r2::R2Repository::new()?,
+            #[cfg(feature = "reports")]
             stats_reports: stats_reports::StatsReportsRepository::new(db),
             team_invitations: team_invitations::TeamInvitationsRepository::new(db),
             users: users::UsersRepository::new(db),
@@ -69,7 +76,9 @@ impl Repositories {
         self.custom_events.ping().await?;
         self.global_stats.ping().await?;
         self.sessions.ping().await?;
+        #[cfg(feature = "reports")]
         self.r2.ping().await?;
+        #[cfg(feature = "reports")]
         self.stats_reports.ping().await?;
         self.team_invitations.ping().await?;
         self.users.ping().await?;

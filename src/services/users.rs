@@ -35,6 +35,7 @@ impl UsersService {
                 .achievements
                 .delete_by_bot_id(&bot.bot_id)
                 .await?;
+            #[cfg(feature = "reports")]
             self.repos
                 .stats_reports
                 .delete_by_bot_id(&bot.bot_id)
@@ -48,6 +49,7 @@ impl UsersService {
                 .delete_by_bot_id(&bot.bot_id)
                 .await?;
         }
+        #[cfg(feature = "reports")]
         self.repos.stats_reports.delete_by_user_id(user_id).await?;
         self.repos
             .team_invitations

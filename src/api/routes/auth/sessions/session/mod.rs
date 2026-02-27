@@ -1,4 +1,4 @@
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete},
@@ -21,8 +21,8 @@ use crate::{
 )]
 async fn revoke_session(
     auth: Authenticated,
-    repos: web::Data<Repositories>,
-    session_id: web::Path<String>,
+    repos: Data<Repositories>,
+    session_id: Path<String>,
 ) -> ApiResult<Json<Value>> {
     let user_id = auth.0.user_id.ok_or(ApiError::Unauthorized)?;
 

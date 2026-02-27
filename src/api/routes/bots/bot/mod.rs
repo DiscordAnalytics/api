@@ -1,4 +1,4 @@
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
@@ -25,9 +25,9 @@ use crate::{
 )]
 async fn get_bot(
     auth: Authenticated,
-    services: web::Data<Services>,
-    repos: web::Data<Repositories>,
-    id: web::Path<String>,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.into_inner();
 
@@ -97,10 +97,10 @@ async fn get_bot(
 )]
 async fn post_bot(
     auth: Authenticated,
-    services: web::Data<Services>,
-    repos: web::Data<Repositories>,
+    services: Data<Services>,
+    repos: Data<Repositories>,
     body: Json<BotCreationBody>,
-    id: web::Path<String>,
+    id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.into_inner();
 
@@ -172,9 +172,9 @@ async fn post_bot(
 )]
 async fn patch_bot(
     auth: Authenticated,
-    repos: web::Data<Repositories>,
+    repos: Data<Repositories>,
     body: Json<BotUpdateBody>,
-    id: web::Path<String>,
+    id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.into_inner();
     let update_data = body.into_inner();
@@ -262,9 +262,9 @@ async fn patch_bot(
 )]
 async fn delete_bot(
     auth: Authenticated,
-    services: web::Data<Services>,
-    repos: web::Data<Repositories>,
-    id: web::Path<String>,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    id: Path<String>,
 ) -> ApiResult<Json<BotDeletionResponse>> {
     let bot_id = id.into_inner();
 

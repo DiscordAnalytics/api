@@ -1,6 +1,6 @@
 mod session;
 
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, resource, scope},
@@ -24,7 +24,7 @@ use crate::{
 )]
 async fn list_sessions(
     auth: Authenticated,
-    repos: web::Data<Repositories>,
+    repos: Data<Repositories>,
 ) -> ApiResult<Json<Vec<SessionResponse>>> {
     let user_id = auth.0.user_id.ok_or(ApiError::Unauthorized)?;
 
@@ -58,7 +58,7 @@ async fn list_sessions(
 )]
 async fn revoke_all_sessions(
     auth: Authenticated,
-    repos: web::Data<Repositories>,
+    repos: Data<Repositories>,
 ) -> ApiResult<Json<Value>> {
     let user_id = auth.0.user_id.ok_or(ApiError::Unauthorized)?;
     let current_session_id = auth.0.session_id.ok_or(ApiError::Unauthorized)?;

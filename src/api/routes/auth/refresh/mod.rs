@@ -1,4 +1,4 @@
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, post},
@@ -22,7 +22,7 @@ use crate::{
     skip
 )]
 async fn refresh_token(
-    repos: web::Data<Repositories>,
+    repos: Data<Repositories>,
     body: Json<RefreshTokenRequest>,
 ) -> ApiResult<Json<TokenResponse>> {
     info!(

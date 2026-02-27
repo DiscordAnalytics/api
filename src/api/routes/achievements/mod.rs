@@ -1,4 +1,4 @@
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
@@ -15,9 +15,7 @@ use crate::{
     description = "Retrieve a list of all achievements in the system",
     tag = "Achievements"
 )]
-async fn get_achievements(
-    repos: web::Data<Repositories>,
-) -> ApiResult<Json<Vec<AchievementResponse>>> {
+async fn get_achievements(repos: Data<Repositories>) -> ApiResult<Json<Vec<AchievementResponse>>> {
     info!(
         code = %LogCode::Request,
         "Fetching all achievements",

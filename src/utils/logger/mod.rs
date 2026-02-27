@@ -9,7 +9,7 @@ use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use tracing::Level;
 use tracing_subscriber::{
     filter::EnvFilter,
-    fmt::{self, format::FmtSpan},
+    fmt::{format::FmtSpan, layer},
     layer::SubscriberExt,
     prelude::*,
     registry,
@@ -40,7 +40,7 @@ impl Logger {
     pub fn init(self) -> Result<()> {
         let filter = EnvFilter::from_default_env().add_directive(self.level.into());
 
-        let stdout_layer = fmt::layer()
+        let stdout_layer = layer()
             .with_writer(io::stdout)
             .with_ansi(self.dev_mode)
             .with_span_events(FmtSpan::CLOSE)

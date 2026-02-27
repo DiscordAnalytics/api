@@ -1,7 +1,10 @@
 mod refresh;
 mod sessions;
 
-use actix_web::{HttpRequest, web};
+use actix_web::{
+    HttpRequest,
+    web::{Data, Query},
+};
 use apistos::{
     api_operation,
     web::{Redirect, ServiceConfig, get, resource, scope},
@@ -29,9 +32,9 @@ use crate::{
 )]
 async fn oauth_callback(
     req: HttpRequest,
-    services: web::Data<Services>,
-    repos: web::Data<Repositories>,
-    query: web::Query<AuthCallbackQuery>,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    query: Query<AuthCallbackQuery>,
 ) -> Redirect {
     info!(
         code = %LogCode::Auth,

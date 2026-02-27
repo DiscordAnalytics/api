@@ -2,7 +2,7 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest,
     dev::Payload,
     error::{ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
-    web,
+    web::Data,
 };
 use apistos::ApiSecurity;
 use futures::future::{Ready, ready};
@@ -30,7 +30,7 @@ impl FromRequest for Authenticated {
                 let ctx = context.clone();
 
                 if ctx.is_admin() {
-                    let services = match req.app_data::<web::Data<Services>>() {
+                    let services = match req.app_data::<Data<Services>>() {
                         Some(services) => services,
                         None => {
                             return ready(Err(ErrorInternalServerError(ApiError::InternalError(
@@ -89,7 +89,7 @@ impl FromRequest for RequireAdmin {
             None => return ready(Err(ErrorUnauthorized(ApiError::Unauthorized))),
         };
 
-        let services = match req.app_data::<web::Data<Services>>() {
+        let services = match req.app_data::<Data<Services>>() {
             Some(services) => services,
             None => {
                 return ready(Err(ErrorInternalServerError(ApiError::InternalError(

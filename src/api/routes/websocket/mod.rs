@@ -1,6 +1,9 @@
 use std::{pin::pin, time::Instant};
 
-use actix_web::{HttpRequest, HttpResponse, web};
+use actix_web::{
+    HttpRequest, HttpResponse,
+    web::{Data, Payload},
+};
 use actix_ws::{AggregatedMessage, MessageStream, Session, handle};
 use apistos::{
     api_operation,
@@ -104,8 +107,8 @@ async fn handle_chat_ws(
 )]
 async fn get_lost(
     req: HttpRequest,
-    body: web::Payload,
-    chat_server: web::Data<ChatServerHandle>,
+    body: Payload,
+    chat_server: Data<ChatServerHandle>,
 ) -> ApiResult<HttpResponse> {
     let (response, session, stream) = handle(&req, body)?;
 

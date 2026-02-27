@@ -1,6 +1,6 @@
 mod bot;
 
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json};
 use anyhow::Result;
 use apistos::{
     api_operation,
@@ -21,7 +21,7 @@ use crate::{
 )]
 async fn get_all_bots(
     _admin: RequireAdmin,
-    repos: web::Data<Repositories>,
+    repos: Data<Repositories>,
 ) -> ApiResult<Json<Vec<BotResponse>>> {
     info!(
         code = %LogCode::Request,
@@ -29,7 +29,7 @@ async fn get_all_bots(
     );
 
     let bots = repos.bots.find_all().await?;
-    
+
     let bot_responses = bots
         .into_iter()
         .map(BotResponse::try_from)

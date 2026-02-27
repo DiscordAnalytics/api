@@ -1,7 +1,7 @@
 use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, http, rt, web};
+use actix_web::{App, HttpServer, http, rt, web::Data};
 use anyhow::Result;
 use apistos::app::OpenApiWrapper;
 use tokio::{
@@ -84,7 +84,7 @@ async fn main() -> Result<()> {
         "Services initialized",
     );
 
-    let votes_webhooks_manager = web::Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
+    let votes_webhooks_manager = Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
     info!(
         code = %LogCode::Server,
         "VotesWebhooksManager initialized",
@@ -92,7 +92,7 @@ async fn main() -> Result<()> {
 
     let (chat_server, chat_server_handle) = ChatServer::new();
     let chat_server = spawn(chat_server.run());
-    let chat_server_handle = web::Data::new(chat_server_handle);
+    let chat_server_handle = Data::new(chat_server_handle);
     info!(
         code = %LogCode::Server,
         "ChatServer initialized",
@@ -114,8 +114,8 @@ async fn main() -> Result<()> {
 
         App::new()
             .document(spec)
-            .app_data(web::Data::new(repos.clone()))
-            .app_data(web::Data::new(services.clone()))
+            .app_data(Data::new(repos.clone()))
+            .app_data(Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
             .app_data(chat_server_handle.clone())
             .wrap(TracingLogger::default())

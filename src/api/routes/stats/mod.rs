@@ -1,4 +1,4 @@
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json, Query};
 use anyhow::Result;
 use apistos::{
     api_operation,
@@ -23,8 +23,8 @@ use crate::{
 )]
 async fn get_stats(
     _admin: RequireAdmin,
-    repos: web::Data<Repositories>,
-    query: web::Query<StatsQuery>,
+    repos: Data<Repositories>,
+    query: Query<StatsQuery>,
 ) -> ApiResult<Json<Vec<StatResponse>>> {
     info!(
         code = %LogCode::Request,

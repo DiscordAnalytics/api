@@ -1,4 +1,4 @@
-use actix_web::web::{self, Json};
+use actix_web::web::{Data, Json, Query};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
@@ -22,8 +22,8 @@ use crate::{
     tag = "Invitations"
 )]
 async fn get_invitation(
-    repos: web::Data<Repositories>,
-    query: web::Query<InvitationQuery>,
+    repos: Data<Repositories>,
+    query: Query<InvitationQuery>,
 ) -> ApiResult<Json<InvitationResponse>> {
     let invitation_id = &query.invitation_id;
 
@@ -114,9 +114,9 @@ async fn get_invitation(
 )]
 async fn post_invitation(
     auth: Authenticated,
-    services: web::Data<Services>,
-    repos: web::Data<Repositories>,
-    body: web::Json<InvitationAcceptBody>,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    body: Json<InvitationAcceptBody>,
 ) -> ApiResult<Json<InvitationAcceptResponse>> {
     let invitation_id = &body.invitation_id;
 

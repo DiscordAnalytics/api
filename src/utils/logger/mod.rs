@@ -10,7 +10,10 @@ use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 #[cfg(feature = "otel")]
 use opentelemetry_otlp::{LogExporter, Protocol, WithExportConfig, WithHttpConfig};
 #[cfg(feature = "otel")]
-use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
+use opentelemetry_sdk::{
+    Resource,
+    logs::{SdkLogger, SdkLoggerProvider},
+};
 use tracing::Level;
 use tracing_subscriber::{
     filter::EnvFilter,
@@ -66,7 +69,7 @@ impl Logger {
     }
 
     #[cfg(feature = "otel")]
-    fn otel_layer(&self) -> OpenTelemetryTracingBridge<SdkLoggerProvider> {
+    fn otel_layer(&self) -> OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger> {
         let env = app_env!();
 
         let mut headers = HashMap::new();

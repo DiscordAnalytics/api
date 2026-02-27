@@ -78,9 +78,9 @@ cargo build
 | `CLOUDFLARE_ID`             | No       | —                 | Cloudflare API ID                                                        |
 | `CLOUDFLARE_TOKEN`          | No       | —                 | Cloudflare API token                                                     |
 
-> **Note 1:** If any one of `OTLP_ENDPOINT`, `OTLP_TOKEN`, or `OTLP_STREAM` is set, all three must be provided.
-> **Note 2:** If any of the `SMTP` variables are set, all of them must be provided to enable email notifications.
-> **Note 3:** If any of the `R2` or `CLOUDFLARE` variables are set, all of them must be provided to enable Cloudflare R2 integration.
+> **Note 1:** Required when using the `otel` feature, if any one of `OTLP_ENDPOINT`, `OTLP_TOKEN`, or `OTLP_STREAM` is set, all three must be provided.
+> **Note 2:** Required when using the `mails` feature, if any of the `SMTP` variables are set, all of them must be provided to enable email notifications.
+> **Note 3:** Required when using the `reports` feature, if any of the `R2` or `CLOUDFLARE` variables are set, all of them must be provided to enable Cloudflare R2 integration.
 
 ---
 
@@ -88,8 +88,15 @@ cargo build
 
 **Development**
 
+The following `cargo` commands run the API with different feature sets. You can also combine features as needed (e.g. `cargo run --features "mails otel"`).
+
 ```sh
-cargo run
+cargo minimal    # Runs the api without any features
+cargo mails      # Runs the API with email notifications enabled
+cargo otel       # Runs the API with OpenTelemetry enabled
+cargo reports    # Runs the API with the reports feature enabled
+cargo mails-otel # Runs the API with both email notifications and OpenTelemetry enabled
+cargo full       # Runs the API with all features enabled
 ```
 
 **Production**

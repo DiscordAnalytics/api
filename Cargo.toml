@@ -9,7 +9,7 @@ homepage = "https://discordanalytics.xyz"
 repository = "https://github.com/DiscordAnalytics/api"
 
 [features]
-default = []
+default = ["full"]
 mails = []
 otel = [
   "dep:opentelemetry-appender-tracing",

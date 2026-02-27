@@ -1,11 +1,16 @@
 use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, http, web};
+use actix_web::{App, HttpServer, http, rt, web};
 use anyhow::Result;
 use apistos::app::OpenApiWrapper;
-use tokio::{spawn, sync::Mutex, try_join};
-use tracing::{Level, info};
+use tokio::{
+    spawn,
+    sync::Mutex,
+    time::{Duration, interval},
+    try_join,
+};
+use tracing::{Level, error, info};
 use tracing_actix_web::TracingLogger;
 
 use api::{
@@ -49,6 +54,29 @@ async fn main() -> Result<()> {
         code = %LogCode::Server,
         "Repositories initialized",
     );
+
+    let repos_clone = repos.clone();
+    rt::spawn(async move {
+        let repos_clone = repos_clone.clone();
+        let mut interval = interval(Duration::from_secs(3600));
+
+        loop {
+            interval.tick().await;
+
+            match repos_clone.sessions.delete_expired().await {
+                Ok(deleted_count) => info!(
+                    code = %LogCode::Server,
+                    deleted_count = %deleted_count,
+                    "Deleted expired sessions",
+                ),
+                Err(e) => error!(
+                    code = %LogCode::Server,
+                    error = %e,
+                    "Failed to delete expired sessions"
+                ),
+            }
+        }
+    });
 
     let services = Services::new(repos.clone());
     info!(

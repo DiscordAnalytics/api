@@ -44,5 +44,9 @@ async fn get_all_users(
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/users").service(resource("").route(get().to(get_all_users))));
+    cfg.service(
+        scope("/users")
+            .service(resource("").route(get().to(get_all_users)))
+            .configure(user::configure),
+    );
 }

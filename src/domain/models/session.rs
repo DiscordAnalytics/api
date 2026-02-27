@@ -21,7 +21,8 @@ pub struct Session {
 impl Session {
     pub fn new(user_id: String, refresh_token_hash: String) -> Self {
         let now = DateTime::now();
-        let expires_at = DateTime::from_millis(now.timestamp_millis() + REFRESH_TOKEN_LIFETIME);
+        let expires_at =
+            DateTime::from_millis(now.timestamp_millis() + (REFRESH_TOKEN_LIFETIME * 1000));
 
         Self {
             active: true,

@@ -1,3 +1,5 @@
+mod bots;
+
 use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
@@ -74,7 +76,8 @@ async fn get_user(
 #[api_operation(
     summary = "Update user details",
     description = "Update information for a specific user registered in the Discord Analytics API",
-    tag = "Users"
+    tag = "Users",
+    skip
 )]
 async fn update_user(
     _admin: RequireAdmin,
@@ -167,11 +170,13 @@ async fn delete_user(
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
-        scope("/{id}").service(
-            resource("")
-                .route(get().to(get_user))
-                .route(patch().to(update_user))
-                .route(delete().to(delete_user)),
-        ),
+        scope("/{id}")
+            .service(
+                resource("")
+                    .route(get().to(get_user))
+                    .route(patch().to(update_user))
+                    .route(delete().to(delete_user)),
+            )
+            .configure(bots::configure),
     );
 }

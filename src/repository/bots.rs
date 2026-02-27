@@ -78,8 +78,13 @@ impl BotsRepository {
         self.collection.find_one(doc! { "botId": bot_id }).await
     }
 
-    pub async fn find_by_owner(&self, owner_id: &str) -> Result<Vec<Bot>> {
+    pub async fn find_by_owner_id(&self, owner_id: &str) -> Result<Vec<Bot>> {
         let cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
+        cursor.try_collect().await
+    }
+
+    pub async fn find_by_team_member_id(&self, user_id: &str) -> Result<Vec<Bot>> {
+        let cursor = self.collection.find(doc! { "team": user_id }).await?;
         cursor.try_collect().await
     }
 

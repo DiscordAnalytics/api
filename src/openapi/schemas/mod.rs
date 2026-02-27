@@ -16,4 +16,4 @@ pub use invitation::{
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 pub use stat::{StatResponse, StatsQuery};
-pub use user::{UserDeletionReponse, UserResponse, UserUpdateRequest};
+pub use user::{UserBotsResponse, UserDeletionReponse, UserResponse, UserUpdateRequest};

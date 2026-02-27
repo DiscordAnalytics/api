@@ -2,7 +2,7 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::models::User;
+use crate::{domain::models::User, openapi::schemas::BotResponse};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -42,4 +42,11 @@ pub struct UserUpdateRequest {
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct UserDeletionReponse {
     pub message: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct UserBotsResponse {
+    pub owned_bots: Vec<BotResponse>,
+    pub in_bots_teams: Vec<BotResponse>,
 }

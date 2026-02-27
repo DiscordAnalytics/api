@@ -22,6 +22,7 @@ pub struct EnvConfig {
     // Tokens
     pub discord_token: String,
     pub jwt_secret: String,
+    pub enable_registrations: bool,
 
     // Linked Roles
     pub client_secret: String,
@@ -87,6 +88,9 @@ pub fn init_env() -> Result<&'static EnvConfig> {
 
     let discord_token = get_var("DISCORD_TOKEN")?;
     let jwt_secret = get_var("JWT_SECRET")?;
+    let enable_registrations = env::var("ENABLE_REGISTRATIONS")
+        .map(|v| v == "true" || v == "1")
+        .unwrap_or(false);
 
     let client_secret = get_var("CLIENT_SECRET")?;
     let client_id = get_var("CLIENT_ID")?;
@@ -113,6 +117,7 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         otlp_stream,
         discord_token,
         jwt_secret,
+        enable_registrations,
         client_secret,
         client_id,
         smtp,

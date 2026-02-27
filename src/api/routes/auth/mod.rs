@@ -143,6 +143,19 @@ async fn oauth_callback(
             );
         }
         None => {
+            if !app_env!().enable_registrations {
+                warn!(
+                    code = %LogCode::Auth,
+                    user_id = %user_id,
+                    "Registration attempt while registrations are disabled"
+                );
+                return Redirect::to(format!(
+                    "{}/auth?error=registrations_disabled",
+                    app_env!().client_url
+                ))
+                .temporary();
+            }
+
             let user_created_at = get_user_creation_date(&user_id).unwrap_or_else(DateTime::now);
 
             let new_user = User {

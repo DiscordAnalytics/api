@@ -32,13 +32,13 @@ pub struct EnvConfig {
     pub otlp_stream: String,
 
     // Mail
-    #[cfg(any(feature = "mails", feature = "reports"))]
+    #[cfg(feature = "mails")]
     pub smtp: String,
-    #[cfg(any(feature = "mails", feature = "reports"))]
+    #[cfg(feature = "mails")]
     pub smtp_mail: String,
-    #[cfg(any(feature = "mails", feature = "reports"))]
+    #[cfg(feature = "mails")]
     pub smtp_user: String,
-    #[cfg(any(feature = "mails", feature = "reports"))]
+    #[cfg(feature = "mails")]
     pub smtp_password: String,
 
     // R2
@@ -100,13 +100,13 @@ pub fn init_env() -> Result<&'static EnvConfig> {
     #[cfg(feature = "otel")]
     let otlp_stream = get_var("OTLP_STREAM")?;
 
-    #[cfg(feature = "reports")]
+    #[cfg(feature = "mails")]
     let smtp = get_var("SMTP")?;
-    #[cfg(feature = "reports")]
+    #[cfg(feature = "mails")]
     let smtp_mail = get_var("SMTP_MAIL")?;
-    #[cfg(feature = "reports")]
+    #[cfg(feature = "mails")]
     let smtp_user = get_var("SMTP_USER")?;
-    #[cfg(feature = "reports")]
+    #[cfg(feature = "mails")]
     let smtp_password = get_var("SMTP_PASSWORD")?;
 
     #[cfg(feature = "reports")]
@@ -137,13 +137,13 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         otlp_token,
         #[cfg(feature = "otel")]
         otlp_stream,
-        #[cfg(any(feature = "mails", feature = "reports"))]
+        #[cfg(feature = "mails")]
         smtp,
-        #[cfg(any(feature = "mails", feature = "reports"))]
+        #[cfg(feature = "mails")]
         smtp_mail,
-        #[cfg(any(feature = "mails", feature = "reports"))]
+        #[cfg(feature = "mails")]
         smtp_user,
-        #[cfg(any(feature = "mails", feature = "reports"))]
+        #[cfg(feature = "mails")]
         smtp_password,
         #[cfg(feature = "reports")]
         r2_bucket_name,

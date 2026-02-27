@@ -31,6 +31,11 @@ impl R2Repository {
         })
     }
 
+    pub async fn ping(&self) -> Result<()> {
+        self.client.buckets().list().send().await?;
+        Ok(())
+    }
+
     pub async fn put_object(&self, key: &str, body: &[u8], content_type: &str) -> Result<()> {
         self.client
             .objects()

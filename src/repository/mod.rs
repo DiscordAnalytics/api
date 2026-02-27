@@ -13,6 +13,7 @@ mod users;
 mod votes;
 
 pub use achievements::AchievementUpdate;
+use anyhow::Result;
 pub use blog_articles::BlogArticleUpdate;
 pub use bot_stats::BotStatsUpdate;
 pub use bots::BotUpdate;
@@ -40,7 +41,7 @@ pub struct Repositories {
 }
 
 impl Repositories {
-    pub async fn init() -> anyhow::Result<Self> {
+    pub async fn init() -> Result<Self> {
         let connection = connection::DbConnection::init().await?;
         let db = connection.database();
 
@@ -58,5 +59,22 @@ impl Repositories {
             users: users::UsersRepository::new(db),
             votes: votes::VotesRepository::new(db),
         })
+    }
+
+    pub async fn ping(&self) -> Result<()> {
+        self.achievements.ping().await?;
+        self.blog_articles.ping().await?;
+        self.bots.ping().await?;
+        self.bot_stats.ping().await?;
+        self.custom_events.ping().await?;
+        self.global_stats.ping().await?;
+        self.sessions.ping().await?;
+        self.r2.ping().await?;
+        self.stats_reports.ping().await?;
+        self.team_invitations.ping().await?;
+        self.users.ping().await?;
+        self.votes.ping().await?;
+
+        Ok(())
     }
 }

@@ -35,6 +35,11 @@ impl TeamInvitationsRepository {
         }
     }
 
+    pub async fn ping(&self) -> Result<()> {
+        self.collection.find_one(doc! {}).await?;
+        Ok(())
+    }
+
     pub async fn find_all(&self) -> Result<Vec<TeamInvitation>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await

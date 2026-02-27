@@ -1,19 +1,20 @@
-use actix_web::web::Json;
+use actix_web::web::{self, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
 };
 
-use crate::{domain::error::ApiResult, openapi::schemas::HealthResponse};
+use crate::{domain::error::ApiResult, openapi::schemas::HealthResponse, repository::Repositories};
 
 #[api_operation(
     summary = "Get API health status",
     description = "Check the health status of the Discord Analytics API",
     tag = "Health"
 )]
-async fn get_health() -> ApiResult<Json<HealthResponse>> {
+async fn get_health(repos: web::Data<Repositories>) -> ApiResult<Json<HealthResponse>> {
+    let repos_status = repos.ping().await.is_ok();
     Ok(Json(HealthResponse {
-        status: "ok".to_string(),
+        status: (if repos_status { "healthy" } else { "degraded" }).to_string(),
         service: "Discord Analytics API".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         environment: (if cfg!(debug_assertions) {

@@ -20,6 +20,11 @@ impl SessionsRepository {
         }
     }
 
+    pub async fn ping(&self) -> Result<()> {
+        self.collection.find_one(doc! {}).await?;
+        Ok(())
+    }
+
     pub async fn insert(&self, session: &Session) -> Result<InsertOneResult> {
         self.collection.insert_one(session).await
     }

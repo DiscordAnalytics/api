@@ -35,6 +35,11 @@ impl BotStatsRepository {
         }
     }
 
+    pub async fn ping(&self) -> Result<()> {
+        self.collection.find_one(doc! {}).await?;
+        Ok(())
+    }
+
     pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<BotStats>> {
         let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
         cursor.try_collect().await

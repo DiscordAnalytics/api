@@ -28,6 +28,11 @@ impl UserUpdate {
         self
     }
 
+    pub fn with_bots_limit(mut self, bots_limit: i32) -> Self {
+        self.updates.insert("botsLimit", bots_limit);
+        self
+    }
+
     pub fn with_mail(mut self, mail: String) -> Self {
         self.updates.insert("mail", mail);
         self
@@ -89,7 +94,7 @@ impl UsersRepository {
             .await
     }
 
-    pub async fn delete(&self, user_id: &str) -> Result<DeleteResult> {
+    pub async fn delete_by_id(&self, user_id: &str) -> Result<DeleteResult> {
         self.collection.delete_one(doc! { "userId": user_id }).await
     }
 }

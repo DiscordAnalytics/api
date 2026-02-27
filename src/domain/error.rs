@@ -46,6 +46,7 @@ pub enum ApiError {
     InvitationAlreadyAccepted,
 
     // Validation errors
+    InvalidId,
     InvalidInput(String),
     ValidationError(String),
 
@@ -77,6 +78,7 @@ impl fmt::Display for ApiError {
             ApiError::InvitationAlreadyAccepted => {
                 write!(f, "Invitation has already been accepted")
             }
+            ApiError::InvalidId => write!(f, "Invalid ID format"),
             ApiError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             ApiError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             ApiError::BotSuspended => write!(f, "Bot is suspended"),
@@ -97,7 +99,8 @@ impl ResponseError for ApiError {
                 StatusCode::UNAUTHORIZED
             }
             ApiError::Forbidden => StatusCode::FORBIDDEN,
-            ApiError::InvalidInput(_)
+            ApiError::InvalidId
+            | ApiError::InvalidInput(_)
             | ApiError::ValidationError(_)
             | ApiError::InvitationExpired
             | ApiError::InvitationAlreadyAccepted => StatusCode::BAD_REQUEST,

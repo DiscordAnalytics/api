@@ -26,14 +26,20 @@ impl TryFrom<User> for UserResponse {
             avatar_decoration: user.avatar_decoration,
             banned: user.banned,
             bots_limit: user.bots_limit,
-            created_at: user
-                .created_at
-                .try_to_rfc3339_string()?,
-            joined_at: user
-                .joined_at
-                .try_to_rfc3339_string()?,
+            created_at: user.created_at.try_to_rfc3339_string()?,
+            joined_at: user.joined_at.try_to_rfc3339_string()?,
             username: user.username,
             user_id: user.user_id,
         })
     }
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct UserUpdateRequest {
+    pub bots_limit: i32,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct UserDeletionReponse {
+    pub message: String,
 }

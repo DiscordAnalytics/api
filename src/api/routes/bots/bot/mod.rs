@@ -15,7 +15,7 @@ use crate::{
     openapi::schemas::{BotCreationBody, BotDeletionResponse, BotResponse, BotUpdateBody},
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{discord::is_valid_snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -30,6 +30,10 @@ async fn get_bot(
     id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(bot_id.as_str()) {
+        return Err(ApiError::InvalidId);
+    }
 
     info!(
       code = %LogCode::Request,
@@ -54,15 +58,15 @@ async fn get_bot(
           bot_id = %bot_id,
           "Admin access granted for bot details",
         );
-    } else if auth.0.is_bot() && auth.0.bot_id.as_deref() != Some(&bot_id) {
+    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
         warn!(
           code = %LogCode::Forbidden,
           bot_id = %bot_id,
           "Bot attempting to access details of another bot",
         );
         return Err(ApiError::Forbidden);
-    } else if auth.0.is_user() {
-        let user_id = auth.0.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
             warn!(
               code = %LogCode::Forbidden,
@@ -103,6 +107,10 @@ async fn post_bot(
     id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(bot_id.as_str()) {
+        return Err(ApiError::InvalidId);
+    }
 
     info!(
       code = %LogCode::Request,
@@ -177,6 +185,11 @@ async fn patch_bot(
     id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(bot_id.as_str()) {
+        return Err(ApiError::InvalidId);
+    }
+
     let update_data = body.into_inner();
 
     info!(
@@ -267,6 +280,10 @@ async fn delete_bot(
     id: Path<String>,
 ) -> ApiResult<Json<BotDeletionResponse>> {
     let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(bot_id.as_str()) {
+        return Err(ApiError::InvalidId);
+    }
 
     info!(
       code = %LogCode::Request,

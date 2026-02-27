@@ -9,13 +9,13 @@ use crate::domain::models::Bot;
 pub struct BotResponse {
     pub advanced_stats: Option<bool>,
     pub avatar: Option<String>,
-    pub banned: Option<bool>,
     pub bot_id: String,
     pub framework: Option<String>,
     pub goals_limit: Option<i32>,
     pub language: Option<String>,
     pub last_push: Option<String>,
     pub owner_id: Option<String>,
+    pub suspended: Option<bool>,
     pub team: Option<Vec<String>>,
     pub username: Option<String>,
     pub version: Option<String>,
@@ -30,7 +30,6 @@ impl TryFrom<Bot> for BotResponse {
         Ok(Self {
             advanced_stats: Some(bot.advanced_stats),
             avatar: bot.avatar,
-            banned: Some(bot.suspended),
             bot_id: bot.bot_id,
             framework: bot.framework,
             goals_limit: bot.goals_limit,
@@ -40,6 +39,7 @@ impl TryFrom<Bot> for BotResponse {
                 .map(|dt| dt.try_to_rfc3339_string())
                 .transpose()?,
             owner_id: Some(bot.owner_id),
+            suspended: Some(bot.suspended),
             team: Some(bot.team),
             username: Some(bot.username),
             version: bot.version,

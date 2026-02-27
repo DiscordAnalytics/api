@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 pub struct User {
     pub avatar: String,
     pub avatar_decoration: Option<String>,
-    pub banned: bool,
     pub bots_limit: i32,
     pub created_at: DateTime,
     pub joined_at: DateTime,
     pub mail: String,
+    pub suspended: bool,
     pub username: String,
     pub user_id: String,
 }

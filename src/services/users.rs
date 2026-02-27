@@ -25,6 +25,7 @@ impl UsersService {
 
     pub async fn delete_user(&self, user_id: &str) -> Result<()> {
         self.repos.users.delete_by_id(user_id).await?;
+        self.repos.sessions.revoke_all_for_user(user_id).await?;
         let user_bots = self.repos.bots.find_by_owner_id(user_id).await?;
         for bot in user_bots {
             self.repos.bots.delete(&bot.bot_id).await?;

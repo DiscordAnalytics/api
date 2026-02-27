@@ -28,9 +28,9 @@ async fn get_invitation(
     let invitation_id = &query.invitation_id;
 
     info!(
-      code = %LogCode::Request,
-      invitation_id = %invitation_id,
-      "Fetching details for invitation",
+        code = %LogCode::Request,
+        invitation_id = %invitation_id,
+        "Fetching details for invitation",
     );
 
     let invitation = repos
@@ -39,27 +39,27 @@ async fn get_invitation(
         .await?
         .ok_or_else(|| {
             info!(
-              code = %LogCode::Request,
-              invitation_id = %invitation_id,
-              "Invitation not found",
+                code = %LogCode::Request,
+                invitation_id = %invitation_id,
+                "Invitation not found",
             );
             ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
         })?;
 
     if invitation.accepted {
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          "Invitation already accepted",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation already accepted",
         );
         return Err(ApiError::InvitationAlreadyAccepted);
     }
 
     if invitation.is_expired() {
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          "Invitation expired",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation expired",
         );
         return Err(ApiError::InvitationExpired);
     }
@@ -70,9 +70,9 @@ async fn get_invitation(
         .await?
         .ok_or_else(|| {
             info!(
-              code = %LogCode::Request,
-              bot_id = %invitation.bot_id,
-              "Bot not found for invitation",
+                code = %LogCode::Request,
+                bot_id = %invitation.bot_id,
+                "Bot not found for invitation",
             );
             ApiError::NotFound(format!("Bot with ID {} not found", invitation.bot_id))
         })?;
@@ -83,19 +83,19 @@ async fn get_invitation(
         .await?
         .ok_or_else(|| {
             info!(
-              code = %LogCode::Request,
-              owner_id = %bot.owner_id,
-              "Owner not found for bot in invitation",
+                code = %LogCode::Request,
+                owner_id = %bot.owner_id,
+                "Owner not found for bot in invitation",
             );
             ApiError::NotFound(format!("Owner with ID {} not found", bot.owner_id))
         })?;
 
     info!(
-      code = %LogCode::Request,
-      invitation_id = %invitation_id,
-      bot_id = %bot.bot_id,
-      owner_id = %owner.user_id,
-      "Successfully fetched invitation details",
+        code = %LogCode::Request,
+        invitation_id = %invitation_id,
+        bot_id = %bot.bot_id,
+        owner_id = %owner.user_id,
+        "Successfully fetched invitation details",
     );
 
     Ok(Json(InvitationResponse {
@@ -121,9 +121,9 @@ async fn post_invitation(
     let invitation_id = &body.invitation_id;
 
     info!(
-      code = %LogCode::Request,
-      invitation_id = %invitation_id,
-      "Processing invitation acceptance/rejection",
+        code = %LogCode::Request,
+        invitation_id = %invitation_id,
+        "Processing invitation acceptance/rejection",
     );
 
     let invitation = repos
@@ -132,9 +132,9 @@ async fn post_invitation(
         .await?
         .ok_or_else(|| {
             info!(
-              code = %LogCode::Request,
-              invitation_id = %invitation_id,
-              "Invitation not found for acceptance/rejection",
+                code = %LogCode::Request,
+                invitation_id = %invitation_id,
+                "Invitation not found for acceptance/rejection",
             );
             ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
         })?;
@@ -145,9 +145,9 @@ async fn post_invitation(
         .await?
         .ok_or_else(|| {
             info!(
-              code = %LogCode::Request,
-              bot_id = %invitation.bot_id,
-              "Bot not found for invitation acceptance/rejection",
+                code = %LogCode::Request,
+                bot_id = %invitation.bot_id,
+                "Bot not found for invitation acceptance/rejection",
             );
             ApiError::NotFound(format!("Bot with ID {} not found", invitation.bot_id))
         })?;
@@ -156,50 +156,50 @@ async fn post_invitation(
 
     if ctx.is_admin() {
         info!(
-          code = %LogCode::AdminAction,
-          invitation_id = %invitation_id,
-          "Admin user processing invitation acceptance/rejection",
+            code = %LogCode::AdminAction,
+            invitation_id = %invitation_id,
+            "Admin user processing invitation acceptance/rejection",
         );
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_team_member(user_id) {
             info!(
-              code = %LogCode::Forbidden,
-              invitation_id = %invitation_id,
-              user_id = %user_id,
-              "User does not have access to process invitation acceptance/rejection",
+                code = %LogCode::Forbidden,
+                invitation_id = %invitation_id,
+                user_id = %user_id,
+                "User does not have access to process invitation acceptance/rejection",
             );
             return Err(ApiError::Forbidden);
         }
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          user_id = %user_id,
-          "User processing invitation acceptance/rejection",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            user_id = %user_id,
+            "User processing invitation acceptance/rejection",
         );
     } else {
         info!(
-          code = %LogCode::Forbidden,
-          invitation_id = %invitation_id,
-          "Unauthorized context attempting to process invitation acceptance/rejection",
+            code = %LogCode::Forbidden,
+            invitation_id = %invitation_id,
+            "Unauthorized context attempting to process invitation acceptance/rejection",
         );
         return Err(ApiError::Forbidden);
     }
 
     if invitation.accepted {
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          "Invitation already accepted, cannot process acceptance/rejection",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation already accepted, cannot process acceptance/rejection",
         );
         return Err(ApiError::InvitationAlreadyAccepted);
     }
 
     if invitation.is_expired() {
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          "Invitation expired, cannot process acceptance/rejection",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation expired, cannot process acceptance/rejection",
         );
         return Err(ApiError::InvitationExpired);
     }
@@ -210,9 +210,9 @@ async fn post_invitation(
             .accept_invitation(invitation_id)
             .await?;
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          "Invitation accepted successfully",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation accepted successfully",
         );
     } else {
         services
@@ -220,9 +220,9 @@ async fn post_invitation(
             .reject_invitation(invitation_id, &invitation.bot_id, &invitation.user_id)
             .await?;
         info!(
-          code = %LogCode::Request,
-          invitation_id = %invitation_id,
-          "Invitation rejected successfully",
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation rejected successfully",
         );
     }
 

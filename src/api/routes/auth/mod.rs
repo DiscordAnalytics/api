@@ -104,14 +104,17 @@ async fn oauth_callback(
 
     match existing_user {
         Some(db_user) => {
-            if db_user.banned {
+            if db_user.suspended {
                 warn!(
                     code = %LogCode::Auth,
                     user_id = %user_id,
                     "Banned user attempted login"
                 );
-                return Redirect::to(format!("{}/auth?error=banned_user", app_env!().client_url))
-                    .permanent();
+                return Redirect::to(format!(
+                    "{}/auth?error=suspended_user",
+                    app_env!().client_url
+                ))
+                .permanent();
             }
 
             let mut user_update = UserUpdate::new();
@@ -166,7 +169,7 @@ async fn oauth_callback(
                 avatar_decoration: discord_user
                     .avatar_decoration_data
                     .and_then(|data| data.asset),
-                banned: false,
+                suspended: false,
                 bots_limit: 3,
                 created_at: user_created_at,
                 joined_at: DateTime::now(),
@@ -230,9 +233,9 @@ async fn oauth_callback(
             }
 
             info!(
-               code = %LogCode::Auth,
-               user_id = %user_id,
-               "New user registered successfully"
+                code = %LogCode::Auth,
+                user_id = %user_id,
+                "New user registered successfully"
             );
         }
     }
@@ -241,10 +244,10 @@ async fn oauth_callback(
         Ok(token) => token,
         Err(e) => {
             error!(
-              code = %LogCode::Auth,
-              user_id = %user_id,
-              error = %e,
-              "Failed to generate refresh token"
+                code = %LogCode::Auth,
+                user_id = %user_id,
+                error = %e,
+                "Failed to generate refresh token"
             );
             return Redirect::to(format!(
                 "{}/auth?error=token_generation_failed",

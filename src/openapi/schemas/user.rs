@@ -9,10 +9,10 @@ use crate::{domain::models::User, openapi::schemas::BotResponse};
 pub struct UserResponse {
     pub avatar: String,
     pub avatar_decoration: Option<String>,
-    pub banned: bool,
     pub bots_limit: i32,
     pub created_at: String,
     pub joined_at: String,
+    pub suspended: bool,
     pub username: String,
     pub user_id: String,
 }
@@ -24,10 +24,10 @@ impl TryFrom<User> for UserResponse {
         Ok(Self {
             avatar: user.avatar,
             avatar_decoration: user.avatar_decoration,
-            banned: user.banned,
             bots_limit: user.bots_limit,
             created_at: user.created_at.try_to_rfc3339_string()?,
             joined_at: user.joined_at.try_to_rfc3339_string()?,
+            suspended: user.suspended,
             username: user.username,
             user_id: user.user_id,
         })
@@ -49,4 +49,14 @@ pub struct UserDeletionReponse {
 pub struct UserBotsResponse {
     pub owned_bots: Vec<BotResponse>,
     pub in_bots_teams: Vec<BotResponse>,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct UserSuspendRequest {
+    pub reason: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct UserSuspendResponse {
+    pub message: String,
 }

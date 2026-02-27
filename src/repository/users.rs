@@ -38,6 +38,11 @@ impl UserUpdate {
         self
     }
 
+    pub fn with_suspended(mut self, suspended: bool) -> Self {
+        self.updates.insert("suspended", suspended);
+        self
+    }
+
     pub fn with_username(mut self, username: String) -> Self {
         self.updates.insert("username", username);
         self

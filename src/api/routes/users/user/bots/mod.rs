@@ -29,26 +29,32 @@ async fn get_user_bots(
         return Err(ApiError::InvalidId);
     }
 
+    info!(
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "Received request to fetch user's bots"
+    );
+
     let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
-          code = %LogCode::AdminAction,
-          user_id = %user_id,
-          "Admin access granted for user bots"
+            code = %LogCode::AdminAction,
+            user_id = %user_id,
+            "Admin access granted for user bots"
         );
     } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
         warn!(
-          code = %LogCode::Forbidden,
-          user_id = %user_id,
-          "User attempted to access another user's details"
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "User attempted to access another user's details"
         );
         return Err(ApiError::Forbidden);
     } else {
         warn!(
-          code = %LogCode::Forbidden,
-          user_id = %user_id,
-          "Unauthenticated access attempt to user details"
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "Unauthenticated access attempt to user details"
         );
         return Err(ApiError::Forbidden);
     }
@@ -64,6 +70,14 @@ async fn get_user_bots(
         .into_iter()
         .map(BotResponse::try_from)
         .collect::<Result<Vec<_>, _>>()?;
+
+    info!(
+        code = %LogCode::Request,
+        user_id = %user_id,
+        owned_bots_count = owned_bots.len(),
+        team_bots_count = in_bots_teams.len(),
+        "Fetched user's bots"
+    );
 
     Ok(Json(UserBotsResponse {
         owned_bots,

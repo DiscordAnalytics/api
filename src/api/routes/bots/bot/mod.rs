@@ -36,59 +36,59 @@ async fn get_bot(
     }
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Fetching details for bot",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Fetching details for bot",
     );
 
     let ctx = &auth.0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
-          code = %LogCode::Request,
-          bot_id = %bot_id,
-          "Bot not found",
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
     if ctx.is_admin() {
         info!(
-          code = %LogCode::AdminAction,
-          bot_id = %bot_id,
-          "Admin access granted for bot details",
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            "Admin access granted for bot details",
         );
     } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          "Bot attempting to access details of another bot",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Bot attempting to access details of another bot",
         );
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
             warn!(
-              code = %LogCode::Forbidden,
-              bot_id = %bot_id,
-              user_id = %user_id,
-              "User does not have access to bot details",
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %user_id,
+                "User does not have access to bot details",
             );
             return Err(ApiError::Forbidden);
         }
     } else {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          "Access denied for bot details",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for bot details",
         );
         return Err(ApiError::Forbidden);
     }
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Bot details fetched successfully",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Bot details fetched successfully",
     );
 
     Ok(Json(BotResponse::try_from(bot)?))
@@ -113,19 +113,19 @@ async fn post_bot(
     }
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Attempting to create bot",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Attempting to create bot",
     );
 
     let ctx = &auth.0;
 
     if !ctx.is_admin() && !ctx.is_user() {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          auth_type = ?ctx.auth_type,
-          "Unauthorized bot creation attempt",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            auth_type = ?ctx.auth_type,
+            "Unauthorized bot creation attempt",
         );
         return Err(ApiError::Forbidden);
     }
@@ -136,10 +136,10 @@ async fn post_bot(
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if user_id != body_data.user_id {
             warn!(
-              code = %LogCode::Forbidden,
-              bot_id = %bot_id,
-              user_id = %user_id,
-              "User ID in request does not match authenticated user",
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %user_id,
+                "User ID in request does not match authenticated user",
             );
             return Err(ApiError::Forbidden);
         }
@@ -151,10 +151,10 @@ async fn post_bot(
         .await?
     {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          user_id = %body_data.user_id,
-          "User has reached bots limit and cannot create more",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            user_id = %body_data.user_id,
+            "User has reached bots limit and cannot create more",
         );
         return Err(ApiError::Forbidden);
     }
@@ -165,9 +165,9 @@ async fn post_bot(
     repos.bots.insert(&bot).await?;
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Bot created successfully",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Bot created successfully",
     );
 
     Ok(Json(BotResponse::try_from(bot)?))
@@ -193,28 +193,28 @@ async fn patch_bot(
     let update_data = body.into_inner();
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Attempting to update bot",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Attempting to update bot",
     );
 
     let ctx = &auth.0;
 
     if !ctx.is_admin() && !(ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          auth_type = ?ctx.auth_type,
-          "Unauthorized bot update attempt",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            auth_type = ?ctx.auth_type,
+            "Unauthorized bot update attempt",
         );
         return Err(ApiError::Forbidden);
     }
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
-          code = %LogCode::Request,
-          bot_id = %bot_id,
-          "Bot not found for update",
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for update",
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
@@ -223,9 +223,9 @@ async fn patch_bot(
         let auth_token = ctx.token.as_deref().ok_or(ApiError::InvalidToken)?;
         if bot.token() != auth_token {
             warn!(
-              code = %LogCode::InvalidToken,
-              bot_id = %bot_id,
-              "Bot token mismatch during update",
+                code = %LogCode::InvalidToken,
+                bot_id = %bot_id,
+                "Bot token mismatch during update",
             );
             return Err(ApiError::InvalidToken);
         }
@@ -252,17 +252,17 @@ async fn patch_bot(
 
     let updated_bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         warn!(
-          code = %LogCode::DbError,
-          bot_id = %bot_id,
-          "Bot not found after update",
+            code = %LogCode::DbError,
+            bot_id = %bot_id,
+            "Bot not found after update",
         );
         ApiError::DatabaseError(format!("Bot with ID {} not found after update", bot_id))
     })?;
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Bot update successful",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Bot update successful",
     );
 
     Ok(Json(BotResponse::try_from(updated_bot)?))
@@ -286,51 +286,51 @@ async fn delete_bot(
     }
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Attempting to delete bot",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Attempting to delete bot",
     );
 
     let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
-          code = %LogCode::AdminAction,
-          bot_id = %bot_id,
-          "Admin access granted for bot deletion",
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            "Admin access granted for bot deletion",
         );
     } else if ctx.is_bot() {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          "Bot attempting to delete a bot",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Bot attempting to delete a bot",
         );
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !services.auth.user_owns_bot(user_id, &bot_id).await? {
             warn!(
-              code = %LogCode::Forbidden,
-              bot_id = %bot_id,
-              user_id = %user_id,
-              "User does not own bot and cannot delete",
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %user_id,
+                "User does not own bot and cannot delete",
             );
             return Err(ApiError::Forbidden);
         }
     } else {
         warn!(
-          code = %LogCode::Forbidden,
-          bot_id = %bot_id,
-          "Access denied for bot deletion",
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for bot deletion",
         );
         return Err(ApiError::Forbidden);
     }
 
     repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
-          code = %LogCode::Request,
-          bot_id = %bot_id,
-          "Bot not found for deletion",
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for deletion",
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
@@ -338,9 +338,9 @@ async fn delete_bot(
     services.bots.delete_bot(&bot_id).await?;
 
     info!(
-      code = %LogCode::Request,
-      bot_id = %bot_id,
-      "Bot successfully deleted",
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Bot successfully deleted",
     );
 
     Ok(Json(BotDeletionResponse {

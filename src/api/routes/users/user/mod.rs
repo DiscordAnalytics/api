@@ -1,4 +1,5 @@
 mod bots;
+mod suspend;
 
 use actix_web::web::{Data, Json, Path};
 use apistos::{
@@ -31,43 +32,49 @@ async fn get_user(
         return Err(ApiError::InvalidId);
     }
 
+    info!(
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "Received request to fetch user details"
+    );
+
     let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
-          code = %LogCode::AdminAction,
-          user_id = %user_id,
-          "Admin access granted for user details"
+            code = %LogCode::AdminAction,
+            user_id = %user_id,
+            "Admin access granted for user details"
         );
     } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
         warn!(
-          code = %LogCode::Forbidden,
-          user_id = %user_id,
-          "User attempted to access another user's details"
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "User attempted to access another user's details"
         );
         return Err(ApiError::Forbidden);
     } else {
         warn!(
-          code = %LogCode::Forbidden,
-          user_id = %user_id,
-          "Unauthenticated access attempt to user details"
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "Unauthenticated access attempt to user details"
         );
         return Err(ApiError::Forbidden);
     }
 
     let user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
         info!(
-          code = %LogCode::Request,
-          user_id = %user_id,
-          "User not found"
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found"
         );
         ApiError::NotFound(format!("User with ID {} not found", user_id))
     })?;
 
     info!(
-      code = %LogCode::Request,
-      user_id = %user_id,
-      "Fetched details for user"
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "Fetched details for user"
     );
 
     Ok(Json(UserResponse::try_from(user)?))
@@ -91,6 +98,12 @@ async fn update_user(
         return Err(ApiError::InvalidId);
     }
 
+    info!(
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "Received request to update user details"
+    );
+
     let bots_limit = body.bots_limit;
 
     let user_update = UserUpdate::new().with_bots_limit(bots_limit);
@@ -99,17 +112,17 @@ async fn update_user(
 
     let updated_user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
         warn!(
-          code = %LogCode::Request,
-          user_id = %user_id,
-          "User not found after update"
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found after update"
         );
         ApiError::DatabaseError(format!("User with ID {} not found after update", user_id))
     })?;
 
     info!(
-      code = %LogCode::Request,
-      user_id = %user_id,
-      "User details updated"
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "User details updated"
     );
 
     Ok(Json(UserResponse::try_from(updated_user)?))
@@ -131,26 +144,32 @@ async fn delete_user(
         return Err(ApiError::InvalidId);
     }
 
+    info!(
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "Received request to delete user account"
+    );
+
     let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
-          code = %LogCode::AdminAction,
-          user_id = %user_id,
-          "Admin access granted for user deletion"
+            code = %LogCode::AdminAction,
+            user_id = %user_id,
+            "Admin access granted for user deletion"
         );
     } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
         warn!(
-          code = %LogCode::Forbidden,
-          user_id = %user_id,
-          "User attempted to delete another user's account"
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "User attempted to delete another user's account"
         );
         return Err(ApiError::Forbidden);
     } else {
         warn!(
-          code = %LogCode::Forbidden,
-          user_id = %user_id,
-          "Unauthenticated access attempt to delete user account"
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "Unauthenticated access attempt to delete user account"
         );
         return Err(ApiError::Forbidden);
     }
@@ -158,9 +177,9 @@ async fn delete_user(
     repos.users.delete_by_id(&user_id).await?;
 
     info!(
-      code = %LogCode::Request,
-      user_id = %user_id,
-      "User account deleted"
+        code = %LogCode::Request,
+        user_id = %user_id,
+        "User account deleted"
     );
 
     Ok(Json(UserDeletionReponse {
@@ -177,6 +196,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(patch().to(update_user))
                     .route(delete().to(delete_user)),
             )
-            .configure(bots::configure),
+            .configure(bots::configure)
+            .configure(suspend::configure),
     );
 }

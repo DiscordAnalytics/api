@@ -52,7 +52,7 @@ pub enum ApiError {
 
     // Business logic errors
     BotSuspended,
-    UserBanned,
+    UserSuspended,
     LimitExceeded,
 
     // External service errors
@@ -82,7 +82,7 @@ impl fmt::Display for ApiError {
             ApiError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             ApiError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             ApiError::BotSuspended => write!(f, "Bot is suspended"),
-            ApiError::UserBanned => write!(f, "User is banned"),
+            ApiError::UserSuspended => write!(f, "User is suspended"),
             ApiError::LimitExceeded => write!(f, "Rate limit exceeded"),
             ApiError::StorageError(msg) => write!(f, "Storage error: {}", msg),
             ApiError::WebhookError(msg) => write!(f, "Webhook error: {}", msg),

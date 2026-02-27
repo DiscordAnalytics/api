@@ -15,6 +15,8 @@ use opentelemetry_sdk::{
     logs::{SdkLogger, SdkLoggerProvider},
 };
 use tracing::Level;
+#[cfg(not(feature = "otel"))]
+use tracing_subscriber::layer::Identity;
 use tracing_subscriber::{
     filter::EnvFilter,
     fmt::{format::FmtSpan, layer},
@@ -56,20 +58,17 @@ impl Logger {
             .with_filter(filter);
 
         #[cfg(feature = "otel")]
-        {
-            let otel_layer = self.otel_layer();
-            registry().with(stdout_layer).with(otel_layer).init();
-        }
+        let otel_layer = (!self.dev_mode).then(|| self.otel_layer()).transpose()?;
         #[cfg(not(feature = "otel"))]
-        {
-            registry().with(stdout_layer).init();
-        }
+        let otel_layer: Option<Identity> = None;
+
+        registry().with(stdout_layer).with(otel_layer).init();
 
         Ok(())
     }
 
     #[cfg(feature = "otel")]
-    fn otel_layer(&self) -> OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger> {
+    fn otel_layer(&self) -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>> {
         let env = app_env!();
 
         let mut headers = HashMap::new();
@@ -84,8 +83,7 @@ impl Logger {
             .with_protocol(Protocol::HttpBinary)
             .with_headers(headers)
             .with_endpoint(format!("{}/v1/logs", env.otlp_endpoint))
-            .build()
-            .expect("Failed to create OTLP log exporter");
+            .build()?;
 
         let resource = Resource::builder().with_service_name("api").build();
 
@@ -95,6 +93,6 @@ impl Logger {
             .build();
         let otel_layer = OpenTelemetryTracingBridge::new(&provider);
 
-        otel_layer
+        Ok(otel_layer)
     }
 }

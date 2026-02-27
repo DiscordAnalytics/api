@@ -81,3 +81,8 @@ pub struct BotSuspendRequest {
 pub struct BotSuspendResponse {
     pub message: String,
 }
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct RefreshBotTokenResponse {
+    pub token: String,
+}

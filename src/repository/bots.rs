@@ -38,6 +38,11 @@ impl BotUpdate {
         self
     }
 
+    pub fn with_token(mut self, token: String) -> Self {
+        self.updates.insert("token", token);
+        self
+    }
+
     pub fn with_username(mut self, username: String) -> Self {
         self.updates.insert("username", username);
         self

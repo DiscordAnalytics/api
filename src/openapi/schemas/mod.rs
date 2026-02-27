@@ -11,7 +11,7 @@ pub use achievement::AchievementResponse;
 pub use auth::{AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse};
 pub use bot::{
     BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,
-    BotUpdateBody,
+    BotUpdateBody, RefreshBotTokenResponse,
 };
 pub use health::HealthResponse;
 pub use invitation::{

@@ -1,4 +1,5 @@
 mod suspend;
+mod token;
 
 use actix_web::web::{Data, Json, Path};
 use apistos::{
@@ -360,6 +361,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(patch().to(patch_bot))
                     .route(delete().to(delete_bot)),
             )
-            .configure(suspend::configure),
+            .configure(suspend::configure)
+            .configure(token::configure),
     );
 }

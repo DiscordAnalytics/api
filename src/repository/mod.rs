@@ -6,6 +6,7 @@ mod connection;
 mod custom_events;
 mod global_stats;
 mod r2;
+mod sessions;
 mod stats_reports;
 mod team_invitations;
 mod users;
@@ -30,6 +31,7 @@ pub struct Repositories {
     pub bot_stats: bot_stats::BotStatsRepository,
     pub custom_events: custom_events::CustomEventsRepository,
     pub global_stats: global_stats::GlobalStatsRepository,
+    pub sessions: sessions::SessionsRepository,
     pub r2: r2::R2Repository,
     pub stats_reports: stats_reports::StatsReportsRepository,
     pub team_invitations: team_invitations::TeamInvitationsRepository,
@@ -49,6 +51,7 @@ impl Repositories {
             bot_stats: bot_stats::BotStatsRepository::new(db),
             custom_events: custom_events::CustomEventsRepository::new(db),
             global_stats: global_stats::GlobalStatsRepository::new(db),
+            sessions: sessions::SessionsRepository::new(db),
             r2: r2::R2Repository::new()?,
             stats_reports: stats_reports::StatsReportsRepository::new(db),
             team_invitations: team_invitations::TeamInvitationsRepository::new(db),

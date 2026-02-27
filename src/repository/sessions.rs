@@ -1,0 +1,81 @@
+use futures::stream::TryStreamExt as _;
+use mongodb::{
+    Collection, Database,
+    bson::{DateTime, doc},
+    error::Result,
+    results::{InsertOneResult, UpdateResult},
+};
+
+use crate::{domain::models::Session, utils::constants::SESSIONS_COLLECTION};
+
+#[derive(Clone)]
+pub struct SessionsRepository {
+    collection: Collection<Session>,
+}
+
+impl SessionsRepository {
+    pub fn new(db: &Database) -> Self {
+        Self {
+            collection: db.collection(SESSIONS_COLLECTION),
+        }
+    }
+
+    pub async fn insert(&self, session: &Session) -> Result<InsertOneResult> {
+        self.collection.insert_one(session).await
+    }
+
+    pub async fn find_by_id(&self, session_id: &str) -> Result<Option<Session>> {
+        self.collection
+            .find_one(doc! { "sessionId": session_id })
+            .await
+    }
+
+    pub async fn find_by_user_id(&self, user_id: &str) -> Result<Vec<Session>> {
+        let cursor = self
+            .collection
+            .find(doc! {
+              "active": true,
+              "expiresAt": { "$gt": DateTime::now() },
+              "userId": user_id,
+            })
+            .await?;
+        cursor.try_collect().await
+    }
+
+    pub async fn update_last_used(&self, session_id: &str) -> Result<UpdateResult> {
+        self.collection
+            .update_one(
+                doc! { "sessionId": session_id },
+                doc! { "$set": { "lastUsedAt": DateTime::now() } },
+            )
+            .await
+    }
+
+    pub async fn revoke(&self, session_id: &str) -> Result<UpdateResult> {
+        self.collection
+            .update_one(
+                doc! { "sessionId": session_id },
+                doc! { "$set": { "active": false } },
+            )
+            .await
+    }
+
+    pub async fn revoke_all_for_user(&self, user_id: &str) -> Result<UpdateResult> {
+        self.collection
+            .update_many(
+                doc! { "userId": user_id },
+                doc! { "$set": { "active": false } },
+            )
+            .await
+    }
+
+    pub async fn delete_expired(&self) -> Result<u64> {
+        let result = self
+            .collection
+            .delete_many(doc! {
+                "expiresAt": { "$lt": DateTime::now() },
+            })
+            .await?;
+        Ok(result.deleted_count)
+    }
+}

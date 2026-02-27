@@ -19,6 +19,21 @@ impl GlobalStatsUpdate {
         Self::default()
     }
 
+    pub fn with_bot_count(mut self, bot_count: i32) -> Self {
+        self.updates.insert("botCount", bot_count);
+        self
+    }
+
+    pub fn with_registered_bots(mut self, registered_bots: i32) -> Self {
+        self.updates.insert("registeredBots", registered_bots);
+        self
+    }
+
+    pub fn with_user_count(mut self, user_count: i32) -> Self {
+        self.updates.insert("userCount", user_count);
+        self
+    }
+
     pub fn build(self) -> Document {
         self.updates
     }
@@ -39,6 +54,10 @@ impl GlobalStatsRepository {
     pub async fn find_all(&self) -> Result<Vec<GlobalStats>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await
+    }
+
+    pub async fn find_one(&self, date: &DateTime) -> Result<Option<GlobalStats>> {
+        self.collection.find_one(doc! { "date": date }).await
     }
 
     pub async fn find_from_date_range(

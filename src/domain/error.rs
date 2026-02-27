@@ -38,6 +38,7 @@ pub enum ApiError {
     Unauthorized,
     Forbidden,
     InvalidToken,
+    TokenGenerationFailed,
     MissingAuth,
 
     // Invitation errors
@@ -70,6 +71,7 @@ impl fmt::Display for ApiError {
             ApiError::Unauthorized => write!(f, "Unauthorized"),
             ApiError::Forbidden => write!(f, "Forbidden"),
             ApiError::InvalidToken => write!(f, "Invalid authentication token"),
+            ApiError::TokenGenerationFailed => write!(f, "Failed to generate authentication token"),
             ApiError::MissingAuth => write!(f, "Authentication required"),
             ApiError::InvitationExpired => write!(f, "Invitation has expired"),
             ApiError::InvitationAlreadyAccepted => {

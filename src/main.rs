@@ -3,7 +3,7 @@ use std::{net::Ipv4Addr, sync::Arc};
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, http, web};
 use anyhow::Result;
-use apistos::{app::OpenApiWrapper, web::scope};
+use apistos::app::OpenApiWrapper;
 use tokio::{spawn, sync::Mutex, try_join};
 use tracing::{Level, info};
 use tracing_actix_web::TracingLogger;
@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
             .wrap(TracingLogger::default())
             .wrap(cors)
             .wrap(AuthMiddleware)
-            .service(scope("/api").configure(routes::configure))
+            .configure(routes::configure)
             .build("/openapi.json")
     })
     .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?

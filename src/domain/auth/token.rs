@@ -1,43 +1,84 @@
 use anyhow::Result;
 use chrono::{Duration, Utc};
-use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use ring::{
-    aead,
+    aead, digest,
     rand::{SecureRandom, SystemRandom},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::app_env;
+use crate::{
+    app_env,
+    utils::constants::{ACCESS_TOKEN_LIFETIME, REFRESH_TOKEN_LIFETIME},
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Claims {
     pub sub: String,
+    pub sid: String,
+    pub iat: i64,
     pub exp: usize,
 }
 
-impl Claims {
-    pub fn new(user_id: String, exp_hours: u64) -> Self {
-        let exp = (Utc::now() + Duration::hours(exp_hours as i64)).timestamp() as usize;
-
-        Self { sub: user_id, exp }
-    }
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct RefreshClaims {
+    pub sub: String,
+    pub sid: String,
+    pub iat: i64,
+    pub exp: usize,
 }
 
-pub fn generate_jwt(user_id: &str) -> Result<String> {
-    let claims = Claims::new(user_id.to_string(), 24 * 7);
+pub fn generate_access_token(user_id: &str, session_id: &str) -> Result<String> {
+    let now = Utc::now();
+    let exp = now + Duration::seconds(ACCESS_TOKEN_LIFETIME);
 
-    let header = Header::default();
-    let encoding_key = EncodingKey::from_secret(app_env!().jwt_secret.as_ref());
+    let claims = Claims {
+        sub: user_id.to_string(),
+        sid: session_id.to_string(),
+        iat: now.timestamp(),
+        exp: exp.timestamp() as usize,
+    };
 
-    jsonwebtoken::encode(&header, &claims, &encoding_key)
-        .map_err(|e| anyhow::anyhow!("Failed to generate JWT: {:?}", e))
+    let encoding_key = EncodingKey::from_secret(app_env!().jwt_secret.as_bytes());
+    encode(&Header::default(), &claims, &encoding_key)
+        .map_err(|e| anyhow::anyhow!("Failed to encode JWT: {:?}", e))
 }
 
-pub fn decode_jwt(token: &str) -> Result<Claims> {
+pub fn generate_refresh_token(user_id: &str, session_id: &str) -> Result<String> {
+    let now = Utc::now();
+    let exp = now + Duration::seconds(REFRESH_TOKEN_LIFETIME);
+
+    let claims = RefreshClaims {
+        sub: user_id.to_string(),
+        sid: session_id.to_string(),
+        iat: now.timestamp(),
+        exp: exp.timestamp() as usize,
+    };
+
+    let encoding_key = EncodingKey::from_secret(app_env!().jwt_secret.as_bytes());
+    encode(&Header::default(), &claims, &encoding_key)
+        .map_err(|e| anyhow::anyhow!("Failed to encode JWT: {:?}", e))
+}
+
+pub fn hash_refresh_token(token: &str) -> String {
+    let hash = digest::digest(&digest::SHA256, token.as_bytes());
+    hex::encode(hash.as_ref())
+}
+
+pub fn decode_access_token(token: &str) -> Result<Claims> {
     let decoding_key = DecodingKey::from_secret(app_env!().jwt_secret.as_ref());
     let validation = Validation::default();
 
-    jsonwebtoken::decode::<Claims>(token, &decoding_key, &validation)
+    decode::<Claims>(token, &decoding_key, &validation)
+        .map(|data| data.claims)
+        .map_err(|e| anyhow::anyhow!("Failed to decode JWT: {:?}", e))
+}
+
+pub fn decode_refresh_token(token: &str) -> Result<RefreshClaims> {
+    let decoding_key = DecodingKey::from_secret(app_env!().jwt_secret.as_ref());
+    let validation = Validation::default();
+
+    decode::<RefreshClaims>(token, &decoding_key, &validation)
         .map(|data| data.claims)
         .map_err(|e| anyhow::anyhow!("Failed to decode JWT: {:?}", e))
 }

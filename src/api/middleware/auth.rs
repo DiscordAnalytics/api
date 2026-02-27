@@ -9,7 +9,7 @@ use futures::future::LocalBoxFuture;
 use tracing::{info, warn};
 
 use crate::{
-    domain::auth::{AuthContext, AuthType, Authorization, decode_jwt},
+    domain::auth::{AuthContext, AuthType, Authorization, decode_access_token},
     utils::{discord::is_valid_snowflake, logger::LogCode},
 };
 
@@ -56,38 +56,43 @@ where
         if let Some(auth_header) = auth_header {
             if let Some(authorization) = Authorization::parse(auth_header) {
                 match authorization.auth_type {
-                    AuthType::Admin | AuthType::User => match decode_jwt(&authorization.token) {
-                        Ok(claims) => {
-                            let sub = claims.sub;
+                    AuthType::Admin | AuthType::User => {
+                        match decode_access_token(&authorization.token) {
+                            Ok(claims) => {
+                                let sub = claims.sub;
+                                let sid = claims.sid;
 
-                            info!(
-                              code = %LogCode::Auth,
-                              "Decoded JWT for user_id: {} with auth type: {:?}",
-                              sub,
-                              authorization.auth_type
-                            );
+                                info!(
+                                  code = %LogCode::Auth,
+                                  session_id = %sid,
+                                  "Decoded JWT for user_id: {} with auth type: {:?}",
+                                  sub,
+                                  authorization.auth_type
+                                );
 
-                            let new_auth = format!("{} {}", authorization.auth_type, sub);
+                                let new_auth = format!("{} {}", authorization.auth_type, sub);
 
-                            let auth_context = AuthContext::new(authorization.auth_type)
-                                .with_user_id(sub)
-                                .with_token(authorization.token.clone());
+                                let auth_context = AuthContext::new(authorization.auth_type)
+                                    .with_user_id(sub)
+                                    .with_session_id(sid)
+                                    .with_token(authorization.token.clone());
 
-                            req.extensions_mut().insert(auth_context);
+                                req.extensions_mut().insert(auth_context);
 
-                            if let Ok(header_value) = HeaderValue::from_str(&new_auth) {
-                                req.headers_mut()
-                                    .insert(header::AUTHORIZATION, header_value);
+                                if let Ok(header_value) = HeaderValue::from_str(&new_auth) {
+                                    req.headers_mut()
+                                        .insert(header::AUTHORIZATION, header_value);
+                                }
+                            }
+                            Err(e) => {
+                                warn!(
+                                  code = %LogCode::Auth,
+                                  "Failed to decode JWT: {:?}",
+                                  e
+                                );
                             }
                         }
-                        Err(e) => {
-                            warn!(
-                              code = %LogCode::Auth,
-                              "Failed to decode JWT: {:?}",
-                              e
-                            );
-                        }
-                    },
+                    }
                     AuthType::Bot => {
                         let bot_id = extract_bot_id_from_path(req.path());
 

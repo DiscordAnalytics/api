@@ -65,6 +65,10 @@ impl BotsRepository {
         cursor.try_collect().await
     }
 
+    pub async fn count_bots(&self) -> Result<u64> {
+        self.collection.count_documents(doc! {}).await
+    }
+
     pub async fn find_by_id(&self, bot_id: &str) -> Result<Option<Bot>> {
         self.collection.find_one(doc! { "botId": bot_id }).await
     }

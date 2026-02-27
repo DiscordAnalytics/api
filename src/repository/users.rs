@@ -18,6 +18,26 @@ impl UserUpdate {
         Self::default()
     }
 
+    pub fn with_avatar(mut self, avatar: String) -> Self {
+        self.updates.insert("avatar", avatar);
+        self
+    }
+
+    pub fn with_avatar_decoration(mut self, avatar_decoration: String) -> Self {
+        self.updates.insert("avatarDecoration", avatar_decoration);
+        self
+    }
+
+    pub fn with_mail(mut self, mail: String) -> Self {
+        self.updates.insert("mail", mail);
+        self
+    }
+
+    pub fn with_username(mut self, username: String) -> Self {
+        self.updates.insert("username", username);
+        self
+    }
+
     pub fn build(self) -> Document {
         self.updates
     }
@@ -40,12 +60,12 @@ impl UsersRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_id(&self, user_id: &str) -> Result<Option<User>> {
-        self.collection.find_one(doc! { "userId": user_id }).await
+    pub async fn count_users(&self) -> Result<u64> {
+        self.collection.count_documents(doc! {}).await
     }
 
-    pub async fn find_by_token(&self, token: &str) -> Result<Option<User>> {
-        self.collection.find_one(doc! { "token": token }).await
+    pub async fn find_by_id(&self, user_id: &str) -> Result<Option<User>> {
+        self.collection.find_one(doc! { "userId": user_id }).await
     }
 
     pub async fn insert(&self, user: &User) -> Result<InsertOneResult> {

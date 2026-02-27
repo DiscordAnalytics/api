@@ -27,21 +27,6 @@ impl AuthService {
         }
     }
 
-    pub async fn verify_user_token(&self, token: &str) -> Result<AuthContext> {
-        let user = self.repos.users.find_by_token(token).await?;
-        match user {
-            Some(user) => {
-                let auth_type = if self.is_admin(&user.user_id) {
-                    AuthType::Admin
-                } else {
-                    AuthType::User
-                };
-                Ok(AuthContext::new(auth_type).with_user_id(user.user_id))
-            }
-            None => bail!("User not found or invalid token"),
-        }
-    }
-
     pub fn is_admin(&self, user_id: &str) -> bool {
         app_env!().admins.iter().any(|admin_id| admin_id == user_id)
     }

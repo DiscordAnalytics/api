@@ -63,6 +63,7 @@ pub struct AuthContext {
     pub auth_type: AuthType,
     pub user_id: Option<String>,
     pub bot_id: Option<String>,
+    pub session_id: Option<String>,
     pub token: Option<String>,
 }
 
@@ -72,6 +73,7 @@ impl AuthContext {
             auth_type,
             user_id: None,
             bot_id: None,
+            session_id: None,
             token: None,
         }
     }
@@ -83,6 +85,11 @@ impl AuthContext {
 
     pub fn with_bot_id(mut self, bot_id: String) -> Self {
         self.bot_id = Some(bot_id);
+        self
+    }
+
+    pub fn with_session_id(mut self, session_id: String) -> Self {
+        self.session_id = Some(session_id);
         self
     }
 

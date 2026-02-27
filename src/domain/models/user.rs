@@ -11,13 +11,6 @@ pub struct User {
     pub created_at: DateTime,
     pub joined_at: DateTime,
     pub mail: String,
-    pub(crate) token: String,
     pub username: String,
     pub user_id: String,
-}
-
-impl User {
-    pub fn token(self) -> String {
-        self.token
-    }
 }

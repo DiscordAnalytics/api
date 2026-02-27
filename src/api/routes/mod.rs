@@ -1,4 +1,5 @@
 mod achievements;
+mod auth;
 mod bots;
 mod health;
 mod invitations;
@@ -10,6 +11,7 @@ use apistos::web::ServiceConfig;
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.configure(achievements::configure)
+        .configure(auth::configure)
         .configure(bots::configure)
         .configure(health::configure)
         .configure(invitations::configure)

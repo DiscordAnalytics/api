@@ -1,7 +1,7 @@
 [alias]
-minimal = "build --no-default-features"
-mails = "build --features mails"
-otel = "build --features otel"
-reports = "build --features reports"
-mails-otel = "build --features mails,otel"
-full = "build --features full"
+minimal = "run --no-default-features"
+mails = "run --features mails"
+otel = "run --features otel"
+reports = "run --features reports"
+mails-otel = "run --features mails,otel"
+full = "run --features full"

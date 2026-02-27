@@ -90,7 +90,7 @@ pub fn init_env() -> Result<&'static EnvConfig> {
     let jwt_secret = get_var("JWT_SECRET")?;
     let enable_registrations = env::var("ENABLE_REGISTRATIONS")
         .map(|v| v == "true" || v == "1")
-        .unwrap_or(false);
+        .unwrap_or(true);
 
     let client_secret = get_var("CLIENT_SECRET")?;
     let client_id = get_var("CLIENT_ID")?;

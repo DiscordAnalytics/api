@@ -57,9 +57,9 @@ async fn suspend_bot(
 }
 
 #[api_operation(
-    summary = "Unsuspend a user",
-    description = "Unsuspends a user, restoring their access to their account and the API. Only administrators can perform this action.",
-    tag = "Users",
+    summary = "Unsuspend a bot",
+    description = "Unsuspends a bot, allowing it to access the API again. Only administrators can perform this action.",
+    tag = "Bots",
     skip
 )]
 async fn unsuspend_bot(

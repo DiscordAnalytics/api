@@ -9,7 +9,10 @@ mod user;
 
 pub use achievement::AchievementResponse;
 pub use auth::{AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse};
-pub use bot::{BotCreationBody, BotDeletionResponse, BotResponse, BotUpdateBody};
+pub use bot::{
+    BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,
+    BotUpdateBody,
+};
 pub use health::HealthResponse;
 pub use invitation::{
     InvitationAcceptBody, InvitationAcceptResponse, InvitationQuery, InvitationResponse,

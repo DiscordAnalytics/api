@@ -28,6 +28,11 @@ impl BotUpdate {
         self
     }
 
+    pub fn with_suspended(mut self, suspended: bool) -> Self {
+        self.updates.insert("suspended", suspended);
+        self
+    }
+
     pub fn with_team(mut self, team: Vec<String>) -> Self {
         self.updates.insert("team", team);
         self

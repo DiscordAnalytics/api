@@ -71,3 +71,13 @@ pub struct BotUpdateBody {
 pub struct BotDeletionResponse {
     pub message: String,
 }
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct BotSuspendRequest {
+    pub reason: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct BotSuspendResponse {
+    pub message: String,
+}

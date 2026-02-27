@@ -1,3 +1,5 @@
+mod suspend;
+
 use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
@@ -350,12 +352,14 @@ async fn delete_bot(
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
-        scope("/{id}").service(
-            resource("")
-                .route(get().to(get_bot))
-                .route(post().to(post_bot))
-                .route(patch().to(patch_bot))
-                .route(delete().to(delete_bot)),
-        ),
+        scope("/{id}")
+            .service(
+                resource("")
+                    .route(get().to(get_bot))
+                    .route(post().to(post_bot))
+                    .route(patch().to(patch_bot))
+                    .route(delete().to(delete_bot)),
+            )
+            .configure(suspend::configure),
     );
 }

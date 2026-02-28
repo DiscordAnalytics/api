@@ -50,7 +50,7 @@ async fn get_user_bots(
             "User attempted to access another user's details"
         );
         return Err(ApiError::Forbidden);
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,

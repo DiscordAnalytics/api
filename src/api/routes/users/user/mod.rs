@@ -53,7 +53,7 @@ async fn get_user(
             "User attempted to access another user's details"
         );
         return Err(ApiError::Forbidden);
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
@@ -165,7 +165,7 @@ async fn delete_user(
             "User attempted to delete another user's account"
         );
         return Err(ApiError::Forbidden);
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,

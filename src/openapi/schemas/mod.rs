@@ -12,7 +12,7 @@ pub use achievement::AchievementResponse;
 pub use auth::{AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse};
 pub use bot::{
     BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,
-    BotUpdateBody, RefreshBotTokenResponse,
+    BotTokenResponse, BotUpdateBody,
 };
 pub use custom_event::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse};
 pub use health::HealthResponse;

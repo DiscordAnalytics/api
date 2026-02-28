@@ -8,7 +8,7 @@ pub struct Bot {
     pub avatar: Option<String>,
     pub bot_id: String,
     pub framework: Option<String>,
-    pub goals_limit: Option<i32>,
+    pub goals_limit: i32,
     pub language: Option<String>,
     pub last_push: Option<DateTime>,
     pub owner_id: String,
@@ -18,28 +18,34 @@ pub struct Bot {
     pub username: String,
     pub version: Option<String>,
     pub votes_webhook_url: Option<String>,
-    pub warn_level: Option<i32>,
+    pub warn_level: i32,
     pub watched_since: Option<DateTime>,
 }
 
 impl Bot {
-    pub fn new(bot_id: &str, owner_id: &str, token: String) -> Self {
+    pub fn new(
+        bot_id: &str,
+        owner_id: &str,
+        token: String,
+        username: &str,
+        avatar: Option<&str>,
+    ) -> Self {
         Bot {
             advanced_stats: false,
-            avatar: None,
+            avatar: avatar.map(|s| s.to_string()),
             bot_id: bot_id.to_string(),
             framework: None,
-            goals_limit: None,
+            goals_limit: 30,
             language: None,
             last_push: None,
             owner_id: owner_id.to_string(),
             suspended: false,
             team: Vec::new(),
             token,
-            username: String::new(),
+            username: username.to_string(),
             version: None,
             votes_webhook_url: None,
-            warn_level: None,
+            warn_level: 0,
             watched_since: None,
         }
     }

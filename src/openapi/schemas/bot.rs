@@ -7,17 +7,17 @@ use crate::domain::models::Bot;
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BotResponse {
-    pub advanced_stats: Option<bool>,
+    pub advanced_stats: bool,
     pub avatar: Option<String>,
     pub bot_id: String,
     pub framework: Option<String>,
-    pub goals_limit: Option<i32>,
+    pub goals_limit: i32,
     pub language: Option<String>,
     pub last_push: Option<String>,
-    pub owner_id: Option<String>,
-    pub suspended: Option<bool>,
-    pub team: Option<Vec<String>>,
-    pub username: Option<String>,
+    pub owner_id: String,
+    pub suspended: bool,
+    pub team: Vec<String>,
+    pub username: String,
     pub version: Option<String>,
     pub votes_webhook_url: Option<String>,
     pub watched_since: Option<String>,
@@ -28,7 +28,7 @@ impl TryFrom<Bot> for BotResponse {
 
     fn try_from(bot: Bot) -> Result<Self, Self::Error> {
         Ok(Self {
-            advanced_stats: Some(bot.advanced_stats),
+            advanced_stats: bot.advanced_stats,
             avatar: bot.avatar,
             bot_id: bot.bot_id,
             framework: bot.framework,
@@ -38,10 +38,10 @@ impl TryFrom<Bot> for BotResponse {
                 .last_push
                 .map(|dt| dt.try_to_rfc3339_string())
                 .transpose()?,
-            owner_id: Some(bot.owner_id),
-            suspended: Some(bot.suspended),
-            team: Some(bot.team),
-            username: Some(bot.username),
+            owner_id: bot.owner_id,
+            suspended: bot.suspended,
+            team: bot.team,
+            username: bot.username,
             version: bot.version,
             votes_webhook_url: bot.votes_webhook_url,
             watched_since: bot

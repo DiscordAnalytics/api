@@ -1,6 +1,7 @@
 mod achievement;
 mod auth;
 mod bot;
+mod custom_event;
 mod health;
 mod invitation;
 mod session;
@@ -13,6 +14,7 @@ pub use bot::{
     BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,
     BotUpdateBody, RefreshBotTokenResponse,
 };
+pub use custom_event::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse};
 pub use health::HealthResponse;
 pub use invitation::{
     InvitationAcceptBody, InvitationAcceptResponse, InvitationQuery, InvitationResponse,

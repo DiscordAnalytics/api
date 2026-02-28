@@ -1,3 +1,4 @@
+mod events;
 mod suspend;
 mod token;
 
@@ -361,6 +362,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(patch().to(patch_bot))
                     .route(delete().to(delete_bot)),
             )
+            .configure(events::configure)
             .configure(suspend::configure)
             .configure(token::configure),
     );

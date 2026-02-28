@@ -1,0 +1,330 @@
+use actix_web::web::{Data, Json, Path};
+use apistos::{
+    api_operation,
+    web::{ServiceConfig, delete, get, patch, resource, scope},
+};
+use tracing::{info, warn};
+
+use crate::{
+    api::middleware::Authenticated,
+    domain::error::{ApiError, ApiResult},
+    openapi::schemas::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse},
+    repository::{CustomEventUpdate, Repositories},
+    services::Services,
+    utils::{discord::is_valid_snowflake, logger::LogCode},
+};
+
+#[api_operation(
+    summary = "Get Custom Event",
+    description = "Retrieve details of a specific custom event associated with the authenticated bot. This endpoint allows you to view the event key and graph name of a particular custom event. Use this information to manage and organize your bot's custom events effectively.",
+    tag = "Bots"
+)]
+async fn get_event(
+    auth: Authenticated,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    id: Path<String>,
+    event_key: Path<String>,
+) -> ApiResult<Json<CustomEventResponse>> {
+    let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(&bot_id) {
+        return Err(ApiError::InvalidId);
+    }
+
+    let event_key = event_key.into_inner();
+
+    let ctx = &auth.0;
+
+    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Admin access granted for retrieving custom event",
+        );
+    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Bot access denied for retrieving custom event",
+        );
+        return Err(ApiError::Forbidden);
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "User access denied for retrieving custom event",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
+        warn!(
+            code = %LogCode::Unauthorized,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Unauthenticated access attempt for retrieving custom event",
+        );
+        return Err(ApiError::Unauthorized);
+    }
+
+    let event = repos
+        .custom_events
+        .find_by_bot_id_and_event_key(&bot_id, &event_key)
+        .await?
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Custom event not found",
+            );
+            ApiError::NotFound(format!(
+                "Custom event with key {} for bot ID {} not found",
+                event_key, bot_id
+            ))
+        })?;
+
+    Ok(Json(CustomEventResponse::from(event)))
+}
+
+#[api_operation(
+    summary = "Update Custom Event",
+    description = "Update the details of a specific custom event associated with the authenticated bot. This endpoint allows you to modify the event key and graph name of a particular custom event. Use this functionality to keep your bot's custom events up-to-date and organized effectively.",
+    tag = "Bots"
+)]
+async fn update_event(
+    auth: Authenticated,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    body: Json<CustomEventBody>,
+    id: Path<String>,
+    event_key: Path<String>,
+) -> ApiResult<Json<CustomEventResponse>> {
+    let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(&bot_id) {
+        return Err(ApiError::InvalidId);
+    }
+
+    let event_key = event_key.into_inner();
+
+    let ctx = &auth.0;
+
+    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Admin access granted for updating custom event",
+        );
+    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Bot access denied for updating custom event",
+        );
+        return Err(ApiError::Forbidden);
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "User access denied for updating custom event",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
+        warn!(
+            code = %LogCode::Unauthorized,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Unauthenticated access attempt for updating custom event",
+        );
+        return Err(ApiError::Unauthorized);
+    }
+
+    repos
+        .custom_events
+        .find_by_bot_id_and_event_key(&bot_id, &event_key)
+        .await?
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Custom event not found",
+            );
+            ApiError::NotFound(format!(
+                "Custom event with key {} for bot ID {} not found",
+                event_key, bot_id
+            ))
+        })?;
+
+    let body = body.into_inner();
+
+    let updates = CustomEventUpdate::new()
+        .with_event_key(&body.event_key)
+        .with_graph_name(&body.graph_name);
+
+    repos
+        .custom_events
+        .update(&bot_id, &event_key, updates)
+        .await?;
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        event_key = %event_key,
+        "Custom event updated successfully",
+    );
+
+    Ok(Json(CustomEventResponse {
+        bot_id,
+        event_key: body.event_key,
+        graph_name: body.graph_name,
+    }))
+}
+
+#[api_operation(
+    summary = "Delete Custom Event",
+    description = "Delete a specific custom event associated with the authenticated bot. This endpoint allows you to remove a particular custom event from your bot's configuration. Use this functionality to manage and organize your bot's custom events effectively, ensuring that only relevant events are retained.",
+    tag = "Bots"
+)]
+async fn delete_event(
+    auth: Authenticated,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    id: Path<String>,
+    event_key: Path<String>,
+) -> ApiResult<Json<CustomEventDeleteResponse>> {
+    let bot_id = id.into_inner();
+
+    if !is_valid_snowflake(&bot_id) {
+        return Err(ApiError::InvalidId);
+    }
+
+    let event_key = event_key.into_inner();
+
+    let ctx = &auth.0;
+
+    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Admin access granted for deleting custom event",
+        );
+    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Bot access denied for deleting custom event",
+        );
+        return Err(ApiError::Forbidden);
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "User access denied for deleting custom event",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
+        warn!(
+            code = %LogCode::Unauthorized,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Unauthenticated access attempt for deleting custom event",
+        );
+        return Err(ApiError::Unauthorized);
+    }
+
+    repos
+        .custom_events
+        .find_by_bot_id_and_event_key(&bot_id, &event_key)
+        .await?
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Custom event not found",
+            );
+            ApiError::NotFound(format!(
+                "Custom event with key {} for bot ID {} not found",
+                event_key, bot_id
+            ))
+        })?;
+
+    repos
+        .custom_events
+        .delete_by_event_key(&bot_id, &event_key)
+        .await?;
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        event_key = %event_key,
+        "Custom event deleted successfully",
+    );
+
+    Ok(Json(CustomEventDeleteResponse {
+        message: format!(
+            "Custom event with key {} for bot ID {} deleted successfully",
+            event_key, bot_id
+        ),
+    }))
+}
+
+pub fn configure(cfg: &mut ServiceConfig) {
+    cfg.service(
+        scope("/{event_key}").service(
+            resource("")
+                .route(get().to(get_event))
+                .route(patch().to(update_event))
+                .route(delete().to(delete_event)),
+        ),
+    );
+}

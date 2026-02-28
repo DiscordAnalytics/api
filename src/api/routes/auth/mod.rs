@@ -21,7 +21,7 @@ use crate::{
     openapi::schemas::AuthCallbackQuery,
     repository::{GlobalStatsUpdate, Repositories, UserUpdate},
     services::Services,
-    utils::{discord::get_user_creation_date, logger::LogCode},
+    utils::{constants::ACCESS_TOKEN_LIFETIME, discord::get_user_creation_date, logger::LogCode},
 };
 
 #[api_operation(
@@ -307,10 +307,11 @@ async fn oauth_callback(
     );
 
     Redirect::to(format!(
-        "{}/auth?code=ok&accessToken={}&refreshToken={}&id={}",
+        "{}/auth?code=ok&accessToken={}&refreshToken={}&expiresIn={}&id={}",
         app_env!().client_url,
         access_token,
         refresh_token,
+        ACCESS_TOKEN_LIFETIME,
         user_id,
     ))
     .temporary()

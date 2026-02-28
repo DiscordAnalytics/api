@@ -151,6 +151,15 @@ async fn refresh_token(
         return Err(ApiError::Forbidden);
     }
 
+    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        warn!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for token refresh",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
     let new_token = generate_bot_token(&bot_id)?;
     let bot_update = BotUpdate::new().with_token(new_token.clone());
 

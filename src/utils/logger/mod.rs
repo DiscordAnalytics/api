@@ -33,6 +33,12 @@ pub struct Logger {
     dev_mode: bool,
 }
 
+impl Default for Logger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub use codes::LogCode;
 
 impl Logger {
@@ -74,7 +80,7 @@ impl Logger {
         let mut headers = HashMap::new();
         headers.insert(
             String::from("Authorization"),
-            String::from(format!("Basic {}", env.otlp_token)),
+            format!("Basic {}", env.otlp_token),
         );
         headers.insert("stream-name".to_string(), env.otlp_stream.clone());
 

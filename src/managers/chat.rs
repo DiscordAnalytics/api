@@ -62,7 +62,7 @@ impl ChatServer {
 
     async fn send_system_message(&self, msg: impl Into<Msg>) {
         let system_msg = msg.into();
-        for (_, session) in &self.sessions {
+        for session in self.sessions.values() {
             let _ = session.send(system_msg.clone());
         }
     }

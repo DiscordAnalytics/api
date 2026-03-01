@@ -12,7 +12,7 @@ pub enum AuthType {
 }
 
 impl AuthType {
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse_str(s: &str) -> Self {
         match s {
             "Admin" => AuthType::Admin,
             "Bot" => AuthType::Bot,
@@ -21,7 +21,7 @@ impl AuthType {
         }
     }
 
-    pub fn as_str(&self) -> &'static str {
+    pub fn to_str(&self) -> &'static str {
         match self {
             AuthType::Admin => "Admin",
             AuthType::Bot => "Bot",
@@ -33,7 +33,7 @@ impl AuthType {
 
 impl fmt::Display for AuthType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.as_str())
+        write!(f, "{}", self.to_str())
     }
 }
 
@@ -52,7 +52,7 @@ impl Authorization {
         }
 
         Some(Self {
-            auth_type: AuthType::from_str(parts[0]),
+            auth_type: AuthType::parse_str(parts[0]),
             token: parts[1].to_string(),
         })
     }

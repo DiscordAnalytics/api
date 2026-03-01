@@ -260,10 +260,10 @@ async fn oauth_callback(
 
     let mut session = Session::new(user_id.clone(), refresh_token_hash);
 
-    if let Some(user_agent) = req.headers().get("User-Agent") {
-        if let Ok(ua) = user_agent.to_str() {
-            session = session.with_user_agent(ua.to_string());
-        }
+    if let Some(user_agent) = req.headers().get("User-Agent")
+        && let Ok(ua) = user_agent.to_str()
+    {
+        session = session.with_user_agent(ua.to_string());
     }
     if let Some(ip) = req.peer_addr() {
         session = session.with_ip(ip.ip().to_string());

@@ -79,7 +79,7 @@ pub enum Framework {
 }
 
 impl Framework {
-    pub fn from_str(lib: &str) -> Framework {
+    pub fn parse_str(lib: &str) -> Framework {
         match lib {
             "discord.py" => Framework::DiscordPy,
             "pycord" => Framework::PyCord,
@@ -91,7 +91,7 @@ impl Framework {
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn to_str(&self) -> &str {
         match self {
             Framework::DiscordPy => "discord.py",
             Framework::PyCord => "pycord",
@@ -106,7 +106,7 @@ impl Framework {
 
 impl From<Framework> for String {
     fn from(framework: Framework) -> Self {
-        framework.as_str().to_string()
+        framework.to_str().to_string()
     }
 }
 
@@ -118,7 +118,7 @@ pub enum Language {
 }
 
 impl Language {
-    pub fn from_str(lang: &str) -> Language {
+    pub fn parse_str(lang: &str) -> Language {
         match lang {
             "python" => Language::Python,
             "javascript" => Language::JavaScript,
@@ -126,7 +126,7 @@ impl Language {
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn to_str(&self) -> &str {
         match self {
             Language::Python => "python",
             Language::JavaScript => "javascript",
@@ -137,6 +137,6 @@ impl Language {
 
 impl From<Language> for String {
     fn from(language: Language) -> Self {
-        language.as_str().to_string()
+        language.to_str().to_string()
     }
 }

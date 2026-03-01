@@ -53,62 +53,62 @@ where
             .headers()
             .get("Authorization")
             .and_then(|h| h.to_str().ok());
-        if let Some(auth_header) = auth_header {
-            if let Some(authorization) = Authorization::parse(auth_header) {
-                match authorization.auth_type {
-                    AuthType::Admin | AuthType::User => {
-                        match decode_access_token(&authorization.token) {
-                            Ok(claims) => {
-                                let sub = claims.sub;
-                                let sid = claims.sid;
+        if let Some(auth_header) = auth_header
+            && let Some(authorization) = Authorization::parse(auth_header)
+        {
+            match authorization.auth_type {
+                AuthType::Admin | AuthType::User => {
+                    match decode_access_token(&authorization.token) {
+                        Ok(claims) => {
+                            let sub = claims.sub;
+                            let sid = claims.sid;
 
-                                info!(
-                                  code = %LogCode::Auth,
-                                  session_id = %sid,
-                                  "Decoded JWT for user_id: {} with auth type: {:?}",
-                                  sub,
-                                  authorization.auth_type
-                                );
+                            info!(
+                              code = %LogCode::Auth,
+                              session_id = %sid,
+                              "Decoded JWT for user_id: {} with auth type: {:?}",
+                              sub,
+                              authorization.auth_type
+                            );
 
-                                let new_auth = format!("{} {}", authorization.auth_type, sub);
+                            let new_auth = format!("{} {}", authorization.auth_type, sub);
 
-                                let auth_context = AuthContext::new(authorization.auth_type)
-                                    .with_user_id(sub)
-                                    .with_session_id(sid)
-                                    .with_token(authorization.token.clone());
+                            let auth_context = AuthContext::new(authorization.auth_type)
+                                .with_user_id(sub)
+                                .with_session_id(sid)
+                                .with_token(authorization.token.clone());
 
-                                req.extensions_mut().insert(auth_context);
+                            req.extensions_mut().insert(auth_context);
 
-                                if let Ok(header_value) = HeaderValue::from_str(&new_auth) {
-                                    req.headers_mut()
-                                        .insert(header::AUTHORIZATION, header_value);
-                                }
-                            }
-                            Err(e) => {
-                                warn!(
-                                  code = %LogCode::Auth,
-                                  "Failed to decode JWT: {:?}",
-                                  e
-                                );
+                            if let Ok(header_value) = HeaderValue::from_str(&new_auth) {
+                                req.headers_mut()
+                                    .insert(header::AUTHORIZATION, header_value);
                             }
                         }
-                    }
-                    AuthType::Bot => {
-                        let bot_id = extract_bot_id_from_path(req.path());
-
-                        let mut auth_context = AuthContext::new(authorization.auth_type)
-                            .with_token(authorization.token.clone());
-
-                        if let Some(bot_id) = bot_id {
-                            auth_context = auth_context.with_bot_id(bot_id);
+                        Err(e) => {
+                            warn!(
+                              code = %LogCode::Auth,
+                              "Failed to decode JWT: {:?}",
+                              e
+                            );
                         }
+                    }
+                }
+                AuthType::Bot => {
+                    let bot_id = extract_bot_id_from_path(req.path());
 
-                        req.extensions_mut().insert(auth_context);
+                    let mut auth_context = AuthContext::new(authorization.auth_type)
+                        .with_token(authorization.token.clone());
+
+                    if let Some(bot_id) = bot_id {
+                        auth_context = auth_context.with_bot_id(bot_id);
                     }
-                    _ => {
-                        let auth_context = AuthContext::new(authorization.auth_type);
-                        req.extensions_mut().insert(auth_context);
-                    }
+
+                    req.extensions_mut().insert(auth_context);
+                }
+                _ => {
+                    let auth_context = AuthContext::new(authorization.auth_type);
+                    req.extensions_mut().insert(auth_context);
                 }
             }
         }

@@ -273,7 +273,7 @@ async fn patch_bot(
 
     let ctx = &auth.0;
 
-    if !ctx.is_admin() && !(ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
+    if !(ctx.is_admin() || ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

@@ -26,6 +26,12 @@ pub struct VotesWebhooksManager {
     client: Client,
 }
 
+impl Default for VotesWebhooksManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VotesWebhooksManager {
     pub fn new() -> Self {
         Self {
@@ -50,7 +56,7 @@ impl VotesWebhooksManager {
             HeaderValue::from_str(&webhook.webhook_secret)?,
         );
 
-        let provider_str = webhook.data.provider.as_str();
+        let provider_str = webhook.data.provider.to_str();
 
         let content = if Self::is_discord_webhook(&webhook.webhook_url) {
             match &webhook.data.provider {
@@ -89,7 +95,7 @@ impl VotesWebhooksManager {
             "{}:{}:{}",
             webhook.webhook_url,
             webhook.data.voter_id,
-            webhook.data.provider.as_str()
+            webhook.data.provider.to_str()
         )
     }
 
@@ -115,7 +121,7 @@ impl VotesWebhooksManager {
                     code = %LogCode::Request,
                     "Vote webhook of bot {} for provider {} has been sent",
                     webhook.data.bot_id.as_str(),
-                    webhook.data.provider.as_str()
+                    webhook.data.provider.to_str()
                 );
                 let key = Self::build_key(&webhook);
                 mgr.waitlist.remove(&key);
@@ -125,7 +131,7 @@ impl VotesWebhooksManager {
                     code = %LogCode::Request,
                     "Vote webhook of bot {} for provider {} has failed to be sent",
                     webhook.data.bot_id.as_str(),
-                    webhook.data.provider.as_str()
+                    webhook.data.provider.to_str()
                 );
 
                 if let Some(delay) = mgr.retry(&webhook) {

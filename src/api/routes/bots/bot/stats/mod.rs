@@ -36,6 +36,9 @@ async fn get_stats(
         return Err(ApiError::InvalidId);
     }
 
+    let from = DateTime::parse_rfc3339_str(format!("{}T00:00:00Z", query.from).as_str())?;
+    let to = DateTime::parse_rfc3339_str(format!("{}T23:59:59Z", query.to).as_str())?;
+
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
@@ -44,12 +47,7 @@ async fn get_stats(
         "Fetching bot stats for date range",
     );
 
-    let from = DateTime::parse_rfc3339_str(format!("{}T00:00:00Z", query.from).as_str())?;
-    let to = DateTime::parse_rfc3339_str(format!("{}T23:59:59Z", query.to).as_str())?;
-
-    let ctx = &auth.0;
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -57,6 +55,17 @@ async fn get_stats(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
+    let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
@@ -147,7 +156,7 @@ async fn post_stats_old(
         "Posting bot stats",
     );
 
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -155,6 +164,15 @@ async fn post_stats_old(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
 
     let ctx = &auth.0;
 
@@ -298,7 +316,7 @@ async fn post_stats_new(
         "Posting bot stats",
     );
 
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -306,6 +324,15 @@ async fn post_stats_new(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
 
     let ctx = &auth.0;
 

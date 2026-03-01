@@ -38,6 +38,11 @@ impl BotUpdate {
         self
     }
 
+    pub fn with_team_member(mut self, user_id: &str) -> Self {
+        self.updates.insert("$push", doc! { "team": user_id });
+        self
+    }
+
     pub fn with_token(mut self, token: String) -> Self {
         self.updates.insert("token", token);
         self

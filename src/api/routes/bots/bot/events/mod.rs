@@ -42,9 +42,7 @@ async fn get_all_events(
         "Retrieving all custom events for bot",
     );
 
-    let ctx = &auth.0;
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -52,6 +50,17 @@ async fn get_all_events(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
+    let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
@@ -117,9 +126,7 @@ async fn create_event(
         return Err(ApiError::InvalidId);
     }
 
-    let ctx = &auth.0;
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -127,6 +134,17 @@ async fn create_event(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
+    let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(

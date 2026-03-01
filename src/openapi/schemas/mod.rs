@@ -7,6 +7,7 @@ mod health;
 mod invitation;
 mod session;
 mod stat;
+mod team;
 mod user;
 mod vote;
 
@@ -27,6 +28,7 @@ pub use invitation::{
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 pub use stat::{StatResponse, StatsQuery};
+pub use team::{TeamRemoveResponse, TeamRequestBody, TeamResponse};
 pub use user::{
     UserBotsResponse, UserDeletionReponse, UserResponse, UserSuspendRequest, UserSuspendResponse,
     UserUpdateRequest,

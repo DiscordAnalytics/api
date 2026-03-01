@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogCode {
@@ -24,6 +24,8 @@ pub enum LogCode {
     BotExpiration,
     /// User-related events
     User,
+    /// Conflict events (e.g., duplicate entries)
+    Conflict,
     /// Achievement events
     Achievement,
     /// General information
@@ -52,6 +54,7 @@ impl LogCode {
             LogCode::Bot => "BOT",
             LogCode::BotExpiration => "BOT_EXP",
             LogCode::User => "USER",
+            LogCode::Conflict => "CONFLICT",
             LogCode::Achievement => "ACHV",
             LogCode::Info => "INFO",
             LogCode::System => "SYS",
@@ -62,8 +65,8 @@ impl LogCode {
     }
 }
 
-impl fmt::Display for LogCode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for LogCode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.as_str())
     }
 }

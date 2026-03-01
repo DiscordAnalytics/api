@@ -38,6 +38,24 @@ async fn suspend_bot(
         "Received request to suspend bot"
     );
 
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    if bot.suspended {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot is already suspended",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
     let reason = body.reason.trim();
 
     let bot_update = BotUpdate::new().with_suspended(true);
@@ -78,6 +96,24 @@ async fn unsuspend_bot(
         bot_id = %bot_id,
         "Received request to unsuspend bot"
     );
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
+    if !bot.suspended {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot is not suspended",
+        );
+        return Err(ApiError::BotUnsuspended);
+    }
 
     let bot_update = BotUpdate::new().with_suspended(false);
 

@@ -38,6 +38,24 @@ async fn suspend_user(
         "Received request to suspend user"
     );
 
+    let user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found",
+        );
+        ApiError::NotFound(format!("User with ID {} not found", user_id))
+    })?;
+
+    if user.suspended {
+        info!(
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "User is already suspended",
+        );
+        return Err(ApiError::UserSuspended);
+    }
+
     let reason = body.reason.trim();
 
     let user_update = UserUpdate::new().with_suspended(true);
@@ -79,6 +97,24 @@ async fn unsuspend_user(
         user_id = %user_id,
         "Received request to unsuspend user"
     );
+
+    let user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found",
+        );
+        ApiError::NotFound(format!("User with ID {} not found", user_id))
+    })?;
+
+    if !user.suspended {
+        info!(
+            code = %LogCode::Forbidden,
+            user_id = %user_id,
+            "User is not suspended",
+        );
+        return Err(ApiError::UserUnsuspended);
+    }
 
     let user_update = UserUpdate::new().with_suspended(false);
 

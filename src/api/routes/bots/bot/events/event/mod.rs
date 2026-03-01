@@ -32,11 +32,7 @@ async fn get_event(
         return Err(ApiError::InvalidId);
     }
 
-    let event_key = event_key.into_inner();
-
-    let ctx = &auth.0;
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -44,6 +40,19 @@ async fn get_event(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
+    let event_key = event_key.into_inner();
+
+    let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
@@ -121,11 +130,7 @@ async fn update_event(
         return Err(ApiError::InvalidId);
     }
 
-    let event_key = event_key.into_inner();
-
-    let ctx = &auth.0;
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -133,6 +138,19 @@ async fn update_event(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
+    let event_key = event_key.into_inner();
+
+    let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(
@@ -231,11 +249,7 @@ async fn delete_event(
         return Err(ApiError::InvalidId);
     }
 
-    let event_key = event_key.into_inner();
-
-    let ctx = &auth.0;
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -243,6 +257,19 @@ async fn delete_event(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
+    let event_key = event_key.into_inner();
+
+    let ctx = &auth.0;
 
     if ctx.is_admin() {
         info!(

@@ -1,6 +1,7 @@
 mod events;
 mod stats;
 mod suspend;
+mod team;
 mod token;
 
 use actix_web::web::{Data, Json, Path};
@@ -292,6 +293,15 @@ async fn patch_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot update",
+        );
+        return Err(ApiError::BotSuspended);
+    }
+
     if ctx.is_bot() {
         let auth_token = ctx.token.as_deref().ok_or(ApiError::InvalidToken)?;
         if bot.token() != auth_token {
@@ -434,6 +444,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .configure(events::configure)
             .configure(stats::configure)
             .configure(suspend::configure)
+            .configure(team::configure)
             .configure(token::configure),
     );
 }

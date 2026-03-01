@@ -151,7 +151,7 @@ async fn refresh_token(
         return Err(ApiError::Forbidden);
     }
 
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         warn!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -159,6 +159,15 @@ async fn refresh_token(
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
+
+    if bot.suspended {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for token refresh of suspended bot",
+        );
+        return Err(ApiError::BotSuspended);
+    }
 
     let new_token = generate_bot_token(&bot_id)?;
     let bot_update = BotUpdate::new().with_token(new_token.clone());

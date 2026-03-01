@@ -53,8 +53,11 @@ pub enum ApiError {
 
     // Business logic errors
     BotSuspended,
+    BotUnsuspended,
     UserSuspended,
+    UserUnsuspended,
     LimitExceeded,
+    Conflict(String),
 
     // External service errors
     StorageError(String),
@@ -83,8 +86,11 @@ impl fmt::Display for ApiError {
             ApiError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             ApiError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             ApiError::BotSuspended => write!(f, "Bot is suspended"),
+            ApiError::BotUnsuspended => write!(f, "Bot is not suspended"),
             ApiError::UserSuspended => write!(f, "User is suspended"),
+            ApiError::UserUnsuspended => write!(f, "User is not suspended"),
             ApiError::LimitExceeded => write!(f, "Rate limit exceeded"),
+            ApiError::Conflict(msg) => write!(f, "Conflict: {}", msg),
             ApiError::StorageError(msg) => write!(f, "Storage error: {}", msg),
             ApiError::WebhookError(msg) => write!(f, "Webhook error: {}", msg),
             _ => write!(f, "{:?}", self),
@@ -99,13 +105,17 @@ impl ResponseError for ApiError {
             ApiError::Unauthorized | ApiError::InvalidToken | ApiError::MissingAuth => {
                 StatusCode::UNAUTHORIZED
             }
-            ApiError::Forbidden => StatusCode::FORBIDDEN,
+            ApiError::Forbidden
+            | ApiError::BotSuspended
+            | ApiError::BotUnsuspended
+            | ApiError::UserSuspended
+            | ApiError::UserUnsuspended => StatusCode::FORBIDDEN,
             ApiError::InvalidId
             | ApiError::InvalidInput(_)
             | ApiError::ValidationError(_)
             | ApiError::InvitationExpired
             | ApiError::InvitationAlreadyAccepted => StatusCode::BAD_REQUEST,
-            ApiError::AlreadyExists(_) => StatusCode::CONFLICT,
+            ApiError::AlreadyExists(_) | ApiError::Conflict(_) => StatusCode::CONFLICT,
             ApiError::LimitExceeded => StatusCode::TOO_MANY_REQUESTS,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }

@@ -308,27 +308,23 @@ async fn delete_event(
         return Err(ApiError::Unauthorized);
     }
 
-    repos
-        .custom_events
-        .find_by_bot_id_and_event_key(&bot_id, &event_key)
-        .await?
-        .ok_or_else(|| {
-            info!(
-                code = %LogCode::Request,
-                bot_id = %bot_id,
-                event_key = %event_key,
-                "Custom event not found",
-            );
-            ApiError::NotFound(format!(
-                "Custom event with key {} for bot ID {} not found",
-                event_key, bot_id
-            ))
-        })?;
-
-    repos
+    let result = repos
         .custom_events
         .delete_by_event_key(&bot_id, &event_key)
         .await?;
+
+    if result.deleted_count == 0 {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Custom event not found for deletion",
+        );
+        return Err(ApiError::NotFound(format!(
+            "Custom event with key {} for bot ID {} not found",
+            event_key, bot_id
+        )));
+    }
 
     info!(
         code = %LogCode::Request,

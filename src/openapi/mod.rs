@@ -46,6 +46,11 @@ pub fn build_spec() -> Spec {
                 ..Default::default()
             },
             Tag {
+                name: "Articles".to_string(),
+                description: Some("Endpoints for managing and retrieving articles".to_string()),
+                ..Default::default()
+            },
+            Tag {
                 name: "Bots".to_string(),
                 description: Some(
                     "Endpoints for managing and retrieving bot information".to_string(),

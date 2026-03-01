@@ -46,6 +46,9 @@ pub enum ApiError {
     InvitationExpired,
     InvitationAlreadyAccepted,
 
+    /// Article errors
+    AlreadyPublished,
+
     // Validation errors
     InvalidId,
     InvalidInput(String),
@@ -82,6 +85,7 @@ impl fmt::Display for ApiError {
             ApiError::InvitationAlreadyAccepted => {
                 write!(f, "Invitation has already been accepted")
             }
+            ApiError::AlreadyPublished => write!(f, "Article is already published"),
             ApiError::InvalidId => write!(f, "Invalid ID format"),
             ApiError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             ApiError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
@@ -105,16 +109,17 @@ impl ResponseError for ApiError {
             ApiError::Unauthorized | ApiError::InvalidToken | ApiError::MissingAuth => {
                 StatusCode::UNAUTHORIZED
             }
-            ApiError::Forbidden
-            | ApiError::BotSuspended
-            | ApiError::BotUnsuspended
-            | ApiError::UserSuspended
-            | ApiError::UserUnsuspended => StatusCode::FORBIDDEN,
+            ApiError::Forbidden => StatusCode::FORBIDDEN,
             ApiError::InvalidId
             | ApiError::InvalidInput(_)
             | ApiError::ValidationError(_)
             | ApiError::InvitationExpired
-            | ApiError::InvitationAlreadyAccepted => StatusCode::BAD_REQUEST,
+            | ApiError::InvitationAlreadyAccepted
+            | ApiError::BotSuspended
+            | ApiError::BotUnsuspended
+            | ApiError::UserSuspended
+            | ApiError::UserUnsuspended
+            | ApiError::AlreadyPublished => StatusCode::BAD_REQUEST,
             ApiError::AlreadyExists(_) | ApiError::Conflict(_) => StatusCode::CONFLICT,
             ApiError::LimitExceeded => StatusCode::TOO_MANY_REQUESTS,
             _ => StatusCode::INTERNAL_SERVER_ERROR,

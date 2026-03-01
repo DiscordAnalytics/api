@@ -174,7 +174,19 @@ async fn delete_user(
         return Err(ApiError::Forbidden);
     }
 
-    repos.users.delete_by_id(&user_id).await?;
+    let result = repos.users.delete_by_id(&user_id).await?;
+
+    if result.deleted_count == 0 {
+        info!(
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found for deletion"
+        );
+        return Err(ApiError::NotFound(format!(
+            "User with ID {} not found",
+            user_id
+        )));
+    }
 
     info!(
         code = %LogCode::Request,

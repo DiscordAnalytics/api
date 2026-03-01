@@ -1,4 +1,5 @@
 mod achievement;
+mod article;
 mod auth;
 mod bot;
 mod bot_stat;
@@ -12,6 +13,7 @@ mod user;
 mod vote;
 
 pub use achievement::AchievementResponse;
+pub use article::{ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse};
 pub use bot::{
     BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,

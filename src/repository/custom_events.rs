@@ -39,10 +39,18 @@ pub struct CustomEventsRepository {
 }
 
 impl CustomEventsRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(CUSTOM_EVENTS_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .contains(&CUSTOM_EVENTS_COLLECTION.to_string())
+        {
+            db.create_collection(CUSTOM_EVENTS_COLLECTION).await?;
         }
+
+        Ok(Self {
+            collection: db.collection(CUSTOM_EVENTS_COLLECTION),
+        })
     }
 
     pub async fn ping(&self) -> Result<()> {

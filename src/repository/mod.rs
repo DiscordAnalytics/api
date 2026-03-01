@@ -51,20 +51,20 @@ impl Repositories {
         let db = connection.database();
 
         Ok(Self {
-            achievements: achievements::AchievementsRepository::new(db),
-            blog_articles: blog_articles::BlogArticlesRepository::new(db),
-            bots: bots::BotsRepository::new(db),
-            bot_stats: bot_stats::BotStatsRepository::new(db),
-            custom_events: custom_events::CustomEventsRepository::new(db),
-            global_stats: global_stats::GlobalStatsRepository::new(db),
-            sessions: sessions::SessionsRepository::new(db),
+            achievements: achievements::AchievementsRepository::new(db).await?,
+            blog_articles: blog_articles::BlogArticlesRepository::new(db).await?,
+            bots: bots::BotsRepository::new(db).await?,
+            bot_stats: bot_stats::BotStatsRepository::new(db).await?,
+            custom_events: custom_events::CustomEventsRepository::new(db).await?,
+            global_stats: global_stats::GlobalStatsRepository::new(db).await?,
+            sessions: sessions::SessionsRepository::new(db).await?,
             #[cfg(feature = "reports")]
             r2: r2::R2Repository::new()?,
             #[cfg(feature = "reports")]
-            stats_reports: stats_reports::StatsReportsRepository::new(db),
-            team_invitations: team_invitations::TeamInvitationsRepository::new(db),
-            users: users::UsersRepository::new(db),
-            votes: votes::VotesRepository::new(db),
+            stats_reports: stats_reports::StatsReportsRepository::new(db).await?,
+            team_invitations: team_invitations::TeamInvitationsRepository::new(db).await?,
+            users: users::UsersRepository::new(db).await?,
+            votes: votes::VotesRepository::new(db).await?,
         })
     }
 

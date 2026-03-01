@@ -3,6 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
+    options::{TimeseriesGranularity, TimeseriesOptions},
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
@@ -29,10 +30,24 @@ pub struct VotesRepository {
 }
 
 impl VotesRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(VOTES_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .contains(&VOTES_COLLECTION.to_string())
+        {
+            let ts_opts = TimeseriesOptions::builder()
+                .time_field("date")
+                .granularity(Some(TimeseriesGranularity::Hours))
+                .build();
+            db.create_collection(VOTES_COLLECTION)
+                .timeseries(ts_opts)
+                .await?;
         }
+
+        Ok(Self {
+            collection: db.collection(VOTES_COLLECTION),
+        })
     }
 
     pub async fn ping(&self) -> Result<()> {
@@ -50,7 +65,7 @@ impl VotesRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_bot_and_date_range(
+    pub async fn find_from_date_range(
         &self,
         bot_id: &str,
         start_date: &DateTime,

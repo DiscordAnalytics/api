@@ -59,10 +59,18 @@ pub struct UsersRepository {
 }
 
 impl UsersRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(USERS_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .contains(&USERS_COLLECTION.to_string())
+        {
+            db.create_collection(USERS_COLLECTION).await?;
         }
+
+        Ok(Self {
+            collection: db.collection(USERS_COLLECTION),
+        })
     }
 
     pub async fn ping(&self) -> Result<()> {

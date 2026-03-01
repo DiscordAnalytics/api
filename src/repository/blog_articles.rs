@@ -29,10 +29,18 @@ pub struct BlogArticlesRepository {
 }
 
 impl BlogArticlesRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(BLOG_ARTICLES_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .contains(&BLOG_ARTICLES_COLLECTION.to_string())
+        {
+            db.create_collection(BLOG_ARTICLES_COLLECTION).await?;
         }
+
+        Ok(Self {
+            collection: db.collection(BLOG_ARTICLES_COLLECTION),
+        })
     }
 
     pub async fn ping(&self) -> Result<()> {

@@ -1,4 +1,5 @@
 mod events;
+mod stats;
 mod suspend;
 mod token;
 
@@ -431,6 +432,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(delete().to(delete_bot)),
             )
             .configure(events::configure)
+            .configure(stats::configure)
             .configure(suspend::configure)
             .configure(token::configure),
     );

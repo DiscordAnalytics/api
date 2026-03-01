@@ -64,10 +64,18 @@ pub struct BotsRepository {
 }
 
 impl BotsRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(BOTS_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .contains(&BOTS_COLLECTION.to_string())
+        {
+            db.create_collection(BOTS_COLLECTION).await?;
         }
+
+        Ok(Self {
+            collection: db.collection(BOTS_COLLECTION),
+        })
     }
 
     pub async fn ping(&self) -> Result<()> {

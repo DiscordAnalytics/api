@@ -45,10 +45,18 @@ pub struct GlobalStatsRepository {
 }
 
 impl GlobalStatsRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(GLOBAL_STATS_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .contains(&GLOBAL_STATS_COLLECTION.to_string())
+        {
+            db.create_collection(GLOBAL_STATS_COLLECTION).await?;
         }
+
+        Ok(Self {
+            collection: db.collection(GLOBAL_STATS_COLLECTION),
+        })
     }
 
     pub async fn ping(&self) -> Result<()> {
@@ -75,10 +83,10 @@ impl GlobalStatsRepository {
         let cursor = self
             .collection
             .find(doc! {
-                    "date": {
-                        "$gte": start_date,
-                        "$lte": end_date,
-                    }
+                "date": {
+                    "$gte": start_date,
+                    "$lte": end_date,
+                }
             })
             .with_options(options)
             .await?;

@@ -6,12 +6,12 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse},
     repository::{CustomEventUpdate, Repositories},
     services::Services,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -23,14 +23,10 @@ async fn get_event(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
     event_key: Path<String>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -121,14 +117,10 @@ async fn update_event(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<CustomEventBody>,
-    id: Path<String>,
+    id: Snowflake,
     event_key: Path<String>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -239,14 +231,10 @@ async fn delete_event(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
     event_key: Path<String>,
 ) -> ApiResult<Json<CustomEventDeleteResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(

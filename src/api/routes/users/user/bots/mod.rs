@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
@@ -6,11 +6,11 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{BotResponse, UserBotsResponse},
     repository::Repositories,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -21,13 +21,9 @@ use crate::{
 async fn get_user_bots(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<UserBotsResponse>> {
-    let user_id = id.into_inner();
-
-    if !is_valid_snowflake(&user_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let user_id = id.0;
 
     info!(
         code = %LogCode::Request,

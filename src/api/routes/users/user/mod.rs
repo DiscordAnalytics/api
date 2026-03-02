@@ -1,7 +1,7 @@
 mod bots;
 mod suspend;
 
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
@@ -9,11 +9,11 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, RequireAdmin},
+    api::middleware::{Authenticated, RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{UserDeletionReponse, UserResponse, UserUpdateRequest},
     repository::{Repositories, UserUpdate},
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -24,13 +24,9 @@ use crate::{
 async fn get_user(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<UserResponse>> {
-    let user_id = id.into_inner();
-
-    if !is_valid_snowflake(user_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let user_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -90,13 +86,9 @@ async fn update_user(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
     body: Json<UserUpdateRequest>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<UserResponse>> {
-    let user_id = id.into_inner();
-
-    if !is_valid_snowflake(user_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let user_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -136,13 +128,9 @@ async fn update_user(
 async fn delete_user(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<UserDeletionReponse>> {
-    let user_id = id.into_inner();
-
-    if !is_valid_snowflake(user_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let user_id = id.0;
 
     info!(
         code = %LogCode::Request,

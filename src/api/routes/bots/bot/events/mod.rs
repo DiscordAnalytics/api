@@ -1,6 +1,6 @@
 mod event;
 
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
@@ -8,7 +8,7 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     domain::{
         error::{ApiError, ApiResult},
         models::CustomEvent,
@@ -16,7 +16,7 @@ use crate::{
     openapi::schemas::{CustomEventBody, CustomEventResponse},
     repository::Repositories,
     services::Services,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -28,13 +28,9 @@ async fn get_all_events(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<Vec<CustomEventResponse>>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -118,13 +114,9 @@ async fn create_event(
     services: Data<Services>,
     repos: Data<Repositories>,
     event: Json<CustomEventBody>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(

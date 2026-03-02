@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json, Path, Query};
+use actix_web::web::{Data, Json, Query};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
@@ -7,7 +7,7 @@ use mongodb::bson::DateTime;
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{
         BotStatsBody, BotStatsBodyNew, BotStatsBodyOld, BotStatsContent, BotStatsQuery,
@@ -15,7 +15,7 @@ use crate::{
     },
     repository::{BotStatsUpdate, Repositories},
     services::Services,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -28,13 +28,9 @@ async fn get_stats(
     services: Data<Services>,
     repos: Data<Repositories>,
     query: Query<BotStatsQuery>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotStatsResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     let from = DateTime::parse_rfc3339_str(format!("{}T00:00:00Z", query.from).as_str())?;
     let to = DateTime::parse_rfc3339_str(format!("{}T23:59:59Z", query.to).as_str())?;
@@ -137,13 +133,9 @@ async fn post_stats_old(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotStatsBodyOld>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotStatsUpdateResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -297,13 +289,9 @@ async fn post_stats_new(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotStatsBodyNew>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotStatsUpdateResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -456,7 +444,7 @@ async fn post_stats(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotStatsBody>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotStatsUpdateResponse>> {
     match body.into_inner() {
         BotStatsBody::New(new_body) => post_stats_new(auth, repos, Json(new_body), id).await,

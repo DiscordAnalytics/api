@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, patch, resource, scope},
@@ -6,7 +6,7 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
@@ -14,7 +14,7 @@ use crate::{
     openapi::schemas::BotTokenResponse,
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -26,13 +26,9 @@ async fn get_token(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotTokenResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -102,13 +98,9 @@ async fn refresh_token(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotTokenResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(&bot_id) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,

@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, post, scope},
@@ -6,11 +6,11 @@ use apistos::{
 use tracing::info;
 
 use crate::{
-    api::middleware::RequireAdmin,
+    api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{UserSuspendRequest, UserSuspendResponse},
     repository::{Repositories, UserUpdate},
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -23,13 +23,9 @@ async fn suspend_user(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
     body: Json<UserSuspendRequest>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<UserSuspendResponse>> {
-    let user_id = id.into_inner();
-
-    if !is_valid_snowflake(user_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let user_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -84,13 +80,9 @@ async fn suspend_user(
 async fn unsuspend_user(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<UserSuspendResponse>> {
-    let user_id = id.into_inner();
-
-    if !is_valid_snowflake(user_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let user_id = id.0;
 
     info!(
         code = %LogCode::Request,

@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, post, resource, scope},
@@ -6,7 +6,7 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     domain::{
         error::{ApiError, ApiResult},
         models::TeamInvitation,
@@ -14,7 +14,7 @@ use crate::{
     openapi::schemas::{TeamRemoveResponse, TeamRequestBody, TeamResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -26,13 +26,9 @@ async fn get_team(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<Vec<TeamResponse>>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -143,13 +139,9 @@ async fn add_to_team(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<TeamResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -267,13 +259,9 @@ async fn delete_from_team(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<TeamRemoveResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(

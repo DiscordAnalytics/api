@@ -4,7 +4,7 @@ mod suspend;
 mod team;
 mod token;
 
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
@@ -14,7 +14,7 @@ use serde_json::Value;
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, Snowflake},
     app_env,
     domain::{
         auth::generate_bot_token,
@@ -24,7 +24,7 @@ use crate::{
     openapi::schemas::{BotCreationBody, BotDeletionResponse, BotResponse, BotUpdateBody},
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::{discord::is_valid_snowflake, logger::LogCode},
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -36,13 +36,9 @@ async fn get_bot(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -113,13 +109,9 @@ async fn post_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<BotCreationBody>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,
@@ -256,13 +248,9 @@ async fn patch_bot(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotUpdateBody>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     let update_data = body.into_inner();
 
@@ -360,13 +348,9 @@ async fn delete_bot(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Path<String>,
+    id: Snowflake,
 ) -> ApiResult<Json<BotDeletionResponse>> {
-    let bot_id = id.into_inner();
-
-    if !is_valid_snowflake(bot_id.as_str()) {
-        return Err(ApiError::InvalidId);
-    }
+    let bot_id = id.0;
 
     info!(
         code = %LogCode::Request,

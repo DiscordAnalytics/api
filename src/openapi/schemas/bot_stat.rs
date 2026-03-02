@@ -86,27 +86,6 @@ pub struct BotStatsBodyOld {
     pub users_type: Option<UserType>,
 }
 
-impl BotStatsBodyOld {
-    pub fn into_stats(self, bot_id: &str, date: &DateTime) -> BotStats {
-        BotStats {
-            added_guilds: self.added_guilds,
-            bot_id: bot_id.to_string(),
-            custom_events: self.custom_events,
-            date: date.to_owned(),
-            guilds: self.guilds_stats,
-            guild_count: self.guilds,
-            guild_locales: self.guilds_locales,
-            guild_members: self.guild_members,
-            interactions: self.interactions,
-            interactions_locales: self.locales,
-            removed_guilds: self.removed_guilds,
-            user_count: self.users,
-            user_install_count: self.user_install_count,
-            users_type: self.users_type,
-        }
-    }
-}
-
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BotStatsBodyNew {
@@ -124,7 +103,56 @@ pub struct BotStatsBodyNew {
     pub users_type: Option<UserType>,
 }
 
-impl BotStatsBodyNew {
+pub struct NormalizedStatsBody {
+    pub added_guilds: i32,
+    pub custom_events: Option<HashMap<String, i32>>,
+    pub guilds: Option<Vec<Guild>>,
+    pub guild_count: i32,
+    pub guild_locales: Vec<Locale>,
+    pub guild_members: GuildMembers,
+    pub interactions: Vec<Interaction>,
+    pub interactions_locales: Vec<Locale>,
+    pub removed_guilds: i32,
+    pub user_count: i32,
+    pub user_install_count: Option<i32>,
+    pub users_type: Option<UserType>,
+}
+
+impl NormalizedStatsBody {
+    pub fn from_old(old: BotStatsBodyOld) -> Self {
+        Self {
+            added_guilds: old.added_guilds,
+            custom_events: old.custom_events,
+            guilds: old.guilds_stats,
+            guild_count: old.guilds,
+            guild_locales: old.guilds_locales,
+            guild_members: old.guild_members,
+            interactions: old.interactions,
+            interactions_locales: old.locales,
+            removed_guilds: old.removed_guilds,
+            user_count: old.users,
+            user_install_count: old.user_install_count,
+            users_type: old.users_type,
+        }
+    }
+
+    pub fn from_new(new: BotStatsBodyNew) -> Self {
+        Self {
+            added_guilds: new.added_guilds,
+            custom_events: new.custom_events,
+            guilds: new.guilds,
+            guild_count: new.guild_count,
+            guild_locales: new.guild_locales,
+            guild_members: new.guild_members,
+            interactions: new.interactions,
+            interactions_locales: new.interactions_locales,
+            removed_guilds: new.removed_guilds,
+            user_count: new.user_count,
+            user_install_count: new.user_install_count,
+            users_type: new.users_type,
+        }
+    }
+
     pub fn into_stats(self, bot_id: &str, date: &DateTime) -> BotStats {
         BotStats {
             added_guilds: self.added_guilds,

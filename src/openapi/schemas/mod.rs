@@ -20,8 +20,8 @@ pub use bot::{
     BotTokenResponse, BotUpdateBody,
 };
 pub use bot_stat::{
-    BotStatsBody, BotStatsBodyNew, BotStatsBodyOld, BotStatsContent, BotStatsQuery,
-    BotStatsResponse, BotStatsUpdateResponse,
+    BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, BotStatsUpdateResponse,
+    NormalizedStatsBody,
 };
 pub use custom_event::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse};
 pub use health::HealthResponse;

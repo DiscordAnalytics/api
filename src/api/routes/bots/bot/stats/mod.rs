@@ -34,8 +34,40 @@ async fn get_stats(
 ) -> ApiResult<Json<BotStatsResponse>> {
     let bot_id = id.0;
 
-    let from = DateTime::parse_rfc3339_str(format!("{}T00:00:00Z", query.from).as_str())?;
-    let to = DateTime::parse_rfc3339_str(format!("{}T23:59:59Z", query.to).as_str())?;
+    let from = DateTime::parse_rfc3339_str(format!("{}T00:00:00Z", query.from).as_str()).map_err(
+        |_| {
+            warn!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                from = %query.from,
+                "Invalid 'from' date format",
+            );
+            ApiError::InvalidInput("Invalid 'from' date format. Expected YYYY-MM-DD.".to_string())
+        },
+    )?;
+    let to =
+        DateTime::parse_rfc3339_str(format!("{}T23:59:59Z", query.to).as_str()).map_err(|_| {
+            warn!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                to = %query.to,
+                "Invalid 'to' date format",
+            );
+            ApiError::InvalidInput("Invalid 'to' date format. Expected YYYY-MM-DD.".to_string())
+        })?;
+
+    if from > to {
+        warn!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            from = %query.from,
+            to = %query.to,
+            "Invalid date range: 'from' date is after 'to' date",
+        );
+        return Err(ApiError::InvalidInput(
+            "'from' date must be before 'to' date".to_string(),
+        ));
+    }
 
     info!(
         code = %LogCode::Request,

@@ -17,7 +17,7 @@ use crate::{
     },
     repository::{BotStatsUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{constants::MAX_DATE_RANGE, logger::LogCode},
 };
 
 #[api_operation(
@@ -67,6 +67,20 @@ async fn get_stats(
         return Err(ApiError::InvalidInput(
             "'from' date must be before 'to' date".to_string(),
         ));
+    }
+
+    if from.timestamp_millis() - to.timestamp_millis() > MAX_DATE_RANGE * 1000 {
+        warn!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            from = %query.from,
+            to = %query.to,
+            "Invalid date range: range exceeds maximum allowed",
+        );
+        return Err(ApiError::InvalidInput(format!(
+            "Date range cannot exceed {} seconds",
+            MAX_DATE_RANGE
+        )));
     }
 
     info!(

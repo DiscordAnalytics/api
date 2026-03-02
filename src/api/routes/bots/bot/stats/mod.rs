@@ -133,11 +133,6 @@ async fn get_stats(
     }))
 }
 
-#[api_operation(
-    summary = "Post bot stats",
-    description = "Submit bot stats for a specific date.",
-    tag = "Stats"
-)]
 async fn post_stats_old(
     auth: Authenticated,
     repos: Data<Repositories>,

@@ -86,7 +86,7 @@ async fn create_article(
     )?;
 
     if let Some(cover) = &article_request.cover {
-        new_article = new_article.with_cover(&cover);
+        new_article = new_article.with_cover(cover);
     }
 
     repos.blog_articles.insert(&new_article).await?;

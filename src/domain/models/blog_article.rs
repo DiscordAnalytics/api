@@ -27,7 +27,7 @@ impl BlogArticle {
     ) -> Result<Self> {
         Ok(Self {
             author_id: author_id.to_string(),
-            article_id: Self::generate_article_id(&title)?,
+            article_id: Self::generate_article_id(title)?,
             content: content.to_string(),
             cover: None,
             created_at: DateTime::now(),

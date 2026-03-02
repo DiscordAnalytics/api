@@ -103,7 +103,7 @@ async fn get_invitation(
         bot_username: bot.username,
         bot_avatar: bot.avatar,
         owner_username: owner.username,
-        owner_avatar: owner.avatar.into(),
+        owner_avatar: owner.avatar,
     }))
 }
 

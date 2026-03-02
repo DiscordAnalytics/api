@@ -108,7 +108,7 @@ impl BotsRepository {
             .find(doc! {
               "$or": [
                 { "ownerId": user_id },
-                { "team": user_id }
+                { "team": { "$in": [user_id] } }
               ]
             })
             .await?;

@@ -1,0 +1,10 @@
+target
+logs
+**/.github
+**/.dockerignore
+**/.git
+**/.gitignore
+**/.vscode
+**/docker-compose*
+**/Dockerfile*
+**/docker

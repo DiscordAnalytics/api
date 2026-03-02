@@ -238,15 +238,19 @@ async fn post_stats(
         return Err(ApiError::Forbidden);
     }
 
-    let body = match body.into_inner() {
-        BotStatsBody::New(new_body) => NormalizedStatsBody::from_new(new_body),
-        BotStatsBody::Old(old_body) => NormalizedStatsBody::from_old(old_body),
-    };
-
     let current_date = DateTime::now();
     let start_of_hour = DateTime::from_millis(
         current_date.timestamp_millis() - (current_date.timestamp_millis() % 3600000),
     );
+
+    let body = match body.into_inner() {
+        BotStatsBody::New(new_body) => {
+            NormalizedStatsBody::from_new(new_body, &bot_id, &start_of_hour)
+        }
+        BotStatsBody::Old(old_body) => {
+            NormalizedStatsBody::from_old(old_body, &bot_id, &start_of_hour)
+        }
+    };
 
     match repos
         .bot_stats
@@ -335,7 +339,7 @@ async fn post_stats(
                 .await?;
         }
         None => {
-            let new_stats = NormalizedStatsBody::into_stats(body, &bot_id, &start_of_hour);
+            let new_stats = body.into_stats();
             repos.bot_stats.insert(&new_stats).await?;
         }
     };

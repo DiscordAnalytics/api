@@ -106,7 +106,9 @@ pub struct BotStatsBodyNew {
 #[derive(Clone, Debug)]
 pub struct NormalizedStatsBody {
     pub added_guilds: i32,
+    pub bot_id: String,
     pub custom_events: Option<HashMap<String, i32>>,
+    pub date: DateTime,
     pub guilds: Option<Vec<Guild>>,
     pub guild_count: i32,
     pub guild_locales: Vec<Locale>,
@@ -120,10 +122,12 @@ pub struct NormalizedStatsBody {
 }
 
 impl NormalizedStatsBody {
-    pub fn from_old(old: BotStatsBodyOld) -> Self {
+    pub fn from_old(old: BotStatsBodyOld, bot_id: &str, date: &DateTime) -> Self {
         Self {
             added_guilds: old.added_guilds,
+            bot_id: bot_id.to_string(),
             custom_events: old.custom_events,
+            date: *date,
             guilds: old.guilds_stats,
             guild_count: old.guilds,
             guild_locales: old.guilds_locales,
@@ -137,10 +141,12 @@ impl NormalizedStatsBody {
         }
     }
 
-    pub fn from_new(new: BotStatsBodyNew) -> Self {
+    pub fn from_new(new: BotStatsBodyNew, bot_id: &str, date: &DateTime) -> Self {
         Self {
             added_guilds: new.added_guilds,
+            bot_id: bot_id.to_string(),
             custom_events: new.custom_events,
+            date: *date,
             guilds: new.guilds,
             guild_count: new.guild_count,
             guild_locales: new.guild_locales,
@@ -154,12 +160,12 @@ impl NormalizedStatsBody {
         }
     }
 
-    pub fn into_stats(self, bot_id: &str, date: &DateTime) -> BotStats {
+    pub fn into_stats(self) -> BotStats {
         BotStats {
             added_guilds: self.added_guilds,
-            bot_id: bot_id.to_string(),
+            bot_id: self.bot_id,
             custom_events: self.custom_events,
-            date: date.to_owned(),
+            date: self.date,
             guilds: self.guilds,
             guild_count: self.guild_count,
             guild_locales: self.guild_locales,

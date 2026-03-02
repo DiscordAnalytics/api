@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct CustomEvent {
     pub bot_id: String,
+    pub default_value: Option<i32>,
     pub event_key: String,
     pub graph_name: String,
 }

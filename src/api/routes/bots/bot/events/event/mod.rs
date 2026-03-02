@@ -204,10 +204,22 @@ async fn update_event(
         .with_event_key(&body.event_key)
         .with_graph_name(&body.graph_name);
 
-    repos
+    let update_result = repos
         .custom_events
         .update(&bot_id, &event_key, updates)
-        .await?;
+        .await?
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Custom event not found for update",
+            );
+            ApiError::DatabaseError(format!(
+                "Custom event with key {} for bot ID {} not found during update",
+                event_key, bot_id
+            ))
+        })?;
 
     info!(
         code = %LogCode::Request,
@@ -216,10 +228,7 @@ async fn update_event(
         "Custom event updated successfully",
     );
 
-    Ok(Json(CustomEventResponse {
-        event_key: body.event_key,
-        graph_name: body.graph_name,
-    }))
+    Ok(Json(CustomEventResponse::from(update_result)))
 }
 
 #[api_operation(

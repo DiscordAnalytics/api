@@ -191,6 +191,7 @@ async fn create_event(
 
     let new_event = CustomEvent {
         bot_id: bot_id.clone(),
+        default_value: event.default_value,
         event_key: event.event_key.clone(),
         graph_name: event.graph_name.clone(),
     };

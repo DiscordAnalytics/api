@@ -69,7 +69,7 @@ async fn get_stats(
         ));
     }
 
-    if from.timestamp_millis() - to.timestamp_millis() > MAX_DATE_RANGE * 1000 {
+    if to.timestamp_millis() - from.timestamp_millis() > MAX_DATE_RANGE * 1000 {
         warn!(
             code = %LogCode::Request,
             bot_id = %bot_id,

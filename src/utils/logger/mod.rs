@@ -5,15 +5,6 @@ use std::collections::HashMap;
 use std::io;
 
 use anyhow::Result;
-#[cfg(feature = "otel")]
-use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-#[cfg(feature = "otel")]
-use opentelemetry_otlp::{LogExporter, Protocol, WithExportConfig, WithHttpConfig};
-#[cfg(feature = "otel")]
-use opentelemetry_sdk::{
-    Resource,
-    logs::{SdkLogger, SdkLoggerProvider},
-};
 use tracing::Level;
 #[cfg(not(feature = "otel"))]
 use tracing_subscriber::layer::Identity;
@@ -23,6 +14,15 @@ use tracing_subscriber::{
     layer::SubscriberExt,
     prelude::*,
     registry,
+};
+#[cfg(feature = "otel")]
+use {
+    opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge,
+    opentelemetry_otlp::{LogExporter, Protocol, WithExportConfig, WithHttpConfig},
+    opentelemetry_sdk::{
+        Resource,
+        logs::{SdkLogger, SdkLoggerProvider},
+    },
 };
 
 #[cfg(feature = "otel")]

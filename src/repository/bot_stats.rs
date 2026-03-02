@@ -3,8 +3,11 @@ use mongodb::{
     Collection, Database,
     bson::{Bson, DateTime, Document, doc},
     error::Result,
-    options::{FindOptions, TimeseriesGranularity, TimeseriesOptions},
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{
+        FindOneAndUpdateOptions, FindOptions, ReturnDocument, TimeseriesGranularity,
+        TimeseriesOptions,
+    },
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{
@@ -365,18 +368,23 @@ impl BotStatsRepository {
         bot_id: &str,
         date: &DateTime,
         updated_bot_stats: BotStatsUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<BotStats>> {
         let updates = updated_bot_stats.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(
+            .find_one_and_update(
                 doc! { "botId": bot_id, "date": date },
                 doc! { "$set": updates },
             )
+            .with_options(options)
             .await
     }
 

@@ -15,10 +15,10 @@ pub struct AchievementResponse {
     pub editable: bool,
     pub lang: Option<String>,
     pub objective: AchievementObjective,
-    pub shared: Option<bool>,
+    pub shared: bool,
     pub title: String,
     pub title_i18n: Option<String>,
-    pub used_by: Option<i64>,
+    pub used_by: i64,
 }
 
 impl TryFrom<Achievement> for AchievementResponse {

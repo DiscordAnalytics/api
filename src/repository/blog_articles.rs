@@ -3,7 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
@@ -107,20 +108,25 @@ impl BlogArticlesRepository {
         &self,
         article_id: &str,
         updated_article: BlogArticleUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<BlogArticle>> {
         let updates = updated_article.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(
+            .find_one_and_update(
                 doc! {
                   "articleId": article_id
                 },
                 doc! { "$set": updates },
             )
+            .with_options(options)
             .await
     }
 

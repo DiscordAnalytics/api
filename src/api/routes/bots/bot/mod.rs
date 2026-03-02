@@ -331,9 +331,9 @@ async fn patch_bot(
         update = update.with_version(version);
     }
 
-    repos.bots.update(&bot_id, update).await?;
+    let update_result = repos.bots.update(&bot_id, update).await?;
 
-    let updated_bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    let updated_bot = update_result.ok_or_else(|| {
         warn!(
             code = %LogCode::DbError,
             bot_id = %bot_id,

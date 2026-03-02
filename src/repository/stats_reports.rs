@@ -3,7 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{Document, doc},
     error::Result,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::StatsReport, utils::constants::STATS_REPORTS_COLLECTION};
@@ -79,21 +80,22 @@ impl StatsReportsRepository {
 
     pub async fn update(
         &self,
-        bot_id: &str,
-        user_id: &str,
+        doc_id: &str,
         updated_stats_report: StatsReportUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<StatsReport>> {
         let updates = updated_stats_report.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(
-                doc! { "botId": bot_id, "userId": user_id },
-                doc! { "$set": updates },
-            )
+            .find_one_and_update(doc! { "_id": doc_id }, doc! { "$set": updates })
+            .with_options(options)
             .await
     }
 

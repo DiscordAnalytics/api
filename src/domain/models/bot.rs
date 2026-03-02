@@ -19,7 +19,7 @@ pub struct Bot {
     pub version: Option<String>,
     pub votes_webhook_url: Option<String>,
     pub warn_level: i32,
-    pub watched_since: Option<DateTime>,
+    pub watched_since: DateTime,
 }
 
 impl Bot {
@@ -30,7 +30,7 @@ impl Bot {
         username: &str,
         avatar: Option<&str>,
     ) -> Self {
-        Bot {
+        Self {
             advanced_stats: false,
             avatar: avatar.map(|s| s.to_string()),
             bot_id: bot_id.to_string(),
@@ -46,7 +46,7 @@ impl Bot {
             version: None,
             votes_webhook_url: None,
             warn_level: 0,
-            watched_since: None,
+            watched_since: DateTime::now(),
         }
     }
 

@@ -134,7 +134,7 @@ async fn post_invitation(
             info!(
                 code = %LogCode::Request,
                 invitation_id = %invitation_id,
-                "Invitation not found for acceptance/rejection",
+                "Invitation not found",
             );
             ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
         })?;
@@ -147,7 +147,7 @@ async fn post_invitation(
             info!(
                 code = %LogCode::Request,
                 bot_id = %invitation.bot_id,
-                "Bot not found for invitation acceptance/rejection",
+                "Bot not found for",
             );
             ApiError::NotFound(format!("Bot with ID {} not found", invitation.bot_id))
         })?;
@@ -158,7 +158,7 @@ async fn post_invitation(
         info!(
             code = %LogCode::AdminAction,
             invitation_id = %invitation_id,
-            "Admin user processing invitation acceptance/rejection",
+            "Admin user processing invitation",
         );
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
@@ -167,7 +167,7 @@ async fn post_invitation(
                 code = %LogCode::Forbidden,
                 invitation_id = %invitation_id,
                 user_id = %user_id,
-                "User does not have access to process invitation acceptance/rejection",
+                "User does not have access to process invitation",
             );
             return Err(ApiError::Forbidden);
         }
@@ -175,13 +175,13 @@ async fn post_invitation(
             code = %LogCode::Request,
             invitation_id = %invitation_id,
             user_id = %user_id,
-            "User processing invitation acceptance/rejection",
+            "User processing invitation",
         );
     } else if !ctx.is_user() {
         info!(
             code = %LogCode::Forbidden,
             invitation_id = %invitation_id,
-            "Unauthorized context attempting to process invitation acceptance/rejection",
+            "Unauthorized context attempting to process invitation",
         );
         return Err(ApiError::Forbidden);
     }
@@ -190,7 +190,7 @@ async fn post_invitation(
         info!(
             code = %LogCode::Request,
             invitation_id = %invitation_id,
-            "Invitation already accepted, cannot process acceptance/rejection",
+            "Invitation already accepted, cannot process",
         );
         return Err(ApiError::InvitationAlreadyAccepted);
     }
@@ -199,7 +199,7 @@ async fn post_invitation(
         info!(
             code = %LogCode::Request,
             invitation_id = %invitation_id,
-            "Invitation expired, cannot process acceptance/rejection",
+            "Invitation expired, cannot process",
         );
         return Err(ApiError::InvitationExpired);
     }

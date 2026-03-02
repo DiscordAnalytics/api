@@ -21,7 +21,11 @@ use crate::{
     openapi::schemas::AuthCallbackQuery,
     repository::{GlobalStatsUpdate, Repositories, UserUpdate},
     services::Services,
-    utils::{constants::ACCESS_TOKEN_LIFETIME, discord::get_user_creation_date, logger::LogCode},
+    utils::{
+        constants::{ACCESS_TOKEN_LIFETIME, MAX_BOTS_PER_USER},
+        discord::get_user_creation_date,
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -165,12 +169,12 @@ async fn oauth_callback(
             let user_created_at = get_user_creation_date(&user_id).unwrap_or_else(DateTime::now);
 
             let new_user = User {
-                avatar: discord_user.avatar.unwrap_or_default(),
+                avatar: discord_user.avatar.clone(),
                 avatar_decoration: discord_user
                     .avatar_decoration_data
                     .and_then(|data| data.asset),
                 suspended: false,
-                bots_limit: 3,
+                bots_limit: MAX_BOTS_PER_USER,
                 created_at: user_created_at,
                 joined_at: DateTime::now(),
                 mail: discord_user.email.unwrap_or_default(),

@@ -20,7 +20,7 @@ pub struct BotResponse {
     pub username: String,
     pub version: Option<String>,
     pub votes_webhook_url: Option<String>,
-    pub watched_since: Option<String>,
+    pub watched_since: String,
 }
 
 impl TryFrom<Bot> for BotResponse {
@@ -44,10 +44,7 @@ impl TryFrom<Bot> for BotResponse {
             username: bot.username,
             version: bot.version,
             votes_webhook_url: bot.votes_webhook_url,
-            watched_since: bot
-                .watched_since
-                .map(|dt| dt.try_to_rfc3339_string())
-                .transpose()?,
+            watched_since: bot.watched_since.try_to_rfc3339_string()?,
         })
     }
 }

@@ -14,18 +14,18 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Claims {
-    pub sub: String,
-    pub sid: String,
-    pub iat: i64,
-    pub exp: usize,
+    pub sub: String, // user ID
+    pub sid: String, // session ID
+    pub iat: i64,    // issued at
+    pub exp: usize,  // expiration time
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct RefreshClaims {
-    pub sub: String,
-    pub sid: String,
-    pub iat: i64,
-    pub exp: usize,
+    pub sub: String, // user ID
+    pub sid: String, // session ID
+    pub iat: i64,    // issued at
+    pub exp: usize,  // expiration time
 }
 
 pub fn generate_access_token(user_id: &str, session_id: &str) -> Result<String> {
@@ -106,7 +106,7 @@ pub fn generate_bot_token(bot_id: &str) -> Result<String> {
             aead::Aad::empty(),
             &mut in_out,
         )
-        .unwrap();
+        .map_err(|e| anyhow::anyhow!("Failed to seal token: {:?}", e))?;
 
     Ok(hex::encode(&in_out))
 }

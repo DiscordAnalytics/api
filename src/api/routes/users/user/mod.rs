@@ -108,9 +108,9 @@ async fn update_user(
 
     let user_update = UserUpdate::new().with_bots_limit(bots_limit);
 
-    repos.users.update(&user_id, user_update).await?;
+    let update_result = repos.users.update(&user_id, user_update).await?;
 
-    let updated_user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
+    let updated_user = update_result.ok_or_else(|| {
         warn!(
             code = %LogCode::Request,
             user_id = %user_id,

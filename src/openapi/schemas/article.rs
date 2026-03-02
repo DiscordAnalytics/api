@@ -9,7 +9,7 @@ use crate::domain::models::BlogArticle;
 pub struct ArticleResponse {
     pub author_id: String,
     pub article_id: String,
-    pub content: String,
+    pub content: Option<String>,
     pub cover: Option<String>,
     pub created_at: String,
     pub description: String,
@@ -26,7 +26,7 @@ impl TryFrom<BlogArticle> for ArticleResponse {
         Ok(Self {
             author_id: value.author_id,
             article_id: value.article_id,
-            content: value.content,
+            content: Some(value.content),
             cover: value.cover,
             created_at: value.created_at.try_to_rfc3339_string()?,
             description: value.description,

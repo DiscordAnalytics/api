@@ -17,12 +17,14 @@ pub struct Services {
 
 impl Services {
     pub fn new(repos: Repositories) -> Self {
+        let bots_service = bots::BotsService::new(repos.clone());
+
         Self {
             auth: auth::AuthService::new(repos.clone()),
-            bots: bots::BotsService::new(repos.clone()),
+            bots: bots_service.clone(),
             discord: discord::DiscordService::new(),
             invitations: invitations::InvitationsService::new(repos.clone()),
-            users: users::UsersService::new(repos.clone()),
+            users: users::UsersService::new(repos.clone(), &bots_service),
         }
     }
 }

@@ -3,7 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{Document, doc},
     error::Result,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::User, utils::constants::USERS_COLLECTION};
@@ -95,15 +96,20 @@ impl UsersRepository {
         self.collection.insert_one(user).await
     }
 
-    pub async fn update(&self, user_id: &str, updated_user: UserUpdate) -> Result<UpdateResult> {
+    pub async fn update(&self, user_id: &str, updated_user: UserUpdate) -> Result<Option<User>> {
         let updates = updated_user.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(doc! { "userId": user_id }, doc! { "$set": updates })
+            .find_one_and_update(doc! { "userId": user_id }, doc! { "$set": updates })
+            .with_options(options)
             .await
     }
 

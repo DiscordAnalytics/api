@@ -79,18 +79,14 @@ async fn publish_article(
 
     let update = BlogArticleUpdate::new().with_is_draft(false);
 
-    repos.blog_articles.update(&article_id, update).await?;
+    let update_result = repos.blog_articles.update(&article_id, update).await?;
 
-    let updated_article = repos
-        .blog_articles
-        .find_by_id(&article_id)
-        .await?
-        .ok_or_else(|| {
-            ApiError::DatabaseError(format!(
-                "Article with ID {} not found after update",
-                article_id
-            ))
-        })?;
+    let updated_article = update_result.ok_or_else(|| {
+        ApiError::DatabaseError(format!(
+            "Article with ID {} not found after update",
+            article_id
+        ))
+    })?;
 
     let article_response = ArticleResponse::try_from(updated_article)?;
 
@@ -135,18 +131,14 @@ async fn update_article(
         update = update.with_cover(&cover);
     }
 
-    repos.blog_articles.update(&article_id, update).await?;
+    let update_result = repos.blog_articles.update(&article_id, update).await?;
 
-    let updated_article = repos
-        .blog_articles
-        .find_by_id(&article_id)
-        .await?
-        .ok_or_else(|| {
-            ApiError::DatabaseError(format!(
-                "Article with ID {} not found after update",
-                article_id
-            ))
-        })?;
+    let updated_article = update_result.ok_or_else(|| {
+        ApiError::DatabaseError(format!(
+            "Article with ID {} not found after update",
+            article_id
+        ))
+    })?;
 
     let article_response = ArticleResponse::try_from(updated_article)?;
 

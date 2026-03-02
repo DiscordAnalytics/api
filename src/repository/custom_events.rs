@@ -3,7 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{Document, doc},
     error::Result,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::CustomEvent, utils::constants::CUSTOM_EVENTS_COLLECTION};
@@ -93,18 +94,23 @@ impl CustomEventsRepository {
         bot_id: &str,
         event_key: &str,
         updated_custom_event: CustomEventUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<CustomEvent>> {
         let updates = updated_custom_event.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(
+            .find_one_and_update(
                 doc! { "botId": bot_id, "eventKey": event_key },
                 doc! { "$set": updates },
             )
+            .with_options(options)
             .await
     }
 

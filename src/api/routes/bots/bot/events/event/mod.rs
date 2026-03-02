@@ -225,7 +225,6 @@ async fn update_event(
     );
 
     Ok(Json(CustomEventResponse {
-        bot_id,
         event_key: body.event_key,
         graph_name: body.graph_name,
     }))

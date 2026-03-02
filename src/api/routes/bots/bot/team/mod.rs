@@ -106,7 +106,7 @@ async fn get_team(
         };
 
         if let Some(user) = repos.users.find_by_id(&user_id).await? {
-            response.avatar = Some(user.avatar);
+            response.avatar = user.avatar;
             response.username = Some(user.username);
             response.registered = true;
         }

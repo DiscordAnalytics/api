@@ -3,7 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{Document, doc},
     error::Result,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::Bot, utils::constants::BOTS_COLLECTION};
@@ -121,33 +122,34 @@ impl BotsRepository {
         self.collection.insert_one(bot).await
     }
 
-    pub async fn update(&self, bot_id: &str, updated_bot: BotUpdate) -> Result<UpdateResult> {
+    pub async fn update(&self, bot_id: &str, updated_bot: BotUpdate) -> Result<Option<Bot>> {
         let updates = updated_bot.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(doc! { "botId": bot_id }, doc! { "$set": updates })
+            .find_one_and_update(doc! { "botId": bot_id }, doc! { "$set": updates })
+            .with_options(options)
             .await
     }
 
-    pub async fn add_user_to_team(&self, bot_id: &str, user_id: &str) -> Result<UpdateResult> {
-        self.collection
-            .update_one(
-                doc! { "botId": bot_id },
-                doc! { "$addToSet": { "team": user_id } },
-            )
-            .await
-    }
+    pub async fn remove_user_from_team(&self, bot_id: &str, user_id: &str) -> Result<Option<Bot>> {
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
 
-    pub async fn remove_user_from_team(&self, bot_id: &str, user_id: &str) -> Result<UpdateResult> {
         self.collection
-            .update_one(
+            .find_one_and_update(
                 doc! { "botId": bot_id },
                 doc! { "$pull": { "team": user_id } },
             )
+            .with_options(options)
             .await
     }
 

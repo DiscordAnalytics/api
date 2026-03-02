@@ -7,7 +7,7 @@ use crate::{domain::models::User, openapi::schemas::BotResponse};
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResponse {
-    pub avatar: String,
+    pub avatar: Option<String>,
     pub avatar_decoration: Option<String>,
     pub bots_limit: i32,
     pub created_at: String,

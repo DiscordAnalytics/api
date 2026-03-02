@@ -1,7 +1,7 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Document, doc},
+    bson::{DateTime, Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
@@ -134,6 +134,12 @@ impl TeamInvitationsRepository {
     ) -> Result<DeleteResult> {
         self.collection
             .delete_one(doc! { "botId": bot_id, "userId": user_id })
+            .await
+    }
+
+    pub async fn delete_expired_invitations(&self) -> Result<DeleteResult> {
+        self.collection
+            .delete_many(doc! { "expiration": { "$lte": DateTime::now() } })
             .await
     }
 }

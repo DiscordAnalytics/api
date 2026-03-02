@@ -42,7 +42,12 @@ async fn get_articles(
 
     let article_reponses = articles
         .into_iter()
-        .map(ArticleResponse::try_from)
+        .map(|a| {
+            ArticleResponse::try_from(a).map(|mut r| {
+                r.content = None;
+                r
+            })
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     info!(

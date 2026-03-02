@@ -3,7 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{Document, doc},
     error::Result,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::Achievement, utils::constants::ACHIEVEMENTS_COLLECTION};
@@ -80,15 +81,20 @@ impl AchievementsRepository {
         &self,
         achievement_id: &str,
         updated_achievement: AchievementUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<Achievement>> {
         let updates = updated_achievement.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(doc! { "_id": achievement_id }, doc! { "$set": updates })
+            .find_one_and_update(doc! { "_id": achievement_id }, doc! { "$set": updates })
+            .with_options(options)
             .await
     }
 

@@ -5,14 +5,16 @@ pub const PUBLIC_ROUTES: [&str; 2] = ["/articles", "/articles/{id}"];
 pub const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 pub const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
+pub const MAX_BOTS_PER_USER: i32 = 3;
+
 pub const MAX_WEBHOOK_RETRIES: u8 = 15;
 
 pub const TAG_LEN: usize = 16;
 
 pub const DISCORD_EPOCH: i64 = 1420070400000;
 
-pub const ACCESS_TOKEN_LIFETIME: i64 = 30 * 60;
-pub const REFRESH_TOKEN_LIFETIME: i64 = 30 * 24 * 60 * 60;
+pub const ACCESS_TOKEN_LIFETIME: i64 = 30 * 60; // 30 minutes
+pub const REFRESH_TOKEN_LIFETIME: i64 = 30 * 24 * 60 * 60; // 30 days
 
 #[cfg(debug_assertions)]
 pub const DB_NAME: &str = "api-dev";

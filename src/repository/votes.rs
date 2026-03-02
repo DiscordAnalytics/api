@@ -3,8 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
-    options::{TimeseriesGranularity, TimeseriesOptions},
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, ReturnDocument, TimeseriesGranularity, TimeseriesOptions},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::Vote, utils::constants::VOTES_COLLECTION};
@@ -85,18 +85,23 @@ impl VotesRepository {
         bot_id: &str,
         date: &DateTime,
         updated_vote: VoteUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<Vote>> {
         let updates = updated_vote.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(
+            .find_one_and_update(
                 doc! { "botId": bot_id, "date": date },
                 doc! { "$set": updates },
             )
+            .with_options(options)
             .await
     }
 

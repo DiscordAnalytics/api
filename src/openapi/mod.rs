@@ -16,7 +16,7 @@ pub fn build_spec() -> Spec {
             title: "Discord Analytics API".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             description: Some(
-                "Official Discord Analytics API for bot statistics and analytics".to_string(),
+                "The Discord Analytics API allows developers to access various data and statistics related to Discord bots. It provides endpoints for retrieving bot information, achievements, and more. This API is designed to help developers integrate Discord Analytics features into their applications.".to_string(),
             ),
             terms_of_service: Some(
                 "https://discordanalytics.xyz/docs/legals/terms.html".to_string(),

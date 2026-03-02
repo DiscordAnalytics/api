@@ -3,8 +3,8 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
-    options::FindOptions,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
+    options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument},
+    results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::GlobalStats, utils::constants::GLOBAL_STATS_COLLECTION};
@@ -102,15 +102,20 @@ impl GlobalStatsRepository {
         &self,
         date: &DateTime,
         updated_global_stats: GlobalStatsUpdate,
-    ) -> Result<UpdateResult> {
+    ) -> Result<Option<GlobalStats>> {
         let updates = updated_global_stats.build();
 
         if updates.is_empty() {
-            return Ok(UpdateResult::default());
+            return Ok(None);
         }
 
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
         self.collection
-            .update_one(doc! { "date": date }, doc! { "$set": updates })
+            .find_one_and_update(doc! { "date": date }, doc! { "$set": updates })
+            .with_options(options)
             .await
     }
 

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    pub avatar: String,
+    pub avatar: Option<String>,
     pub avatar_decoration: Option<String>,
     pub bots_limit: i32,
     pub created_at: DateTime,

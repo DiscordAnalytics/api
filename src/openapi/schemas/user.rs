@@ -48,7 +48,7 @@ pub struct UserDeletionReponse {
 #[serde(rename_all = "camelCase")]
 pub struct UserBotsResponse {
     pub owned_bots: Vec<BotResponse>,
-    pub in_bots_teams: Vec<BotResponse>,
+    pub team_bots: Vec<BotResponse>,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]

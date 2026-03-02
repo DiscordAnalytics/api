@@ -59,15 +59,17 @@ async fn get_user_bots(
         return Err(ApiError::Forbidden);
     }
 
-    let user_bots = repos.bots.find_by_owner_id(&user_id).await?;
-    let team_bots = repos.bots.find_by_team_member_id(&user_id).await?;
+    let user_bots = repos.bots.find_by_user_id(&user_id).await?;
 
     let owned_bots = user_bots
-        .into_iter()
+        .iter()
+        .filter(|b| b.owner_id == user_id)
+        .cloned()
         .map(BotResponse::try_from)
         .collect::<Result<Vec<_>, _>>()?;
-    let in_bots_teams = team_bots
+    let team_bots = user_bots
         .into_iter()
+        .filter(|b| b.team.contains(&user_id))
         .map(BotResponse::try_from)
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -75,13 +77,13 @@ async fn get_user_bots(
         code = %LogCode::Request,
         user_id = %user_id,
         owned_bots_count = owned_bots.len(),
-        team_bots_count = in_bots_teams.len(),
+        team_bots_count = team_bots.len(),
         "Fetched user's bots"
     );
 
     Ok(Json(UserBotsResponse {
         owned_bots,
-        in_bots_teams,
+        team_bots,
     }))
 }
 

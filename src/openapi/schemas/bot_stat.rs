@@ -63,6 +63,13 @@ pub struct BotStatsQuery {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(untagged)]
+pub enum BotStatsBody {
+    New(BotStatsBodyNew),
+    Old(BotStatsBodyOld),
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BotStatsBodyOld {
     pub added_guilds: i32,
@@ -80,7 +87,7 @@ pub struct BotStatsBodyOld {
 }
 
 impl BotStatsBodyOld {
-    pub fn into(self, bot_id: &str, date: &DateTime) -> BotStats {
+    pub fn into_stats(self, bot_id: &str, date: &DateTime) -> BotStats {
         BotStats {
             added_guilds: self.added_guilds,
             bot_id: bot_id.to_string(),
@@ -118,7 +125,7 @@ pub struct BotStatsBodyNew {
 }
 
 impl BotStatsBodyNew {
-    pub fn into(self, bot_id: &str, date: &DateTime) -> BotStats {
+    pub fn into_stats(self, bot_id: &str, date: &DateTime) -> BotStats {
         BotStats {
             added_guilds: self.added_guilds,
             bot_id: bot_id.to_string(),

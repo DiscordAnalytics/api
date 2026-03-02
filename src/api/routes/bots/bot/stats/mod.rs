@@ -10,8 +10,8 @@ use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{
-        BotStatsBodyNew, BotStatsBodyOld, BotStatsContent, BotStatsQuery, BotStatsResponse,
-        BotStatsUpdateResponse, VoteResponse,
+        BotStatsBody, BotStatsBodyNew, BotStatsBodyOld, BotStatsContent, BotStatsQuery,
+        BotStatsResponse, BotStatsUpdateResponse, VoteResponse,
     },
     repository::{BotStatsUpdate, Repositories},
     services::Services,
@@ -276,7 +276,7 @@ async fn post_stats_old(
                 .await?;
         }
         None => {
-            let new_stats = BotStatsBodyOld::into(body, &bot_id, &start_of_hour);
+            let new_stats = BotStatsBodyOld::into_stats(body, &bot_id, &start_of_hour);
             repos.bot_stats.insert(&new_stats).await?;
         }
     };
@@ -436,7 +436,7 @@ async fn post_stats_new(
                 .await?;
         }
         None => {
-            let new_stats = BotStatsBodyNew::into(body, &bot_id, &start_of_hour);
+            let new_stats = BotStatsBodyNew::into_stats(body, &bot_id, &start_of_hour);
             repos.bot_stats.insert(&new_stats).await?;
         }
     };
@@ -452,12 +452,29 @@ async fn post_stats_new(
     }))
 }
 
+#[api_operation(
+    summary = "Post bot stats",
+    description = "Submit bot stats for a specific date.",
+    tag = "Stats"
+)]
+async fn post_stats(
+    auth: Authenticated,
+    repos: Data<Repositories>,
+    body: Json<BotStatsBody>,
+    id: Path<String>,
+) -> ApiResult<Json<BotStatsUpdateResponse>> {
+    match body.into_inner() {
+        BotStatsBody::New(new_body) => post_stats_new(auth, repos, Json(new_body), id).await,
+        BotStatsBody::Old(old_body) => post_stats_old(auth, repos, Json(old_body), id).await,
+    }
+}
+
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
         scope("/stats").service(
             resource("")
                 .route(get().to(get_stats))
-                .route(post().to(post_stats_old)),
+                .route(post().to(post_stats)),
         ),
     );
 }

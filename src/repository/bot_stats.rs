@@ -105,7 +105,7 @@ impl BotStatsUpdate {
     }
 
     pub fn with_guild_count(mut self, guild_count: i32) -> Self {
-        self.updates.insert("guildCount", guild_count);
+        self.merge_set(doc! { "guildCount": guild_count });
         self
     }
 
@@ -199,12 +199,12 @@ impl BotStatsUpdate {
     }
 
     pub fn with_user_count(mut self, user_count: i32) -> Self {
-        self.updates.insert("userCount", user_count);
+        self.merge_set(doc! { "userCount": user_count });
         self
     }
 
     pub fn with_user_install_count(mut self, user_install_count: i32) -> Self {
-        self.updates.insert("userInstallCount", user_install_count);
+        self.merge_set(doc! { "userInstallCount": user_install_count });
         self
     }
 
@@ -380,10 +380,7 @@ impl BotStatsRepository {
             .build();
 
         self.collection
-            .find_one_and_update(
-                doc! { "botId": bot_id, "date": date },
-                doc! { "$set": updates },
-            )
+            .find_one_and_update(doc! { "botId": bot_id, "date": date }, updates)
             .with_options(options)
             .await
     }

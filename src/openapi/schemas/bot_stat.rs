@@ -103,6 +103,7 @@ pub struct BotStatsBodyNew {
     pub users_type: Option<UserType>,
 }
 
+#[derive(Clone, Debug)]
 pub struct NormalizedStatsBody {
     pub added_guilds: i32,
     pub custom_events: Option<HashMap<String, i32>>,

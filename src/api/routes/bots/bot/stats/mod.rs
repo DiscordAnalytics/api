@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use actix_web::web::{Data, Json, Query};
 use apistos::{
     api_operation,
@@ -205,7 +207,7 @@ async fn post_stats(
         .find_by_date(&bot_id, &start_of_hour)
         .await?
     {
-        Some(_) => {
+        Some(existing_stats) => {
             let mut updates = BotStatsUpdate::new()
                 .with_guild_count(body.guild_count)
                 .with_user_count(body.user_count);
@@ -215,11 +217,27 @@ async fn post_stats(
             }
 
             if let Some(custom_events) = body.custom_events {
-                updates = custom_events
+                let bot_events = repos
+                    .custom_events
+                    .find_by_bot_id(&bot_id)
+                    .await?
                     .into_iter()
-                    .fold(updates, |u, (event_name, count)| {
-                        u.with_custom_event(&event_name, count)
-                    });
+                    .map(|event| (event.event_key, event.default_value))
+                    .collect::<HashMap<_, _>>();
+
+                let existing_events = existing_stats.custom_events.unwrap_or_default();
+
+                for (event_key, count) in custom_events {
+                    if let Some(default_value) = bot_events.get(&event_key) {
+                        let new_count = if existing_events.contains_key(&event_key) {
+                            count
+                        } else {
+                            default_value.unwrap_or(count)
+                        };
+
+                        updates = updates.with_custom_event(&event_key, new_count);
+                    }
+                }
             }
 
             if let Some(guilds) = body.guilds {

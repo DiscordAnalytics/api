@@ -31,7 +31,7 @@ impl BotStatsUpdate {
     }
 
     pub fn with_custom_event(mut self, event_key: &str, count: i32) -> Self {
-        self.merge_inc(doc! { format!("customEvents.{}", event_key): count });
+        self.merge_set(doc! { format!("customEvents.{}", event_key): count });
         self
     }
 

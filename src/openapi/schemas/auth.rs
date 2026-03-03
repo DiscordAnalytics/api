@@ -3,6 +3,12 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize, ApiComponent, JsonSchema)]
+pub struct LinkedRolesQuery {
+    pub code: Option<String>,
+    pub state: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthCallbackQuery {
     pub code: String,

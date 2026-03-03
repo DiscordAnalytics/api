@@ -14,7 +14,9 @@ mod vote;
 
 pub use achievement::AchievementResponse;
 pub use article::{ArticleDeleteResponse, ArticleRequest, ArticleResponse};
-pub use auth::{AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse};
+pub use auth::{
+    AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse, LinkedRolesQuery,
+};
 pub use bot::{
     BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,
     BotTokenResponse, BotUpdateBody,

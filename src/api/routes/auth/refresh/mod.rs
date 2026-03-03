@@ -39,7 +39,15 @@ async fn refresh_token(
         .sessions
         .find_by_id(&refresh_claims.sid)
         .await?
-        .ok_or(ApiError::InvalidToken)?;
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Auth,
+                session_id = %refresh_claims.sid,
+                user_id = %refresh_claims.sub,
+                "Session not found",
+            );
+            ApiError::InvalidToken
+        })?;
 
     if !session.active || session.is_expired() || session.refresh_token_hash != token_hash {
         return Err(ApiError::InvalidToken);

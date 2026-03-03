@@ -6,12 +6,6 @@ use crate::domain::models::TeamInvitation;
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct InvitationQuery {
-    pub invitation_id: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct InvitationAcceptBody {
     pub invitation_id: String,
     pub accept: bool,

@@ -1,4 +1,6 @@
-use actix_web::web::{Data, Json, Query};
+mod invitation;
+
+use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
@@ -6,105 +8,41 @@ use apistos::{
 use tracing::info;
 
 use crate::{
-    api::middleware::Authenticated,
+    api::middleware::{Authenticated, RequireAdmin},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{
-        InvitationAcceptBody, InvitationAcceptResponse, InvitationQuery, InvitationResponse,
-    },
+    openapi::schemas::{InvitationAcceptBody, InvitationAcceptResponse, TeamInvitationResponse},
     repository::Repositories,
     services::Services,
     utils::logger::LogCode,
 };
 
 #[api_operation(
-    summary = "Get an invitation",
-    description = "Fetch details of a specific invitation using its ID",
+    summary = "Get all invitations",
+    description = "Retrieve a list of team invitations",
     tag = "Invitations"
 )]
-async fn get_invitation(
+async fn get_invitations(
+    _admin: RequireAdmin,
     repos: Data<Repositories>,
-    query: Query<InvitationQuery>,
-) -> ApiResult<Json<InvitationResponse>> {
-    let invitation_id = &query.invitation_id;
+) -> ApiResult<Json<Vec<TeamInvitationResponse>>> {
+    info!(
+        code = %LogCode::Request,
+        "Fetching all team invitations",
+    );
+
+    let invitations = repos.team_invitations.find_all().await?;
+
+    let invitation_responses = invitations
+        .into_iter()
+        .map(TeamInvitationResponse::try_from)
+        .collect::<Result<Vec<_>, _>>()?;
 
     info!(
         code = %LogCode::Request,
-        invitation_id = %invitation_id,
-        "Fetching details for invitation",
+        "All team invitations fetched successfully",
     );
 
-    let invitation = repos
-        .team_invitations
-        .find_by_id(invitation_id)
-        .await?
-        .ok_or_else(|| {
-            info!(
-                code = %LogCode::Request,
-                invitation_id = %invitation_id,
-                "Invitation not found",
-            );
-            ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
-        })?;
-
-    if invitation.accepted {
-        info!(
-            code = %LogCode::Request,
-            invitation_id = %invitation_id,
-            "Invitation already accepted",
-        );
-        return Err(ApiError::InvitationAlreadyAccepted);
-    }
-
-    if invitation.is_expired() {
-        info!(
-            code = %LogCode::Request,
-            invitation_id = %invitation_id,
-            "Invitation expired",
-        );
-        return Err(ApiError::InvitationExpired);
-    }
-
-    let bot = repos
-        .bots
-        .find_by_id(&invitation.bot_id)
-        .await?
-        .ok_or_else(|| {
-            info!(
-                code = %LogCode::Request,
-                bot_id = %invitation.bot_id,
-                "Bot not found for invitation",
-            );
-            ApiError::NotFound(format!("Bot with ID {} not found", invitation.bot_id))
-        })?;
-
-    let owner = repos
-        .users
-        .find_by_id(&bot.owner_id)
-        .await?
-        .ok_or_else(|| {
-            info!(
-                code = %LogCode::Request,
-                owner_id = %bot.owner_id,
-                "Owner not found for bot in invitation",
-            );
-            ApiError::NotFound(format!("Owner with ID {} not found", bot.owner_id))
-        })?;
-
-    info!(
-        code = %LogCode::Request,
-        invitation_id = %invitation_id,
-        bot_id = %bot.bot_id,
-        owner_id = %owner.user_id,
-        "Successfully fetched invitation details",
-    );
-
-    Ok(Json(InvitationResponse {
-        invitation: invitation.try_into()?,
-        bot_username: bot.username,
-        bot_avatar: bot.avatar,
-        owner_username: owner.username,
-        owner_avatar: owner.avatar,
-    }))
+    Ok(Json(invitation_responses))
 }
 
 #[api_operation(
@@ -233,10 +171,12 @@ async fn post_invitation(
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
-        scope("/invitations").service(
-            resource("")
-                .route(get().to(get_invitation))
-                .route(post().to(post_invitation)),
-        ),
+        scope("/invitations")
+            .service(
+                resource("")
+                    .route(get().to(get_invitations))
+                    .route(post().to(post_invitation)),
+            )
+            .configure(invitation::configure),
     );
 }

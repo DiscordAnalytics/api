@@ -28,7 +28,7 @@ pub use bot_stat::{
 pub use custom_event::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse};
 pub use health::HealthResponse;
 pub use invitation::{
-    InvitationAcceptBody, InvitationAcceptResponse, InvitationQuery, InvitationResponse,
+    InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, TeamInvitationResponse,
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 pub use stat::{StatResponse, StatsQuery};

@@ -1,3 +1,4 @@
+mod config;
 mod linkedroles;
 mod refresh;
 mod sessions;
@@ -326,6 +327,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
         scope("/auth")
             .service(resource("").route(get().to(oauth_callback)))
+            .configure(config::configure)
             .configure(linkedroles::configure)
             .configure(refresh::configure)
             .configure(sessions::configure),

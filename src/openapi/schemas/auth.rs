@@ -1,6 +1,13 @@
 use apistos::ApiComponent;
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthConfigResponse {
+    pub client_id: String,
+    pub scopes: Vec<String>,
+}
 
 #[derive(Debug, Clone, Deserialize, ApiComponent, JsonSchema)]
 pub struct LinkedRolesQuery {

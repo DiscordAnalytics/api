@@ -11,11 +11,13 @@ mod stat;
 mod team;
 mod user;
 mod vote;
+mod webhook;
 
 pub use achievement::AchievementResponse;
 pub use article::{ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{
-    AuthCallbackQuery, AvatarDecoration, DiscordOAuthUser, DiscordTokenResponse, LinkedRolesQuery,
+    AuthCallbackQuery, AuthConfigResponse, AvatarDecoration, DiscordOAuthUser,
+    DiscordTokenResponse, LinkedRolesQuery,
 };
 pub use bot::{
     BotCreationBody, BotDeletionResponse, BotResponse, BotSuspendRequest, BotSuspendResponse,
@@ -38,3 +40,7 @@ pub use user::{
     UserUpdateRequest,
 };
 pub use vote::VoteResponse;
+pub use webhook::{
+    BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
+    DiscordsComQuery, VoteWebhookResponse, WebhookVoteResponse,
+};

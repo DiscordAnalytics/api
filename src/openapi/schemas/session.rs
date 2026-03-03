@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::domain::models::Session;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RefreshTokenRequest {
     pub refresh_token: String,
 }

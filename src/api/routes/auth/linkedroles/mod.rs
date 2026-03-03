@@ -27,7 +27,8 @@ fn connection_url(state: &str) -> String {
 #[api_operation(
     summary = "Get linked roles for the authenticated user",
     description = "Retrieves the linked roles associated with the authenticated user based on their OAuth credentials.",
-    tag = "Auth"
+    tag = "Auth",
+    skip
 )]
 async fn oauth_callback(
     req: HttpRequest,

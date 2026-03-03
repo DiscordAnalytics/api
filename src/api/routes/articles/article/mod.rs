@@ -52,7 +52,8 @@ async fn get_article(
 #[api_operation(
     summary = "Publish an article",
     description = "Publish a new article with the provided information",
-    tag = "Articles"
+    tag = "Articles",
+    skip
 )]
 async fn publish_article(
     _admin: RequireAdmin,
@@ -102,7 +103,8 @@ async fn publish_article(
 #[api_operation(
     summary = "Update an article",
     description = "Update an existing article with the provided information",
-    tag = "Articles"
+    tag = "Articles",
+    skip
 )]
 async fn update_article(
     _admin: RequireAdmin,
@@ -154,7 +156,8 @@ async fn update_article(
 #[api_operation(
     summary = "Delete an article",
     description = "Delete an existing article by its ID",
-    tag = "Articles"
+    tag = "Articles",
+    skip
 )]
 async fn delete_article(
     _admin: RequireAdmin,

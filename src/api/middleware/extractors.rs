@@ -5,7 +5,10 @@ use actix_web::{
     web::Data,
 };
 use apistos::{ApiComponent, ApiSecurity};
-use futures::future::{Ready, ready};
+use futures::{
+    StreamExt as _,
+    future::{LocalBoxFuture, Ready, ready},
+};
 use schemars::JsonSchema;
 
 use crate::{
@@ -128,5 +131,25 @@ impl FromRequest for Snowflake {
         } else {
             ready(Err(ErrorForbidden(ApiError::InvalidId)))
         }
+    }
+}
+
+#[derive(Clone, JsonSchema, ApiComponent)]
+pub struct RawBody(pub Vec<u8>);
+
+impl FromRequest for RawBody {
+    type Error = Error;
+    type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
+
+    fn from_request(_: &HttpRequest, payload: &mut Payload) -> Self::Future {
+        let mut payload = payload.take();
+        Box::pin(async move {
+            let mut bytes = Vec::new();
+            while let Some(chunk) = payload.next().await {
+                let chunk = chunk?;
+                bytes.extend_from_slice(&chunk);
+            }
+            Ok(RawBody(bytes))
+        })
     }
 }

@@ -61,7 +61,8 @@ async fn get_articles(
 #[api_operation(
     summary = "Create a new article",
     description = "Create a new article with the provided information",
-    tag = "Articles"
+    tag = "Articles",
+    skip
 )]
 async fn create_article(
     auth: RequireAdmin,

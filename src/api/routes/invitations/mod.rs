@@ -19,7 +19,8 @@ use crate::{
 #[api_operation(
     summary = "Get all invitations",
     description = "Retrieve a list of team invitations",
-    tag = "Invitations"
+    tag = "Invitations",
+    skip
 )]
 async fn get_invitations(
     _admin: RequireAdmin,

@@ -1,7 +1,7 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Document, doc},
+    bson::{DateTime, Document, doc},
     error::Result,
     options::{FindOneAndUpdateOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
@@ -73,6 +73,14 @@ impl AchievementsRepository {
         cursor.try_collect().await
     }
 
+    pub async fn find_unachieved_by_bot(&self, bot_id: &str) -> Result<Vec<Achievement>> {
+        let cursor = self
+            .collection
+            .find(doc! { "botId": bot_id, "achievedOn": null })
+            .await?;
+        cursor.try_collect().await
+    }
+
     pub async fn insert(&self, achievement: &Achievement) -> Result<InsertOneResult> {
         self.collection.insert_one(achievement).await
     }
@@ -94,6 +102,26 @@ impl AchievementsRepository {
 
         self.collection
             .find_one_and_update(doc! { "_id": achievement_id }, doc! { "$set": updates })
+            .with_options(options)
+            .await
+    }
+
+    pub async fn update_progress(
+        &self,
+        bot_id: &str,
+        achievement_id: &str,
+        current: Option<i64>,
+        achieved_on: Option<DateTime>,
+    ) -> Result<Option<Achievement>> {
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
+        self.collection
+            .find_one_and_update(
+                doc! { "_id": achievement_id, "botId": bot_id },
+                doc! { "$set": { "current": current, "achievedOn": achieved_on } },
+            )
             .with_options(options)
             .await
     }

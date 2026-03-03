@@ -6,6 +6,7 @@ mod health;
 mod invitations;
 mod stats;
 mod users;
+mod webhooks;
 mod websocket;
 
 use apistos::web::ServiceConfig;
@@ -19,5 +20,6 @@ pub fn configure(cfg: &mut ServiceConfig) {
         .configure(invitations::configure)
         .configure(stats::configure)
         .configure(users::configure)
+        .configure(webhooks::configure)
         .configure(websocket::configure);
 }

@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+
+use apistos::ApiComponent;
 use mongodb::bson::DateTime;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
@@ -17,9 +21,9 @@ pub struct Bot {
     pub(crate) token: String,
     pub username: String,
     pub version: Option<String>,
-    pub votes_webhook_url: Option<String>,
     pub warn_level: i32,
     pub watched_since: DateTime,
+    pub webhooks_config: HashMap<String, WebhookConfig>,
 }
 
 impl Bot {
@@ -44,9 +48,9 @@ impl Bot {
             token,
             username: username.to_string(),
             version: None,
-            votes_webhook_url: None,
             warn_level: 0,
             watched_since: DateTime::now(),
+            webhooks_config: HashMap::new(),
         }
     }
 
@@ -139,4 +143,10 @@ impl From<Language> for String {
     fn from(language: Language) -> Self {
         language.to_str().to_string()
     }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]
+pub struct WebhookConfig {
+    pub webhook_url: String,
+    pub webhook_secret: String,
 }

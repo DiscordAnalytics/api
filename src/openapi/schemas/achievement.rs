@@ -26,10 +26,7 @@ impl TryFrom<Achievement> for AchievementResponse {
 
     fn try_from(achievement: Achievement) -> Result<Self, Self::Error> {
         Ok(Self {
-            id: achievement
-                .id
-                .ok_or_else(|| anyhow::anyhow!("Achievement ID is missing"))?
-                .to_string(),
+            id: achievement.id.to_hex().to_string(),
             achieved_on: achievement
                 .achieved_on
                 .map(|dt| dt.try_to_rfc3339_string())

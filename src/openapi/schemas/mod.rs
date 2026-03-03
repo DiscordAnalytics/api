@@ -42,5 +42,5 @@ pub use user::{
 pub use vote::VoteResponse;
 pub use webhook::{
     BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
-    DiscordsComQuery, VoteWebhookResponse, WebhookVoteResponse,
+    DiscordsComQuery, TopGGPayload, VoteWebhookResponse, WebhookVoteResponse,
 };

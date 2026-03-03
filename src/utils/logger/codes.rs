@@ -36,6 +36,8 @@ pub enum LogCode {
     DbError,
     /// Mail-related events
     Mail,
+    /// Webhooks events
+    Webhook,
     /// Websocket events
     Websocket,
 }
@@ -60,6 +62,7 @@ impl LogCode {
             LogCode::System => "SYS",
             LogCode::DbError => "DB_ERR",
             LogCode::Mail => "MAIL",
+            LogCode::Webhook => "WH",
             LogCode::Websocket => "WS",
         }
     }

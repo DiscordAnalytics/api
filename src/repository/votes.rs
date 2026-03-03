@@ -65,15 +65,38 @@ impl VotesRepository {
         cursor.try_collect().await
     }
 
+    pub async fn find_by_date_and_provider(
+        &self,
+        bot_id: &str,
+        date: &DateTime,
+        provider: &str,
+    ) -> Result<Option<Vote>> {
+        self.collection
+            .find_one(doc! { "botId": bot_id, "date": date, "provider": provider })
+            .await
+    }
+
     pub async fn find_from_date_range(
         &self,
         bot_id: &str,
-        start_date: &DateTime,
-        end_date: &DateTime,
+        from: &DateTime,
+        to: &DateTime,
     ) -> Result<Option<Vote>> {
         self.collection
-            .find_one(doc! { "botId": bot_id, "date": { "$gte": start_date, "$lte": end_date } })
+            .find_one(doc! { "botId": bot_id, "date": { "$gte": from, "$lte": to } })
             .await
+    }
+
+    pub async fn count_votes_since(&self, bot_id: &str, since: &DateTime) -> Result<i64> {
+        let mut cursor = self
+            .collection
+            .find(doc! { "botId": bot_id, "date": { "$gte": since } })
+            .await?;
+        let mut total = 0i64;
+        while let Some(vote) = cursor.try_next().await? {
+            total += vote.count as i64;
+        }
+        Ok(total)
     }
 
     pub async fn insert(&self, vote: &Vote) -> Result<InsertOneResult> {
@@ -100,6 +123,26 @@ impl VotesRepository {
             .find_one_and_update(
                 doc! { "botId": bot_id, "date": date },
                 doc! { "$set": updates },
+            )
+            .with_options(options)
+            .await
+    }
+
+    pub async fn increment_count(
+        &self,
+        bot_id: &str,
+        date: &DateTime,
+        provider: &str,
+        increment_by: i32,
+    ) -> Result<Option<Vote>> {
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
+        self.collection
+            .find_one_and_update(
+                doc! { "botId": bot_id, "date": date, "provider": provider },
+                doc! { "$inc": { "count": increment_by } },
             )
             .with_options(options)
             .await

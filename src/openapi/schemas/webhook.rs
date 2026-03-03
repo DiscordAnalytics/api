@@ -14,28 +14,30 @@ pub struct BotListMePayload {
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct DBListPayload {
-    pub id: String,
-    pub username: String,
-    pub discriminator: Option<String>,
-    pub avatar: Option<String>,
     pub admin: Option<bool>,
-    pub stripe: Option<bool>,
-    pub roblox: Option<bool>,
+    pub avatar: Option<String>,
+    pub bot_id: String,
+    pub discriminator: Option<String>,
+    pub id: String,
     pub promotable_bot: Option<String>,
+    pub roblox: Option<bool>,
+    pub stripe: Option<bool>,
+    pub username: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DiscordListPayload {
     pub bot_id: String,
-    pub user_id: String,
-    pub query: Option<String>,
     pub is_test: bool,
+    pub query: Option<String>,
+    pub user_id: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct DiscordPlacePayload {
     pub bot: String,
+    pub test: bool,
     pub user: String,
 }
 
@@ -46,12 +48,46 @@ pub struct DiscordsComQuery {
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct DiscordsComPayload {
-    pub user: String,
     pub bot: String,
-    pub query: Option<DiscordsComQuery>,
     pub engine: String,
+    pub query: Option<DiscordsComQuery>,
     #[serde(rename = "type")]
     pub type_: String,
+    pub user: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct TopGGPayload {
+    pub data: TopGGData,
+    #[serde(rename = "type")]
+    pub type_: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct TopGGData {
+    pub created_at: Option<String>,
+    pub expires_at: Option<String>,
+    pub id: Option<String>,
+    pub project: TopGGProject,
+    pub user: TopGGUser,
+    pub weight: Option<i32>,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct TopGGProject {
+    pub id: String,
+    pub platform: String,
+    pub platform_id: String,
+    #[serde(rename = "type")]
+    pub type_: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct TopGGUser {
+    pub avatar_url: String,
+    pub id: String,
+    pub name: String,
+    pub platform_id: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]

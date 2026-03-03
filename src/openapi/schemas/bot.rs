@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
 use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::models::Bot;
+use crate::domain::models::{Bot, WebhookConfig};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -19,8 +21,8 @@ pub struct BotResponse {
     pub team: Vec<String>,
     pub username: String,
     pub version: Option<String>,
-    pub votes_webhook_url: Option<String>,
     pub watched_since: String,
+    pub webhooks_config: HashMap<String, WebhookConfig>,
 }
 
 impl TryFrom<Bot> for BotResponse {
@@ -43,8 +45,8 @@ impl TryFrom<Bot> for BotResponse {
             team: bot.team,
             username: bot.username,
             version: bot.version,
-            votes_webhook_url: bot.votes_webhook_url,
             watched_since: bot.watched_since.try_to_rfc3339_string()?,
+            webhooks_config: bot.webhooks_config,
         })
     }
 }

@@ -246,7 +246,8 @@ async fn oauth_callback(
         }
     }
 
-    let refresh_token = match generate_refresh_token(&user_id, &Uuid::new().to_string()) {
+    let session_id = Uuid::new().to_string();
+    let refresh_token = match generate_refresh_token(&user_id, &session_id) {
         Ok(token) => token,
         Err(e) => {
             error!(
@@ -264,7 +265,7 @@ async fn oauth_callback(
     };
     let refresh_token_hash = hash_refresh_token(&refresh_token);
 
-    let mut session = Session::new(user_id.clone(), refresh_token_hash);
+    let mut session = Session::new(user_id.clone(), refresh_token_hash, session_id);
 
     if let Some(user_agent) = req.headers().get("User-Agent")
         && let Ok(ua) = user_agent.to_str()

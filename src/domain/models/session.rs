@@ -1,4 +1,4 @@
-use mongodb::bson::{DateTime, Uuid};
+use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::constants::REFRESH_TOKEN_LIFETIME;
@@ -19,7 +19,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(user_id: String, refresh_token_hash: String) -> Self {
+    pub fn new(user_id: String, refresh_token_hash: String, session_id: String) -> Self {
         let now = DateTime::now();
         let expires_at =
             DateTime::from_millis(now.timestamp_millis() + (REFRESH_TOKEN_LIFETIME * 1000));
@@ -32,7 +32,7 @@ impl Session {
             ip_address: None,
             last_used_at: now,
             refresh_token_hash,
-            session_id: Uuid::new().to_string(),
+            session_id,
             user_agent: None,
             user_id,
         }

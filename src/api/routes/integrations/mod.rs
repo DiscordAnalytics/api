@@ -19,8 +19,8 @@ use crate::{
 mod providers;
 
 #[api_operation(
-    summary = "Handle incoming webhooks from vote providers",
-    description = "This endpoint receives webhooks from various vote providers, processes the payload, and updates the vote counts accordingly. The provider is specified in the URL path, and the payload format may vary based on the provider. The endpoint also verifies the authenticity of the webhook using provider-specific methods to ensure that only legitimate webhooks are processed.",
+    summary = "Handle incoming integration requests from providers",
+    description = "This endpoint receives integration requests from various providers, processes the payload, and returns the necessary information for setting up webhooks or other integration features. The provider is specified in the URL path, and the payload format may vary based on the provider. The endpoint also verifies the authenticity of the request using provider-specific methods to ensure that only legitimate integration requests are processed.",
     tag = "Webhooks"
 )]
 async fn vote_integration(

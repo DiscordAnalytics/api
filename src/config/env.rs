@@ -19,9 +19,6 @@ pub struct EnvConfig {
     pub jwt_secret: String,
     pub enable_registrations: bool,
 
-    // Webhooks
-    pub topgg_webhook_secret: String,
-
     // Linked Roles
     pub client_secret: String,
     pub client_id: String,
@@ -93,8 +90,6 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         .map(|v| v == "true" || v == "1")
         .unwrap_or(true);
 
-    let topgg_webhook_secret = get_var("TOPGG_WEBHOOK_SECRET")?;
-
     let client_secret = get_var("CLIENT_SECRET")?;
     let client_id = get_var("CLIENT_ID")?;
 
@@ -134,7 +129,6 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         discord_token,
         jwt_secret,
         enable_registrations,
-        topgg_webhook_secret,
         client_secret,
         client_id,
         #[cfg(feature = "otel")]

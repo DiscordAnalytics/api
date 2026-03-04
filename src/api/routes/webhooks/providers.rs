@@ -7,7 +7,6 @@ use serde_json::{Value, from_value};
 use tracing::info;
 
 use crate::{
-    app_env,
     domain::{
         error::{ApiError, ApiResult},
         models::Bot,
@@ -285,13 +284,21 @@ async fn handle_topgg(
     bot: &Bot,
     headers: &HeaderMap,
 ) -> ApiResult<ProviderResponse> {
+    let webhook_config = bot.webhooks_config.get("topgg").ok_or_else(|| {
+        ApiError::WebhookError("Bot does not have webhook configured for top.gg".to_string())
+    })?;
+
+    if webhook_config.webhook_secret.is_empty() {
+        return Ok(ProviderResponse::Ignored);
+    }
+
     let signature = match extract_topgg_signature(headers) {
         Some(sig) => sig,
         None => return Ok(ProviderResponse::Ignored),
     };
 
     let computed_signature = compute_topgg_signature(
-        &app_env!().topgg_webhook_secret,
+        &webhook_config.webhook_secret,
         &signature.timestamp,
         body_bytes,
     );

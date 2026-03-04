@@ -77,7 +77,7 @@ async fn handle_topgg_integration(
         return Ok(IntegrationResponse::Ignored);
     }
 
-    repos
+    let bot = repos
         .bots
         .find_by_id(&project.platform_id)
         .await?
@@ -103,6 +103,29 @@ async fn handle_topgg_integration(
 
         repos.bots.update(&project.platform_id, update).await?;
     } else if payload.type_ == "integration.delete" {
+        let existing_config = match bot.webhooks_config.get("topgg").cloned() {
+            Some(config) => config,
+            None => {
+                warn!(
+                    code = %LogCode::Webhook,
+                    provider = "topgg",
+                    bot_id = %project.platform_id,
+                    "Received TopGG integration delete event but bot does not have existing webhook config"
+                );
+                return Ok(IntegrationResponse::Ignored);
+            }
+        };
+
+        if existing_config.connection_id.as_deref() != Some(&payload.data.connection_id) {
+            warn!(
+                code = %LogCode::Webhook,
+                provider = "topgg",
+                bot_id = %project.platform_id,
+                "Received TopGG integration delete event but connection ID does not match existing config"
+            );
+            return Ok(IntegrationResponse::Ignored);
+        }
+
         let update = BotUpdate::new().with_webhook_config(
             "topgg",
             WebhookConfig {

@@ -93,12 +93,13 @@ async fn handle_botlistme(
         ApiError::WebhookError("Bot does not have webhook configured for botlist.me".to_string())
     })?;
 
-    if webhook_config.webhook_secret.is_empty() {
-        return Ok(ProviderResponse::Ignored);
-    }
+    let webhook_secret = match &webhook_config.webhook_secret {
+        Some(secret) if !secret.is_empty() => secret,
+        _ => return Ok(ProviderResponse::Ignored),
+    };
 
     if let Some(auth) = authorization
-        && auth != webhook_config.webhook_secret
+        && auth != webhook_secret
     {
         return Ok(ProviderResponse::Ignored);
     }
@@ -131,12 +132,13 @@ async fn handle_dblist(
         ApiError::WebhookError("Bot does not have webhook configured for dblist".to_string())
     })?;
 
-    if webhook_config.webhook_secret.is_empty() {
-        return Ok(ProviderResponse::Ignored);
-    }
+    let webhook_secret = match &webhook_config.webhook_secret {
+        Some(secret) if !secret.is_empty() => secret,
+        _ => return Ok(ProviderResponse::Ignored),
+    };
 
     if let Some(auth) = authorization
-        && auth != webhook_config.webhook_secret
+        && auth != webhook_secret
     {
         return Ok(ProviderResponse::Ignored);
     }
@@ -165,13 +167,14 @@ async fn handle_discordlist(body_bytes: &[u8], bot: &Bot) -> ApiResult<ProviderR
         ApiError::WebhookError("Bot does not have webhook configured for discordlist".to_string())
     })?;
 
-    if webhook_config.webhook_secret.is_empty() {
-        return Ok(ProviderResponse::Ignored);
-    }
+    let webhook_secret = match &webhook_config.webhook_secret {
+        Some(secret) if !secret.is_empty() => secret,
+        _ => return Ok(ProviderResponse::Ignored),
+    };
 
     let token_data = match decode::<DiscordListPayload>(
         from_utf8(body_bytes).unwrap_or_default(),
-        &DecodingKey::from_secret(webhook_config.webhook_secret.as_bytes()),
+        &DecodingKey::from_secret(webhook_secret.as_bytes()),
         &Validation::new(Algorithm::HS256),
     ) {
         Ok(data) => data,
@@ -203,12 +206,13 @@ async fn handle_discordplace(
         ApiError::WebhookError("Bot does not have webhook configured for discord.place".to_string())
     })?;
 
-    if webhook_config.webhook_secret.is_empty() {
-        return Ok(ProviderResponse::Ignored);
-    }
+    let webhook_secret = match &webhook_config.webhook_secret {
+        Some(secret) if !secret.is_empty() => secret,
+        _ => return Ok(ProviderResponse::Ignored),
+    };
 
     if let Some(auth) = authorization
-        && auth != webhook_config.webhook_secret
+        && auth != webhook_secret
     {
         return Ok(ProviderResponse::Ignored);
     }
@@ -241,12 +245,13 @@ async fn handle_discordscom(
         ApiError::WebhookError("Bot does not have webhook configured for discords.com".to_string())
     })?;
 
-    if webhook_config.webhook_secret.is_empty() {
-        return Ok(ProviderResponse::Ignored);
-    }
+    let webhook_secret = match &webhook_config.webhook_secret {
+        Some(secret) if !secret.is_empty() => secret,
+        _ => return Ok(ProviderResponse::Ignored),
+    };
 
     if let Some(auth) = authorization
-        && auth != webhook_config.webhook_secret
+        && auth != webhook_secret
     {
         return Ok(ProviderResponse::Ignored);
     }
@@ -288,20 +293,18 @@ async fn handle_topgg(
         ApiError::WebhookError("Bot does not have webhook configured for top.gg".to_string())
     })?;
 
-    if webhook_config.webhook_secret.is_empty() {
-        return Ok(ProviderResponse::Ignored);
-    }
+    let webhook_secret = match &webhook_config.webhook_secret {
+        Some(secret) if !secret.is_empty() => secret,
+        _ => return Ok(ProviderResponse::Ignored),
+    };
 
     let signature = match extract_topgg_signature(headers) {
         Some(sig) => sig,
         None => return Ok(ProviderResponse::Ignored),
     };
 
-    let computed_signature = compute_topgg_signature(
-        &webhook_config.webhook_secret,
-        &signature.timestamp,
-        body_bytes,
-    );
+    let computed_signature =
+        compute_topgg_signature(webhook_secret, &signature.timestamp, body_bytes);
 
     if !verify_topgg_signature(&signature.signature, &computed_signature) {
         return Ok(ProviderResponse::Ignored);

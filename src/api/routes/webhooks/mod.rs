@@ -58,7 +58,7 @@ async fn vote_webhook(
 
     let body_bytes = &body.0;
 
-    let body_value: Value = from_slice(body_bytes).map_err(|e| {
+    let body_value = from_slice::<Value>(body_bytes).map_err(|e| {
         warn!(
             code = %LogCode::Webhook,
             provider = %provider,
@@ -199,7 +199,7 @@ async fn legacy_vote_webhook(
         "Received webhook on legacy endpoint, this endpoint is deprecated and should not be used"
     );
 
-    let mut body_with_bot_id: Value = from_slice(&body.0).unwrap_or(Value::Null);
+    let mut body_with_bot_id = from_slice::<Value>(&body.0).unwrap_or(Value::Null);
     if let Value::Object(ref mut map) = body_with_bot_id {
         map.insert("bot_id".to_string(), Value::String(bot_id.clone()));
     }
@@ -224,5 +224,8 @@ async fn legacy_vote_webhook(
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/webhooks").service(resource("/{provider}").route(post().to(vote_webhook))));
+    cfg.service(scope("/webhooks").service(resource("/{provider}").route(post().to(vote_webhook))))
+        .service(
+            resource("/bots/{id}/votes/webhooks/{provider}").route(post().to(legacy_vote_webhook)),
+        );
 }

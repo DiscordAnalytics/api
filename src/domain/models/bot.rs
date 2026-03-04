@@ -146,7 +146,9 @@ impl From<Language> for String {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct WebhookConfig {
-    pub webhook_url: String,
-    pub webhook_secret: String,
+    pub connection_id: Option<String>,
+    pub webhook_url: Option<String>,
+    pub webhook_secret: Option<String>,
 }

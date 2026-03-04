@@ -1,13 +1,16 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Document, doc},
+    bson::{Bson, Document, doc},
     error::Result,
     options::{FindOneAndUpdateOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{domain::models::Bot, utils::constants::BOTS_COLLECTION};
+use crate::{
+    domain::models::{Bot, WebhookConfig},
+    utils::constants::BOTS_COLLECTION,
+};
 
 #[derive(Clone, Default)]
 pub struct BotUpdate {
@@ -20,43 +23,63 @@ impl BotUpdate {
     }
 
     pub fn with_avatar(mut self, avatar: String) -> Self {
-        self.updates.insert("avatar", avatar);
+        self.merge_set(doc! { "avatar": avatar });
         self
     }
 
     pub fn with_framework(mut self, framework: String) -> Self {
-        self.updates.insert("framework", framework);
+        self.merge_set(doc! { "framework": framework });
         self
     }
 
     pub fn with_suspended(mut self, suspended: bool) -> Self {
-        self.updates.insert("suspended", suspended);
+        self.merge_set(doc! { "suspended": suspended });
         self
     }
 
     pub fn with_team(mut self, team: Vec<String>) -> Self {
-        self.updates.insert("team", team);
+        self.merge_set(doc! { "team": team });
         self
     }
 
     pub fn with_team_member(mut self, user_id: &str) -> Self {
-        self.updates.insert("$push", doc! { "team": user_id });
+        self.merge_set(doc! { "team": user_id });
         self
     }
 
     pub fn with_token(mut self, token: String) -> Self {
-        self.updates.insert("token", token);
+        self.merge_set(doc! { "token": token });
         self
     }
 
     pub fn with_username(mut self, username: String) -> Self {
-        self.updates.insert("username", username);
+        self.merge_set(doc! { "username": username });
         self
     }
 
     pub fn with_version(mut self, version: String) -> Self {
-        self.updates.insert("version", version);
+        self.merge_set(doc! { "version": version });
         self
+    }
+
+    pub fn with_webhook_config(mut self, provider: &str, config: WebhookConfig) -> Self {
+        self.merge_set(doc! { format!("webhooksConfig.{}", provider): doc! {
+            "connectionId": config.connection_id,
+            "webhookUrl": config.webhook_url,
+            "webhookSecret": config.webhook_secret,
+        }});
+        self
+    }
+
+    fn merge_set(&mut self, doc: Document) {
+        let set_doc = self
+            .updates
+            .entry("$set")
+            .or_insert_with(|| Bson::Document(doc! {}));
+
+        if let Bson::Document(existing) = set_doc {
+            existing.extend(doc);
+        }
     }
 
     pub fn build(self) -> Document {

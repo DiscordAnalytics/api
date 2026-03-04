@@ -5,6 +5,7 @@ mod bot;
 mod bot_stat;
 mod custom_event;
 mod health;
+mod integrations;
 mod invitation;
 mod session;
 mod stat;
@@ -29,6 +30,7 @@ pub use bot_stat::{
 };
 pub use custom_event::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse};
 pub use health::HealthResponse;
+pub use integrations::TopGGIntegrationPayload;
 pub use invitation::{
     InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, TeamInvitationResponse,
 };

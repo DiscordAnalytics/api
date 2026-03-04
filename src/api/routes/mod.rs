@@ -3,6 +3,7 @@ mod articles;
 mod auth;
 mod bots;
 mod health;
+mod integrations;
 mod invitations;
 mod stats;
 mod users;
@@ -17,6 +18,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
         .configure(auth::configure)
         .configure(bots::configure)
         .configure(health::configure)
+        .configure(integrations::configure)
         .configure(invitations::configure)
         .configure(stats::configure)
         .configure(users::configure)

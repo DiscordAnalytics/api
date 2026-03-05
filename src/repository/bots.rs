@@ -165,7 +165,7 @@ impl BotsRepository {
             .build();
 
         self.collection
-            .find_one_and_update(doc! { "botId": bot_id }, doc! { "$set": updates })
+            .find_one_and_update(doc! { "botId": bot_id }, updates)
             .with_options(options)
             .await
     }

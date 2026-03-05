@@ -14,11 +14,10 @@ use serde_json::{Value, from_slice};
 use tokio::sync::Mutex;
 use tracing::{info, warn};
 
+use self::providers::{ProviderResponse, handle_provider};
+
 use crate::{
-    api::{
-        middleware::RawBody,
-        routes::webhooks::providers::{ProviderResponse, handle_provider},
-    },
+    api::middleware::RawBody,
     domain::error::{ApiError, ApiResult},
     managers::VotesWebhooksManager,
     openapi::schemas::VoteWebhookResponse,
@@ -32,7 +31,7 @@ fn extract_bot_id_from_payload(provider: &str, body: &Value) -> Option<String> {
         "topgg" => body
             .get("data")?
             .get("project")?
-            .get("plaform_id")?
+            .get("platform_id")?
             .as_str()
             .map(String::from),
         "dblist" | "discordlist" => body.get("bot_id")?.as_str().map(String::from),

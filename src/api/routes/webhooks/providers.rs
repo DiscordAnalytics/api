@@ -34,6 +34,17 @@ struct TopGGSignature {
     signature: String,
 }
 
+fn extract_discordlist_payload(secret: &str, body_bytes: &[u8]) -> Option<DiscordListPayload> {
+    let body_str = from_utf8(body_bytes).ok()?;
+    let token_data = decode::<DiscordListPayload>(
+        body_str,
+        &DecodingKey::from_secret(secret.as_bytes()),
+        &Validation::new(Algorithm::HS256),
+    )
+    .ok()?;
+    Some(token_data.claims)
+}
+
 fn extract_topgg_signature(headers: &HeaderMap) -> Option<TopGGSignature> {
     let signature_str = headers.get("x-topgg-signature")?.to_str().ok()?;
     let (t_part, v1_part) = signature_str.split_once(',')?;
@@ -48,7 +59,10 @@ fn extract_topgg_signature(headers: &HeaderMap) -> Option<TopGGSignature> {
 
 fn compute_topgg_signature(secret: &str, timestamp: &str, body: &[u8]) -> String {
     let mac = Key::new(HMAC_SHA256, secret.as_bytes());
-    let data = [timestamp.as_bytes(), body].concat();
+    let mut data = Vec::with_capacity(timestamp.len() + 1 + body.len());
+    data.extend_from_slice(timestamp.as_bytes());
+    data.push(b'.');
+    data.extend_from_slice(body);
     let signature = sign(&mac, &data);
     hex::encode(signature.as_ref())
 }
@@ -104,23 +118,21 @@ async fn handle_botlistme(
         return Ok(ProviderResponse::Ignored);
     }
 
-    let payload = match from_value::<BotListMePayload>(body) {
-        Ok(p) => p,
-        Err(_) => return Ok(ProviderResponse::Ignored),
-    };
+    let payload = from_value::<BotListMePayload>(body)
+        .map_err(|_| ApiError::InvalidInput("Invalid botlist.me payload".to_string()))?;
 
     if payload.bot != bot.bot_id {
         return Ok(ProviderResponse::Ignored);
     }
 
-    if payload.vote_type == "Test" {
-        return Ok(ProviderResponse::TestWebhook);
+    match payload.vote_type.as_str() {
+        "Test" => Ok(ProviderResponse::TestWebhook),
+        "Upvote" => Ok(ProviderResponse::Vote(VoteResult {
+            vote_count: 1,
+            voter_id: payload.user,
+        })),
+        _ => Ok(ProviderResponse::Ignored),
     }
-
-    Ok(ProviderResponse::Vote(VoteResult {
-        vote_count: 1,
-        voter_id: payload.user,
-    }))
 }
 
 async fn handle_dblist(
@@ -143,23 +155,20 @@ async fn handle_dblist(
         return Ok(ProviderResponse::Ignored);
     }
 
-    let payload = match from_value::<DBListPayload>(body) {
-        Ok(p) => p,
-        Err(_) => return Ok(ProviderResponse::Ignored),
-    };
+    let payload = from_value::<DBListPayload>(body)
+        .map_err(|_| ApiError::InvalidInput("Invalid DBList payload".to_string()))?;
 
     if payload.bot_id != bot.bot_id {
         return Ok(ProviderResponse::Ignored);
     }
 
-    if payload.promotable_bot.is_some() {
-        return Ok(ProviderResponse::TestWebhook);
+    match payload.promotable_bot {
+        Some(_) => Ok(ProviderResponse::TestWebhook),
+        None => Ok(ProviderResponse::Vote(VoteResult {
+            vote_count: 1,
+            voter_id: payload.id,
+        })),
     }
-
-    Ok(ProviderResponse::Vote(VoteResult {
-        vote_count: 1,
-        voter_id: payload.id,
-    }))
 }
 
 async fn handle_discordlist(body_bytes: &[u8], bot: &Bot) -> ApiResult<ProviderResponse> {
@@ -172,29 +181,21 @@ async fn handle_discordlist(body_bytes: &[u8], bot: &Bot) -> ApiResult<ProviderR
         _ => return Ok(ProviderResponse::Ignored),
     };
 
-    let token_data = match decode::<DiscordListPayload>(
-        from_utf8(body_bytes).unwrap_or_default(),
-        &DecodingKey::from_secret(webhook_secret.as_bytes()),
-        &Validation::new(Algorithm::HS256),
-    ) {
-        Ok(data) => data,
-        Err(_) => return Ok(ProviderResponse::Ignored),
-    };
-
-    let payload = token_data.claims;
+    let payload = extract_discordlist_payload(webhook_secret, body_bytes).ok_or_else(|| {
+        ApiError::InvalidInput("Invalid DiscordList payload or signature".to_string())
+    })?;
 
     if payload.bot_id != bot.bot_id {
         return Ok(ProviderResponse::Ignored);
     }
 
-    if payload.is_test {
-        return Ok(ProviderResponse::TestWebhook);
+    match payload.is_test {
+        true => Ok(ProviderResponse::TestWebhook),
+        false => Ok(ProviderResponse::Vote(VoteResult {
+            vote_count: 1,
+            voter_id: payload.user_id,
+        })),
     }
-
-    Ok(ProviderResponse::Vote(VoteResult {
-        vote_count: 1,
-        voter_id: payload.user_id,
-    }))
 }
 
 async fn handle_discordplace(
@@ -217,10 +218,8 @@ async fn handle_discordplace(
         return Ok(ProviderResponse::Ignored);
     }
 
-    let payload = match from_value::<DiscordPlacePayload>(body) {
-        Ok(p) => p,
-        Err(_) => return Ok(ProviderResponse::Ignored),
-    };
+    let payload = from_value::<DiscordPlacePayload>(body)
+        .map_err(|_| ApiError::InvalidInput("Invalid discord.place payload".to_string()))?;
 
     if payload.bot != bot.bot_id {
         return Ok(ProviderResponse::Ignored);
@@ -256,31 +255,25 @@ async fn handle_discordscom(
         return Ok(ProviderResponse::Ignored);
     }
 
-    let payload = match from_value::<DiscordsComPayload>(body) {
-        Ok(p) => p,
-        Err(_) => return Ok(ProviderResponse::Ignored),
-    };
+    let payload = from_value::<DiscordsComPayload>(body)
+        .map_err(|_| ApiError::InvalidInput("Invalid discords.com payload".to_string()))?;
 
     if payload.bot != bot.bot_id {
         return Ok(ProviderResponse::Ignored);
     }
 
-    if payload.type_ == "review" {
-        return Ok(ProviderResponse::Ignored);
+    match payload.type_.as_str() {
+        "test" => Ok(ProviderResponse::TestWebhook),
+        "premium_vote" => Ok(ProviderResponse::Vote(VoteResult {
+            vote_count: 2,
+            voter_id: payload.user,
+        })),
+        "vote" => Ok(ProviderResponse::Vote(VoteResult {
+            vote_count: 1,
+            voter_id: payload.user,
+        })),
+        _ => Ok(ProviderResponse::Ignored),
     }
-
-    if payload.type_ == "test" {
-        return Ok(ProviderResponse::TestWebhook);
-    }
-
-    Ok(ProviderResponse::Vote(VoteResult {
-        vote_count: if payload.type_ == "premium_vote" {
-            2
-        } else {
-            1
-        },
-        voter_id: payload.user,
-    }))
 }
 
 async fn handle_topgg(
@@ -298,11 +291,9 @@ async fn handle_topgg(
         _ => return Ok(ProviderResponse::Ignored),
     };
 
-    let signature = match extract_topgg_signature(headers) {
-        Some(sig) => sig,
-        None => return Ok(ProviderResponse::Ignored),
-    };
-
+    let signature = extract_topgg_signature(headers).ok_or_else(|| {
+        ApiError::WebhookError("Missing or invalid TopGG signature header".to_string())
+    })?;
     let computed_signature =
         compute_topgg_signature(webhook_secret, &signature.timestamp, body_bytes);
 
@@ -310,10 +301,8 @@ async fn handle_topgg(
         return Ok(ProviderResponse::Ignored);
     }
 
-    let payload = match from_value::<TopGGPayload>(body) {
-        Ok(p) => p,
-        Err(_) => return Ok(ProviderResponse::Ignored),
-    };
+    let payload = from_value::<TopGGPayload>(body)
+        .map_err(|_| ApiError::InvalidInput("Invalid TopGG payload".to_string()))?;
 
     let project = payload.data.project;
 
@@ -329,12 +318,12 @@ async fn handle_topgg(
         return Ok(ProviderResponse::Ignored);
     }
 
-    if payload.type_ == "webhook.test" {
-        return Ok(ProviderResponse::TestWebhook);
+    match payload.type_.as_str() {
+        "vote.create" => Ok(ProviderResponse::Vote(VoteResult {
+            vote_count: payload.data.weight.unwrap_or(1),
+            voter_id: payload.data.user.platform_id,
+        })),
+        "webhook.test" => Ok(ProviderResponse::TestWebhook),
+        _ => Ok(ProviderResponse::Ignored),
     }
-
-    Ok(ProviderResponse::Vote(VoteResult {
-        vote_count: payload.data.weight.unwrap_or(1),
-        voter_id: payload.data.user.platform_id,
-    }))
 }

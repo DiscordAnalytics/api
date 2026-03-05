@@ -12,9 +12,9 @@ pub struct TopGGIntegrationPayload {
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct TopGGIntegrationData {
     pub connection_id: String,
-    pub project: TopGGIntegrationProject,
-    pub user: TopGGIntegrationUser,
-    pub webhook_secret: String,
+    pub project: Option<TopGGIntegrationProject>,
+    pub user: Option<TopGGIntegrationUser>,
+    pub webhook_secret: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]

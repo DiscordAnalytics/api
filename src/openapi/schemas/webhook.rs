@@ -14,15 +14,9 @@ pub struct BotListMePayload {
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct DBListPayload {
-    pub admin: Option<bool>,
-    pub avatar: Option<String>,
     pub bot_id: String,
-    pub discriminator: Option<String>,
     pub id: String,
     pub promotable_bot: Option<String>,
-    pub roblox: Option<bool>,
-    pub stripe: Option<bool>,
-    pub username: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
@@ -30,7 +24,6 @@ pub struct DBListPayload {
 pub struct DiscordListPayload {
     pub bot_id: String,
     pub is_test: bool,
-    pub query: Option<String>,
     pub user_id: String,
 }
 
@@ -42,15 +35,8 @@ pub struct DiscordPlacePayload {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct DiscordsComQuery {
-    pub cast: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct DiscordsComPayload {
     pub bot: String,
-    pub engine: String,
-    pub query: Option<DiscordsComQuery>,
     #[serde(rename = "type")]
     pub type_: String,
     pub user: String,
@@ -65,9 +51,6 @@ pub struct TopGGPayload {
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct TopGGData {
-    pub created_at: Option<String>,
-    pub expires_at: Option<String>,
-    pub id: Option<String>,
     pub project: TopGGProject,
     pub user: TopGGUser,
     pub weight: Option<i32>,
@@ -75,7 +58,6 @@ pub struct TopGGData {
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct TopGGProject {
-    pub id: String,
     pub platform: String,
     pub platform_id: String,
     #[serde(rename = "type")]
@@ -84,8 +66,6 @@ pub struct TopGGProject {
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct TopGGUser {
-    pub avatar_url: String,
-    pub id: String,
     pub name: String,
     pub platform_id: String,
 }

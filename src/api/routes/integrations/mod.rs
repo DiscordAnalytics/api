@@ -1,3 +1,5 @@
+mod providers;
+
 use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
@@ -5,18 +7,13 @@ use apistos::{
 };
 use serde_json::{Value, from_slice};
 
+use self::providers::{IntegrationResponse, IntegrationResult, handle_provider};
+
 use crate::{
-    api::{
-        middleware::RawBody,
-        routes::integrations::providers::{
-            IntegrationResponse, IntegrationResult, handle_provider,
-        },
-    },
+    api::middleware::RawBody,
     domain::error::{ApiError, ApiResult},
     repository::Repositories,
 };
-
-mod providers;
 
 #[api_operation(
     summary = "Handle incoming integration requests from providers",

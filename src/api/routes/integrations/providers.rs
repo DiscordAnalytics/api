@@ -3,7 +3,7 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::{Value, from_value};
-use tracing::warn;
+use tracing::{info, warn};
 
 use crate::{
     app_env,
@@ -19,7 +19,7 @@ use crate::{
 #[derive(Serialize, ApiComponent, JsonSchema)]
 pub struct IntegrationResult {
     pub webhook_url: String,
-    pub routes: Vec<String>,
+    pub routes: Vec<&'static str>,
 }
 
 pub enum IntegrationResponse {
@@ -55,7 +55,18 @@ async fn handle_topgg_integration(
         }
     };
 
-    let project = payload.data.project;
+    if payload.type_ == "integration.delete" {
+        return Ok(IntegrationResponse::Ignored);
+    }
+
+    let project = payload.data.project.ok_or_else(|| {
+        warn!(
+            code = %LogCode::Webhook,
+            provider = "topgg",
+            "Received TopGG integration payload without project information"
+        );
+        ApiError::InvalidInput("Missing project information in TopGG payload".to_string())
+    })?;
 
     if project.platform != "discord" {
         warn!(
@@ -77,66 +88,7 @@ async fn handle_topgg_integration(
         return Ok(IntegrationResponse::Ignored);
     }
 
-    let bot = repos
-        .bots
-        .find_by_id(&project.platform_id)
-        .await?
-        .ok_or_else(|| {
-            warn!(
-                code = %LogCode::Webhook,
-                provider = "topgg",
-                bot_id = %project.platform_id,
-                "Received TopGG integration for non-existent bot"
-            );
-            ApiError::NotFound("Bot not found".to_string())
-        })?;
-
-    if payload.type_ == "integration.create" {
-        let update = BotUpdate::new().with_webhook_config(
-            "topgg",
-            WebhookConfig {
-                connection_id: Some(payload.data.connection_id),
-                webhook_url: None,
-                webhook_secret: Some(payload.data.webhook_secret),
-            },
-        );
-
-        repos.bots.update(&project.platform_id, update).await?;
-    } else if payload.type_ == "integration.delete" {
-        let existing_config = match bot.webhooks_config.get("topgg").cloned() {
-            Some(config) => config,
-            None => {
-                warn!(
-                    code = %LogCode::Webhook,
-                    provider = "topgg",
-                    bot_id = %project.platform_id,
-                    "Received TopGG integration delete event but bot does not have existing webhook config"
-                );
-                return Ok(IntegrationResponse::Ignored);
-            }
-        };
-
-        if existing_config.connection_id.as_deref() != Some(&payload.data.connection_id) {
-            warn!(
-                code = %LogCode::Webhook,
-                provider = "topgg",
-                bot_id = %project.platform_id,
-                "Received TopGG integration delete event but connection ID does not match existing config"
-            );
-            return Ok(IntegrationResponse::Ignored);
-        }
-
-        let update = BotUpdate::new().with_webhook_config(
-            "topgg",
-            WebhookConfig {
-                connection_id: None,
-                webhook_url: None,
-                webhook_secret: None,
-            },
-        );
-
-        repos.bots.update(&project.platform_id, update).await?;
-    } else {
+    if payload.type_ != "integration.create" {
         warn!(
             code = %LogCode::Webhook,
             provider = "topgg",
@@ -146,8 +98,26 @@ async fn handle_topgg_integration(
         return Ok(IntegrationResponse::Ignored);
     }
 
+    let update = BotUpdate::new().with_webhook_config(
+        "topgg",
+        WebhookConfig {
+            connection_id: Some(payload.data.connection_id),
+            webhook_url: None,
+            webhook_secret: payload.data.webhook_secret,
+        },
+    );
+
+    repos.bots.update(&project.platform_id, update).await?;
+
+    info!(
+        code = %LogCode::Webhook,
+        provider = "topgg",
+        bot_id = %project.platform_id,
+        "Successfully processed TopGG integration event"
+    );
+
     Ok(IntegrationResponse::Accepted(IntegrationResult {
         webhook_url: format!("{}/webhooks/topgg", app_env!().api_url),
-        routes: vec!["vote.create".to_string(), "webhook.test".to_string()],
+        routes: vec!["vote.create"],
     }))
 }

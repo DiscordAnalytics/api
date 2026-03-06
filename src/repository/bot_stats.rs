@@ -309,6 +309,7 @@ impl BotStatsRepository {
         {
             let ts_opts = TimeseriesOptions::builder()
                 .time_field("date")
+                .meta_field(Some("botId".to_owned()))
                 .granularity(Some(TimeseriesGranularity::Hours))
                 .build();
             db.create_collection(BOT_STATS_COLLECTION)

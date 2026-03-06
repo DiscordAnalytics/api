@@ -14,13 +14,11 @@ mod user;
 mod vote;
 mod webhook;
 
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct MessageResponse {
-    pub message: String,
-}
+use apistos::ApiComponent;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 pub use achievement::AchievementResponse;
-use apistos::ApiComponent;
 pub use article::{ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{
     AuthCallbackQuery, AuthConfigResponse, AvatarDecoration, DiscordOAuthUser,
@@ -39,8 +37,6 @@ pub use integrations::TopGGIntegrationPayload;
 pub use invitation::{
     InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, TeamInvitationResponse,
 };
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 pub use stat::{StatResponse, StatsQuery};
 pub use team::{TeamRequestBody, TeamResponse};
@@ -50,3 +46,8 @@ pub use webhook::{
     BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
     TopGGPayload, WebhookVoteResponse,
 };
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct MessageResponse {
+    pub message: String,
+}

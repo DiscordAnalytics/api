@@ -1,12 +1,13 @@
 use std::fmt;
 
-use actix_web::{Error as ActixError, HttpResponse, ResponseError, http::StatusCode};
+use actix_web::{http::StatusCode, Error as ActixError, HttpResponse, ResponseError};
 use anyhow::Error as AnyError;
 use apistos::ApiErrorComponent;
 use mongodb::{bson::error::Error as BsonError, error::Error as MongoError};
 use reqwest::Error as ReqwestError;
 use serde::{Deserialize, Serialize};
 
+#[allow(clippy::duplicated_attributes)]
 #[derive(Debug, Clone, Serialize, Deserialize, ApiErrorComponent)]
 #[openapi_error(
     status(

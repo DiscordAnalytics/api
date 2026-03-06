@@ -8,7 +8,7 @@ use tracing::info;
 use crate::{
     api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{BotSuspendRequest, BotSuspendResponse},
+    openapi::schemas::{BotSuspendRequest, MessageResponse},
     repository::{BotUpdate, Repositories},
     utils::logger::LogCode,
 };
@@ -24,7 +24,7 @@ async fn suspend_bot(
     repos: Data<Repositories>,
     body: Json<BotSuspendRequest>,
     id: Snowflake,
-) -> ApiResult<Json<BotSuspendResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
     info!(
@@ -65,7 +65,7 @@ async fn suspend_bot(
         "Bot has been suspended"
     );
 
-    Ok(Json(BotSuspendResponse {
+    Ok(Json(MessageResponse {
         message: format!("Bot {} has been suspended for reason: {}", bot_id, reason),
     }))
 }
@@ -80,7 +80,7 @@ async fn unsuspend_bot(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
     id: Snowflake,
-) -> ApiResult<Json<BotSuspendResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
     info!(
@@ -117,7 +117,7 @@ async fn unsuspend_bot(
         "Bot has been unsuspended"
     );
 
-    Ok(Json(BotSuspendResponse {
+    Ok(Json(MessageResponse {
         message: format!("Bot {} has been unsuspended", bot_id),
     }))
 }

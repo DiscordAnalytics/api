@@ -8,7 +8,7 @@ use tracing::info;
 use crate::{
     api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{UserSuspendRequest, UserSuspendResponse},
+    openapi::schemas::{MessageResponse, UserSuspendRequest},
     repository::{Repositories, UserUpdate},
     utils::logger::LogCode,
 };
@@ -24,7 +24,7 @@ async fn suspend_user(
     repos: Data<Repositories>,
     body: Json<UserSuspendRequest>,
     id: Snowflake,
-) -> ApiResult<Json<UserSuspendResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let user_id = id.0;
 
     info!(
@@ -66,7 +66,7 @@ async fn suspend_user(
         "User has been suspended"
     );
 
-    Ok(Json(UserSuspendResponse {
+    Ok(Json(MessageResponse {
         message: format!("User {} has been suspended for reason: {}", user_id, reason),
     }))
 }
@@ -81,7 +81,7 @@ async fn unsuspend_user(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
     id: Snowflake,
-) -> ApiResult<Json<UserSuspendResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let user_id = id.0;
 
     info!(
@@ -118,7 +118,7 @@ async fn unsuspend_user(
         "User has been unsuspended"
     );
 
-    Ok(Json(UserSuspendResponse {
+    Ok(Json(MessageResponse {
         message: format!("User {} has been unsuspended", user_id),
     }))
 }

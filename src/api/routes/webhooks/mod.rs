@@ -20,7 +20,7 @@ use crate::{
     api::middleware::RawBody,
     domain::error::{ApiError, ApiResult},
     managers::VotesWebhooksManager,
-    openapi::schemas::VoteWebhookResponse,
+    openapi::schemas::MessageResponse,
     repository::Repositories,
     services::Services,
     utils::logger::LogCode,
@@ -52,7 +52,7 @@ async fn vote_webhook(
     webhook_manager: Data<Arc<Mutex<VotesWebhooksManager>>>,
     path: Path<String>,
     body: RawBody,
-) -> ApiResult<Json<VoteWebhookResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let provider = path.into_inner();
 
     let body_bytes = &body.0;
@@ -141,8 +141,7 @@ async fn vote_webhook(
                 "Processed vote webhook successfully"
             );
 
-            Ok(Json(VoteWebhookResponse {
-                success: true,
+            Ok(Json(MessageResponse {
                 message: "Vote processed successfully".to_string(),
             }))
         }
@@ -154,8 +153,7 @@ async fn vote_webhook(
                 "Received test webhook, ignoring vote processing"
             );
 
-            return Ok(Json(VoteWebhookResponse {
-                success: true,
+            return Ok(Json(MessageResponse {
                 message: "Test webhook received".to_string(),
             }));
         }
@@ -167,8 +165,7 @@ async fn vote_webhook(
                 "Webhook ignored after processing"
             );
 
-            Ok(Json(VoteWebhookResponse {
-                success: true,
+            Ok(Json(MessageResponse {
                 message: "Webhook ignored".to_string(),
             }))
         }

@@ -40,11 +40,6 @@ pub struct UserUpdateRequest {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct UserDeletionReponse {
-    pub message: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserBotsResponse {
     pub owned_bots: Vec<BotResponse>,
@@ -54,9 +49,4 @@ pub struct UserBotsResponse {
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct UserSuspendRequest {
     pub reason: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct UserSuspendResponse {
-    pub message: String,
 }

@@ -71,12 +71,6 @@ pub struct TopGGUser {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct VoteWebhookResponse {
-    pub success: bool,
-    pub message: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WebhookVoteResponse {
     pub bot_id: String,

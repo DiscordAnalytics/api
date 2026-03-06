@@ -12,7 +12,7 @@ use crate::{
     api::middleware::{Authenticated, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{
-        BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, BotStatsUpdateResponse,
+        BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, MessageResponse,
         NormalizedStatsBody, VoteResponse,
     },
     repository::{BotStatsUpdate, Repositories},
@@ -187,7 +187,7 @@ async fn post_stats(
     repos: Data<Repositories>,
     body: Json<BotStatsBody>,
     id: Snowflake,
-) -> ApiResult<Json<BotStatsUpdateResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
     info!(
@@ -350,7 +350,7 @@ async fn post_stats(
         "Posted bot stats",
     );
 
-    Ok(Json(BotStatsUpdateResponse {
+    Ok(Json(MessageResponse {
         message: "Bot stats updated successfully".to_string(),
     }))
 }

@@ -67,21 +67,17 @@ pub struct BotUpdateBody {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct BotDeletionResponse {
-    pub message: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct BotSuspendRequest {
     pub reason: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct BotSuspendResponse {
-    pub message: String,
+pub struct BotTokenResponse {
+    pub token: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct BotTokenResponse {
-    pub token: String,
+#[serde(rename_all = "camelCase")]
+pub struct BotSettingsPayload {
+    pub advanced_stats: bool,
 }

@@ -11,7 +11,7 @@ use tracing::{info, warn};
 use crate::{
     api::middleware::{Authenticated, RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{UserDeletionReponse, UserResponse, UserUpdateRequest},
+    openapi::schemas::{MessageResponse, UserResponse, UserUpdateRequest},
     repository::{Repositories, UserUpdate},
     utils::logger::LogCode,
 };
@@ -129,7 +129,7 @@ async fn delete_user(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Snowflake,
-) -> ApiResult<Json<UserDeletionReponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let user_id = id.0;
 
     info!(
@@ -182,7 +182,7 @@ async fn delete_user(
         "User account deleted"
     );
 
-    Ok(Json(UserDeletionReponse {
+    Ok(Json(MessageResponse {
         message: format!("User with ID {} has been deleted", user_id),
     }))
 }

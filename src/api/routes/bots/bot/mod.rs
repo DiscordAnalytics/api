@@ -1,4 +1,5 @@
 mod events;
+mod settings;
 mod stats;
 mod suspend;
 mod team;
@@ -21,7 +22,7 @@ use crate::{
         error::{ApiError, ApiResult},
         models::Bot,
     },
-    openapi::schemas::{BotCreationBody, BotDeletionResponse, BotResponse, BotUpdateBody},
+    openapi::schemas::{BotCreationBody, BotResponse, BotUpdateBody, MessageResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
@@ -252,8 +253,6 @@ async fn patch_bot(
 ) -> ApiResult<Json<BotResponse>> {
     let bot_id = id.0;
 
-    let update_data = body.into_inner();
-
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
@@ -302,6 +301,8 @@ async fn patch_bot(
         }
     }
 
+    let update_data = body.into_inner();
+
     let mut update = BotUpdate::new();
     if let Some(avatar) = update_data.avatar {
         update = update.with_avatar(avatar);
@@ -349,7 +350,7 @@ async fn delete_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
-) -> ApiResult<Json<BotDeletionResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
     info!(
@@ -410,7 +411,7 @@ async fn delete_bot(
         "Bot successfully deleted",
     );
 
-    Ok(Json(BotDeletionResponse {
+    Ok(Json(MessageResponse {
         message: format!("Bot with ID {} has been deleted", bot_id),
     }))
 }
@@ -426,6 +427,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(delete().to(delete_bot)),
             )
             .configure(events::configure)
+            .configure(settings::configure)
             .configure(stats::configure)
             .configure(suspend::configure)
             .configure(team::configure)

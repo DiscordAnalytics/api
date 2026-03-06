@@ -18,8 +18,3 @@ pub struct TeamResponse {
 pub struct TeamRequestBody {
     pub user_id: String,
 }
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TeamRemoveResponse {
-    pub message: String,
-}

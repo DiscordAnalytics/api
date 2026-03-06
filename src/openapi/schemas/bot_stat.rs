@@ -179,8 +179,3 @@ impl NormalizedStatsBody {
         }
     }
 }
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct BotStatsUpdateResponse {
-    pub message: String,
-}

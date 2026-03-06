@@ -29,8 +29,3 @@ pub struct CustomEventBody {
     pub event_key: String,
     pub graph_name: String,
 }
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct CustomEventDeleteResponse {
-    pub message: String,
-}

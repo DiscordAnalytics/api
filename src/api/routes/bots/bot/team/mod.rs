@@ -11,7 +11,7 @@ use crate::{
         error::{ApiError, ApiResult},
         models::TeamInvitation,
     },
-    openapi::schemas::{TeamRemoveResponse, TeamRequestBody, TeamResponse},
+    openapi::schemas::{MessageResponse, TeamRequestBody, TeamResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
@@ -260,7 +260,7 @@ async fn delete_from_team(
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
     id: Snowflake,
-) -> ApiResult<Json<TeamRemoveResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
     repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
@@ -344,7 +344,7 @@ async fn delete_from_team(
         "Removed user from bot team",
     );
 
-    Ok(Json(TeamRemoveResponse {
+    Ok(Json(MessageResponse {
         message: format!(
             "User with ID {} has been removed from the bot team",
             body.user_id

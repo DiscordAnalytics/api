@@ -22,6 +22,11 @@ impl BotUpdate {
         Self::default()
     }
 
+    pub fn with_advanced_stats(mut self, advanced_stats: bool) -> Self {
+        self.merge_set(doc! { "advancedStats": advanced_stats });
+        self
+    }
+
     pub fn with_avatar(mut self, avatar: String) -> Self {
         self.merge_set(doc! { "avatar": avatar });
         self

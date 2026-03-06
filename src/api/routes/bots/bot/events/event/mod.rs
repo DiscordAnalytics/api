@@ -8,7 +8,7 @@ use tracing::{info, warn};
 use crate::{
     api::middleware::{Authenticated, Snowflake},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{CustomEventBody, CustomEventDeleteResponse, CustomEventResponse},
+    openapi::schemas::{CustomEventBody, CustomEventResponse, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
@@ -242,7 +242,7 @@ async fn delete_event(
     repos: Data<Repositories>,
     id: Snowflake,
     event_key: Path<String>,
-) -> ApiResult<Json<CustomEventDeleteResponse>> {
+) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
@@ -329,7 +329,7 @@ async fn delete_event(
         "Custom event deleted successfully",
     );
 
-    Ok(Json(CustomEventDeleteResponse {
+    Ok(Json(MessageResponse {
         message: format!(
             "Custom event with key {} for bot ID {} deleted successfully",
             event_key, bot_id

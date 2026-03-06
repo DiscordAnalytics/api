@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Achievement {
-    #[serde(rename = "_id")]
-    pub id: ObjectId,
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
     pub achieved_on: Option<DateTime>,
     pub bot_id: String,
     pub current: Option<i64>,
@@ -24,6 +24,46 @@ pub struct Achievement {
 }
 
 impl Achievement {
+    pub fn new(
+        bot_id: &str,
+        description: &str,
+        title: &str,
+        editable: bool,
+        objective: AchievementObjective,
+    ) -> Self {
+        Self {
+            id: None,
+            achieved_on: None,
+            bot_id: bot_id.to_string(),
+            current: None,
+            description: description.to_string(),
+            description_i18n: None,
+            editable,
+            from: None,
+            lang: None,
+            objective,
+            shared: false,
+            title: title.to_string(),
+            title_i18n: None,
+            used_by: 0,
+        }
+    }
+
+    pub fn with_description_i18n(mut self, description_i18n: &str) -> Self {
+        self.description_i18n = Some(description_i18n.to_string());
+        self
+    }
+
+    pub fn with_from(mut self, from: &str) -> Self {
+        self.from = Some(from.to_string());
+        self
+    }
+
+    pub fn with_title_i18n(mut self, title_i18n: &str) -> Self {
+        self.title_i18n = Some(title_i18n.to_string());
+        self
+    }
+
     pub fn is_achieved(&self) -> bool {
         match self.current {
             Some(current) => current >= self.objective.value,

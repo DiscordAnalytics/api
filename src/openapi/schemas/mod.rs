@@ -18,7 +18,10 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-pub use achievement::AchievementResponse;
+pub use achievement::{
+    AchievementCreationPayload, AchievementResponse, AchievementUpdatePayload,
+    DeleteAchievementQuery,
+};
 pub use article::{ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{
     AuthCallbackQuery, AuthConfigResponse, AvatarDecoration, DiscordOAuthUser,

@@ -1,3 +1,4 @@
+mod achievements;
 mod events;
 mod settings;
 mod stats;
@@ -47,8 +48,6 @@ async fn get_bot(
         "Fetching details for bot",
     );
 
-    let ctx = &auth.0;
-
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
@@ -58,13 +57,15 @@ async fn get_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
+    let ctx = &auth.0;
+
     if ctx.is_admin() {
         info!(
             code = %LogCode::AdminAction,
             bot_id = %bot_id,
             "Admin access granted for bot details",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
+    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -426,6 +427,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(patch().to(patch_bot))
                     .route(delete().to(delete_bot)),
             )
+            .configure(achievements::configure)
             .configure(events::configure)
             .configure(settings::configure)
             .configure(stats::configure)

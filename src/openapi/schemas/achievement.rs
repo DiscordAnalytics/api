@@ -26,7 +26,10 @@ impl TryFrom<Achievement> for AchievementResponse {
 
     fn try_from(achievement: Achievement) -> Result<Self, Self::Error> {
         Ok(Self {
-            id: achievement.id.to_hex().to_string(),
+            id: achievement
+                .id
+                .ok_or_else(|| anyhow::anyhow!("Achievement ID is missing"))?
+                .to_string(),
             achieved_on: achievement
                 .achieved_on
                 .map(|dt| dt.try_to_rfc3339_string())
@@ -43,4 +46,31 @@ impl TryFrom<Achievement> for AchievementResponse {
             used_by: achievement.used_by,
         })
     }
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AchievementCreationPayload {
+    pub description: String,
+    pub description_i18n: Option<String>,
+    pub editable: bool,
+    pub from: Option<String>,
+    pub objective: AchievementObjective,
+    pub shared: Option<bool>,
+    pub title: String,
+    pub title_i18n: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct AchievementUpdatePayload {
+    pub id: String,
+    pub description: String,
+    pub lang: Option<String>,
+    pub title: String,
+    pub shared: Option<bool>,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct DeleteAchievementQuery {
+    pub id: String,
 }

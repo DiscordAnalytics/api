@@ -2798,9 +2798,9 @@ dependencies = [
 
 [[package]]
 name = "reqx"
-version = "0.1.22"
+version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46737d2301408e032e0bd92a7a86f6bfc7dbfd463331706d700d2bb834a946c6"
+checksum = "0a12032538346e10d36cdd72222430958f3fbab34f53d923da45f10077546066"
 dependencies = [
  "brotli",
  "bytes",
@@ -3008,9 +3008,9 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "s3"
-version = "0.1.17"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "633988046bf7a816ff14a2b4429fdd48ea906d6d993bd1cb609a5863bf72385c"
+checksum = "ce3d2be7cf19dc5c58d039aa8405eb21d7feacefbc84f7d9277303b6831e9fd8"
 dependencies = [
  "base64",
  "bytes",
@@ -3518,9 +3518,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.49.0"
+version = "1.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72a2903cd7736441aac9df9d7688bd0ce48edccaadf181c3b90be801e81d3d86"
+checksum = "27ad5e34374e03cfffefc301becb44e9dc3c17584f414349ebe29ed26661822d"
 dependencies = [
  "bytes",
  "libc",

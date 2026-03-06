@@ -5,12 +5,16 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
 };
+use chrono::{Duration, Utc};
 use mongodb::bson::DateTime;
 use tracing::{info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
-    domain::error::{ApiError, ApiResult},
+    domain::{
+        error::{ApiError, ApiResult},
+        models::AchievementType,
+    },
     openapi::schemas::{
         BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, MessageResponse,
         NormalizedStatsBody, VoteResponse,
@@ -252,7 +256,7 @@ async fn post_stats(
         }
     };
 
-    match repos
+    let new_stats = match repos
         .bot_stats
         .find_by_date(&bot_id, &start_of_hour)
         .await?
@@ -336,13 +340,92 @@ async fn post_stats(
             repos
                 .bot_stats
                 .update(&bot_id, &start_of_hour, updates)
-                .await?;
+                .await?
+                .ok_or_else(|| {
+                    warn!(
+                        code = %LogCode::Database,
+                        bot_id = %bot_id,
+                        "Failed to update existing bot stats",
+                    );
+                    ApiError::DatabaseError("Failed to update bot stats".to_string())
+                })?
         }
         None => {
             let new_stats = body.into_stats();
             repos.bot_stats.insert(&new_stats).await?;
+            new_stats
         }
     };
+
+    let achievements = repos.achievements.find_unachieved_by_bot(&bot_id).await?;
+    for mut achievement in achievements {
+        let new_current = match achievement.objective.achievement_type {
+            AchievementType::FrenchPercentage => {
+                let (total, french_count) = new_stats.interactions_locales.iter().fold(
+                    (0i64, 0i64),
+                    |(total, french), locale_stat| {
+                        let n = locale_stat.number as i64;
+                        (
+                            total + n,
+                            french + if locale_stat.locale == "fr" { n } else { 0 },
+                        )
+                    },
+                );
+                if total > 0 {
+                    let percentage = ((french_count as f64 / total as f64) * 100.0).round() as i64;
+                    Some(percentage)
+                } else {
+                    None
+                }
+            }
+            AchievementType::GuildCount => Some(new_stats.guild_count as i64),
+            AchievementType::InteractionAverageWeek => {
+                let one_month_ago = Utc::now() - Duration::days(30);
+                let dt_month_ago = DateTime::from_millis(one_month_ago.timestamp_millis());
+                let month_stats = repos
+                    .bot_stats
+                    .find_from_date_range(&bot_id, &dt_month_ago, &current_date)
+                    .await?;
+
+                let total_interactions: i64 = month_stats
+                    .iter()
+                    .flat_map(|stats| stats.interactions.iter())
+                    .map(|interaction| interaction.number as i64)
+                    .sum();
+
+                if total_interactions > 0 {
+                    const WEEKS_IN_RANGE: f64 = 30.0 / 7.0;
+                    Some((total_interactions as f64 / WEEKS_IN_RANGE).round() as i64)
+                } else {
+                    None
+                }
+            }
+            AchievementType::JoinedDa => {
+                Some(current_date.timestamp_millis() - bot.watched_since.timestamp_millis())
+            }
+            AchievementType::UserCount => Some(new_stats.user_count as i64),
+            AchievementType::UsersLocales => Some(new_stats.interactions_locales.len() as i64),
+            _ => achievement.current,
+        };
+
+        achievement.current = new_current;
+        if new_current.unwrap_or(0) >= achievement.objective.value {
+            achievement.achieved_on = Some(DateTime::now());
+        }
+
+        repos
+            .achievements
+            .update_progress(
+                &bot_id,
+                &achievement
+                    .id
+                    .ok_or_else(|| anyhow::anyhow!("Achievement ID missing"))?
+                    .to_string(),
+                achievement.current,
+                achievement.achieved_on,
+            )
+            .await?;
+    }
 
     info!(
         code = %LogCode::Request,

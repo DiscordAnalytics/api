@@ -11,6 +11,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
+use mongodb::bson::DateTime;
 use reqwest::{Client, header::AUTHORIZATION};
 use serde_json::Value;
 use tracing::{info, warn};
@@ -21,7 +22,7 @@ use crate::{
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
-        models::Bot,
+        models::{AchievementType, Bot},
     },
     openapi::schemas::{BotCreationBody, BotResponse, BotUpdateBody, MessageResponse},
     repository::{BotUpdate, Repositories},
@@ -331,6 +332,26 @@ async fn patch_bot(
         );
         ApiError::DatabaseError(format!("Bot with ID {} not found after update", bot_id))
     })?;
+
+    let achievements = repos.achievements.find_unachieved_by_bot(&bot_id).await?;
+    for mut achievement in achievements {
+        if achievement.objective.achievement_type == AchievementType::BotConfigured {
+            achievement.current = Some(achievement.objective.value);
+            achievement.achieved_on = Some(DateTime::now());
+            repos
+                .achievements
+                .update_progress(
+                    &bot_id,
+                    &achievement
+                        .id
+                        .ok_or_else(|| anyhow::anyhow!("Achievement ID missing"))?
+                        .to_string(),
+                    achievement.current,
+                    achievement.achieved_on,
+                )
+                .await?;
+        }
+    }
 
     info!(
         code = %LogCode::Request,

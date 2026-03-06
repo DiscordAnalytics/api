@@ -93,12 +93,12 @@ impl AchievementObjective {
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, ApiComponent, JsonSchema)]
 pub enum AchievementType {
+    BotConfigured,
+    FrenchPercentage,
     GuildCount,
     InteractionAverageWeek,
-    FrenchPercentage,
     JoinedDa,
-    UsersLocales,
     UserCount,
-    BotConfigured,
+    UsersLocales,
     VotesCount,
 }

@@ -22,7 +22,7 @@ use crate::{
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
-        models::{AchievementType, Bot},
+        models::{Achievement, AchievementType, Bot},
     },
     openapi::schemas::{BotCreationBody, BotResponse, BotUpdateBody, MessageResponse},
     repository::{BotUpdate, Repositories},
@@ -232,6 +232,12 @@ async fn post_bot(
     let bot = Bot::new(&bot_id, &body_data.user_id, token, bot_username, bot_avatar);
 
     repos.bots.insert(&bot).await?;
+
+    let default_achievements = Achievement::defaults(&bot_id);
+    repos
+        .achievements
+        .insert_many(&default_achievements)
+        .await?;
 
     info!(
         code = %LogCode::Request,

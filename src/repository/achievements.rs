@@ -134,6 +134,15 @@ impl AchievementsRepository {
         self.collection.insert_one(achievement).await
     }
 
+    pub async fn insert_many(&self, achievements: &[Achievement]) -> Result<()> {
+        if achievements.is_empty() {
+            return Ok(());
+        }
+
+        self.collection.insert_many(achievements).await?;
+        Ok(())
+    }
+
     pub async fn update(
         &self,
         achievement_id: &str,

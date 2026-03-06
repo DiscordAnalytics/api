@@ -1,3 +1,5 @@
+mod reset;
+
 use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
@@ -502,12 +504,14 @@ async fn delete_achievement(
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
-        scope("/achievements").service(
-            resource("")
-                .route(get().to(get_bot_achievements))
-                .route(post().to(create_achievement))
-                .route(patch().to(update_achievement))
-                .route(delete().to(delete_achievement)),
-        ),
+        scope("/achievements")
+            .service(
+                resource("")
+                    .route(get().to(get_bot_achievements))
+                    .route(post().to(create_achievement))
+                    .route(patch().to(update_achievement))
+                    .route(delete().to(delete_achievement)),
+            )
+            .configure(reset::configure),
     );
 }

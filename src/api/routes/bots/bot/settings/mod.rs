@@ -10,7 +10,6 @@ use crate::{
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{BotSettingsPayload, MessageResponse},
     repository::{BotUpdate, Repositories},
-    services::Services,
     utils::logger::LogCode,
 };
 
@@ -21,7 +20,6 @@ use crate::{
 )]
 async fn update_settings(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<BotSettingsPayload>,
     id: Snowflake,
@@ -60,7 +58,7 @@ async fn update_settings(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,

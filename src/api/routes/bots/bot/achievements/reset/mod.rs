@@ -33,14 +33,14 @@ async fn reset_achievements(
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
-        "Attempting to create achievement",
+        "Attempting to reset achievements for bot",
     );
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
-            "Bot not found for achievement creation",
+            "Bot not found for achievements reset",
         );
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
@@ -51,15 +51,8 @@ async fn reset_achievements(
         info!(
             code = %LogCode::AdminAction,
             bot_id = %bot_id,
-            "Admin access granted for creating achievement",
+            "Admin access granted for achievements reset",
         );
-    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to create achievement for another bot",
-        );
-        return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
@@ -67,7 +60,7 @@ async fn reset_achievements(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
                 user_id = %user_id,
-                "User does not have access to create bot achievement",
+                "User does not have access to reset achievements for this bot",
             );
             return Err(ApiError::Forbidden);
         }
@@ -75,7 +68,7 @@ async fn reset_achievements(
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
-            "Access denied for creating bot achievement",
+            "Access denied for achievements reset",
         );
         return Err(ApiError::Forbidden);
     }
@@ -84,7 +77,7 @@ async fn reset_achievements(
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
-            "Attempt to create achievement for suspended bot",
+            "Attempt to reset achievements for suspended bot",
         );
         return Err(ApiError::BotSuspended);
     }

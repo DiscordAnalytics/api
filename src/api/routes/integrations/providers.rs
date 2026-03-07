@@ -102,7 +102,7 @@ async fn handle_topgg_integration(
         return Ok(IntegrationResponse::Ignored);
     }
 
-    if !repos.bots.find_by_id(&project.platform_id).await?.is_some() {
+    if repos.bots.find_by_id(&project.platform_id).await?.is_none() {
         let bot_id = &project.platform_id;
         let user = payload.data.user.ok_or_else(|| {
             warn!(

@@ -249,7 +249,6 @@ async fn create_achievement(
 )]
 async fn update_achievement(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
     payload: Json<AchievementUpdatePayload>,
@@ -282,17 +281,9 @@ async fn update_achievement(
             achievement_id = %payload.id,
             "Admin access granted for updating achievement",
         );
-    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            achievement_id = %payload.id,
-            "Bot attempting to update achievement of another bot",
-        );
-        return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,

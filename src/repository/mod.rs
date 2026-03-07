@@ -25,7 +25,6 @@ pub use global_stats::GlobalStatsUpdate;
 pub use stats_reports::StatsReportUpdate;
 pub use team_invitations::TeamInvitationUpdate;
 pub use users::UserUpdate;
-pub use votes::VoteUpdate;
 
 #[derive(Clone)]
 pub struct Repositories {

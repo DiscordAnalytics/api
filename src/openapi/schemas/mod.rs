@@ -47,7 +47,7 @@ pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateReq
 pub use vote::VoteResponse;
 pub use webhook::{
     BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
-    TopGGPayload, WebhookVoteResponse,
+    TopGGPayload,
 };
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]

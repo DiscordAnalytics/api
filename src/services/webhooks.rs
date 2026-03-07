@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Result;
 use chrono::{Duration, Utc};
@@ -49,7 +49,7 @@ impl WebhooksService {
         match self
             .repos
             .votes
-            .find_by_date_and_provider(bot_id, &start_of_hour, provider)
+            .find_by_date(bot_id, &start_of_hour)
             .await?
         {
             Some(_) => {
@@ -69,9 +69,8 @@ impl WebhooksService {
             None => {
                 let new_vote = Vote {
                     bot_id: bot_id.to_string(),
-                    count: vote_count,
                     date: start_of_hour,
-                    provider: provider.to_string(),
+                    votes: HashMap::from([(provider.to_string(), vote_count as u32)]),
                 };
                 self.repos.votes.insert(&new_vote).await?;
 

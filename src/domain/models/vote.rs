@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
@@ -5,18 +7,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Vote {
     pub bot_id: String,
-    pub count: i32,
     pub date: DateTime,
-    pub provider: String,
+    #[serde(flatten)]
+    pub votes: HashMap<String, u32>,
 }
 
 impl Vote {
-    pub fn new(bot_id: String, date: DateTime, provider: String) -> Self {
+    pub fn new(bot_id: String, date: DateTime) -> Self {
         Self {
             bot_id,
-            count: 0,
             date,
-            provider,
+            votes: HashMap::new(),
         }
     }
 }

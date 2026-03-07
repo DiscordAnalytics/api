@@ -2,8 +2,6 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::models::Vote;
-
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct BotListMePayload {
     pub bot: String,
@@ -68,26 +66,4 @@ pub struct TopGGProject {
 pub struct TopGGUser {
     pub name: String,
     pub platform_id: String,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct WebhookVoteResponse {
-    pub bot_id: String,
-    pub provider: String,
-    pub timestamp: String,
-    pub count: i32,
-}
-
-impl TryFrom<Vote> for WebhookVoteResponse {
-    type Error = anyhow::Error;
-
-    fn try_from(vote: Vote) -> Result<Self, Self::Error> {
-        Ok(Self {
-            bot_id: vote.bot_id,
-            provider: vote.provider,
-            timestamp: vote.date.try_to_rfc3339_string()?,
-            count: vote.count,
-        })
-    }
 }

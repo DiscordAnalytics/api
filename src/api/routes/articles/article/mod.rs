@@ -8,7 +8,7 @@ use tracing::info;
 use crate::{
     api::middleware::{OptionalAuth, RequireAdmin},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{ArticleDeleteResponse, ArticleRequest, ArticleResponse},
+    openapi::schemas::{ArticleAuthor, ArticleDeleteResponse, ArticleRequest, ArticleResponse},
     repository::{BlogArticleUpdate, Repositories},
     utils::logger::LogCode,
 };
@@ -46,7 +46,16 @@ async fn get_article(
         )));
     }
 
-    Ok(Json(ArticleResponse::try_from(article)?))
+    let author = repos
+        .users
+        .find_by_id(&article.author_id)
+        .await?
+        .map(|user| ArticleAuthor {
+            avatar: user.avatar,
+            username: user.username,
+        });
+
+    Ok(Json(ArticleResponse::from_article(article, author)?))
 }
 
 #[api_operation(
@@ -89,7 +98,14 @@ async fn publish_article(
         ))
     })?;
 
-    let article_response = ArticleResponse::try_from(updated_article)?;
+    let author = repos
+        .users
+        .find_by_id(&updated_article.author_id)
+        .await?
+        .map(|user| ArticleAuthor {
+            avatar: user.avatar,
+            username: user.username,
+        });
 
     info!(
         code = %LogCode::Request,
@@ -97,7 +113,10 @@ async fn publish_article(
         "Article published successfully",
     );
 
-    Ok(Json(article_response))
+    Ok(Json(ArticleResponse::from_article(
+        updated_article,
+        author,
+    )?))
 }
 
 #[api_operation(
@@ -142,7 +161,14 @@ async fn update_article(
         ))
     })?;
 
-    let article_response = ArticleResponse::try_from(updated_article)?;
+    let author = repos
+        .users
+        .find_by_id(&updated_article.author_id)
+        .await?
+        .map(|user| ArticleAuthor {
+            avatar: user.avatar,
+            username: user.username,
+        });
 
     info!(
         code = %LogCode::Request,
@@ -150,7 +176,10 @@ async fn update_article(
         "Article updated successfully",
     );
 
-    Ok(Json(article_response))
+    Ok(Json(ArticleResponse::from_article(
+        updated_article,
+        author,
+    )?))
 }
 
 #[api_operation(

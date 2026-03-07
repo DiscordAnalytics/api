@@ -13,7 +13,7 @@ use crate::{
         error::{ApiError, ApiResult},
         models::BlogArticle,
     },
-    openapi::schemas::{ArticleRequest, ArticleResponse},
+    openapi::schemas::{ArticleAuthor, ArticleRequest, ArticleResponse},
     repository::Repositories,
     utils::logger::LogCode,
 };
@@ -43,7 +43,7 @@ async fn get_articles(
     let article_reponses = articles
         .into_iter()
         .map(|a| {
-            ArticleResponse::try_from(a).map(|mut r| {
+            ArticleResponse::from_article(a, None).map(|mut r| {
                 r.content = None;
                 r
             })
@@ -76,6 +76,15 @@ async fn create_article(
 
     let user_id = auth.0.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
 
+    let author = repos
+        .users
+        .find_by_id(user_id)
+        .await?
+        .map(|user| ArticleAuthor {
+            avatar: user.avatar,
+            username: user.username,
+        });
+
     let article_request = &body.into_inner();
 
     let mut new_article = BlogArticle::new(
@@ -92,14 +101,12 @@ async fn create_article(
 
     repos.blog_articles.insert(&new_article).await?;
 
-    let article_response = ArticleResponse::try_from(new_article)?;
-
     info!(
         code = %LogCode::Request,
         "Article created successfully",
     );
 
-    Ok(Json(article_response))
+    Ok(Json(ArticleResponse::from_article(new_article, author)?))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {

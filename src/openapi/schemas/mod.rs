@@ -22,7 +22,7 @@ pub use achievement::{
     AchievementCreationPayload, AchievementResponse, AchievementUpdatePayload,
     DeleteAchievementQuery,
 };
-pub use article::{ArticleDeleteResponse, ArticleRequest, ArticleResponse};
+pub use article::{ArticleAuthor, ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{
     AuthCallbackQuery, AuthConfigResponse, AvatarDecoration, DiscordBot, DiscordOAuthUser,
     DiscordTokenResponse, LinkedRolesQuery,

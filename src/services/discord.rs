@@ -4,7 +4,7 @@ use tracing::error;
 
 use crate::{
     app_env,
-    openapi::schemas::{DiscordOAuthUser, DiscordTokenResponse},
+    openapi::schemas::{DiscordBot, DiscordOAuthUser, DiscordTokenResponse},
     utils::logger::LogCode,
 };
 
@@ -75,6 +75,27 @@ impl DiscordService {
                 "Failed to fetch Discord user"
             );
             return Err(anyhow!("Failed to fetch Discord user: {}", error_text));
+        }
+
+        Ok(response.json().await?)
+    }
+
+    pub async fn get_bot(&self, bot_id: &str) -> Result<DiscordBot> {
+        let response = self
+            .client
+            .get(format!("https://discord.com/api/users/{}", bot_id))
+            .header("Authorization", format!("Bot {}", app_env!().discord_token))
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            error!(
+                code = %LogCode::Auth,
+                error = %error_text,
+                "Failed to fetch Discord bot"
+            );
+            return Err(anyhow!("Failed to fetch Discord bot: {}", error_text));
         }
 
         Ok(response.json().await?)

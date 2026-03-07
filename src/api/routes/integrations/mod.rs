@@ -13,6 +13,7 @@ use crate::{
     api::middleware::RawBody,
     domain::error::{ApiError, ApiResult},
     repository::Repositories,
+    services::Services,
 };
 
 #[api_operation(
@@ -21,6 +22,7 @@ use crate::{
     tag = "Webhooks"
 )]
 async fn vote_integration(
+    services: Data<Services>,
     repos: Data<Repositories>,
     raw_body: RawBody,
     path: Path<String>,
@@ -37,7 +39,7 @@ async fn vote_integration(
         }
     };
 
-    match handle_provider(&provider, body_value, repos).await? {
+    match handle_provider(&provider, body_value, services, repos).await? {
         IntegrationResponse::Accepted(integration_result) => Ok(Json(integration_result)),
         IntegrationResponse::Ignored => Err(ApiError::InvalidInput(format!(
             "Unsupported integration provider: {}",

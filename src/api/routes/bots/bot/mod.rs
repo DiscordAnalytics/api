@@ -12,13 +12,10 @@ use apistos::{
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
 use mongodb::bson::DateTime;
-use reqwest::{Client, header::AUTHORIZATION};
-use serde_json::Value;
 use tracing::{info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
-    app_env,
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
@@ -175,32 +172,8 @@ async fn post_bot(
         return Err(ApiError::Forbidden);
     }
 
-    let client = Client::new();
-    let bot_details_response = client
-        .get(format!("https://discord.com/api/v10/users/{}", bot_id))
-        .header(AUTHORIZATION, format!("Bot {}", app_env!().discord_token))
-        .send()
-        .await?;
-
-    if !bot_details_response.status().is_success() {
-        warn!(
-            code = %LogCode::Request,
-            bot_id = %bot_id,
-            status = %bot_details_response.status(),
-            "Failed to fetch bot details from Discord API during creation",
-        );
-        return Err(ApiError::NotFound(format!(
-            "Bot with ID {} not found in Discord API",
-            bot_id
-        )));
-    }
-
-    let bot_details = bot_details_response.json::<Value>().await?;
-    if !bot_details
-        .get("bot")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-    {
+    let bot_details = services.discord.get_bot(&bot_id).await?;
+    if !bot_details.bot {
         warn!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -212,24 +185,14 @@ async fn post_bot(
         )));
     }
 
-    let bot_username = bot_details
-        .get("username")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            warn!(
-                code = %LogCode::Request,
-                bot_id = %bot_id,
-                "Failed to extract bot username from Discord API response",
-            );
-            ApiError::NotFound(format!(
-                "Failed to extract bot username for ID {} from Discord API",
-                bot_id
-            ))
-        })?;
-    let bot_avatar = bot_details.get("avatar").and_then(|v| v.as_str());
-
     let token = generate_bot_token(&bot_id)?;
-    let bot = Bot::new(&bot_id, &body_data.user_id, token, bot_username, bot_avatar);
+    let bot = Bot::new(
+        &bot_id,
+        &body_data.user_id,
+        token,
+        &bot_details.username,
+        bot_details.avatar.as_deref(),
+    );
 
     repos.bots.insert(&bot).await?;
 

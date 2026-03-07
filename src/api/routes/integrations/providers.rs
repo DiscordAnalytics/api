@@ -8,11 +8,13 @@ use tracing::{info, warn};
 use crate::{
     app_env,
     domain::{
+        auth::generate_bot_token,
         error::{ApiError, ApiResult},
-        models::WebhookConfig,
+        models::{Bot, WebhookConfig},
     },
     openapi::schemas::TopGGIntegrationPayload,
     repository::{BotUpdate, Repositories},
+    services::Services,
     utils::logger::LogCode,
 };
 
@@ -30,16 +32,18 @@ pub enum IntegrationResponse {
 pub async fn handle_provider(
     provider: &str,
     body: Value,
+    services: Data<Services>,
     repos: Data<Repositories>,
 ) -> ApiResult<IntegrationResponse> {
     match provider {
-        "topgg" => handle_topgg_integration(body, repos).await,
+        "topgg" => handle_topgg_integration(body, services, repos).await,
         _ => Ok(IntegrationResponse::Ignored),
     }
 }
 
 async fn handle_topgg_integration(
     body: Value,
+    services: Data<Services>,
     repos: Data<Repositories>,
 ) -> ApiResult<IntegrationResponse> {
     let payload = match from_value::<TopGGIntegrationPayload>(body) {
@@ -96,6 +100,55 @@ async fn handle_topgg_integration(
             "Received unsupported TopGG integration event type"
         );
         return Ok(IntegrationResponse::Ignored);
+    }
+
+    if !repos.bots.find_by_id(&project.platform_id).await?.is_some() {
+        let bot_id = &project.platform_id;
+        let user = payload.data.user.ok_or_else(|| {
+            warn!(
+                code = %LogCode::Webhook,
+                provider = "topgg",
+                "Received TopGG integration payload without user information for new bot"
+            );
+            ApiError::InvalidInput("Missing user information in TopGG payload".to_string())
+        })?;
+        let token = generate_bot_token(bot_id).map_err(|e| {
+            warn!(
+                code = %LogCode::Webhook,
+                provider = "topgg",
+                bot_id = %bot_id,
+                error = %e,
+                "Failed to generate bot token for new TopGG integration"
+            );
+            ApiError::InternalError("Failed to generate bot token".to_string())
+        })?;
+        let bot_details = services.discord.get_bot(bot_id).await.map_err(|e| {
+            warn!(
+                code = %LogCode::Webhook,
+                provider = "topgg",
+                bot_id = %bot_id,
+                error = %e,
+                "Failed to fetch bot details from Discord for new TopGG integration"
+            );
+            ApiError::InternalError("Failed to fetch bot details".to_string())
+        })?;
+        let new_bot = Bot::new(
+            bot_id,
+            &user.platform_id,
+            token,
+            &bot_details.username,
+            bot_details.avatar.as_deref(),
+        );
+        repos.bots.insert(&new_bot).await.map_err(|e| {
+            warn!(
+                code = %LogCode::Webhook,
+                provider = "topgg",
+                bot_id = %bot_id,
+                error = %e,
+                "Failed to insert new bot from TopGG integration into database"
+            );
+            ApiError::InternalError("Failed to create bot".to_string())
+        })?;
     }
 
     let update = BotUpdate::new().with_webhook_config(

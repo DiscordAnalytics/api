@@ -25,12 +25,19 @@ pub struct AuthCallbackQuery {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DiscordOAuthUser {
-    pub id: String,
-    pub username: String,
     pub avatar: Option<String>,
     pub avatar_decoration_data: Option<AvatarDecoration>,
-    pub email: Option<String>,
     pub discriminator: String,
+    pub email: Option<String>,
+    pub id: String,
+    pub username: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DiscordBot {
+    pub avatar: Option<String>,
+    pub bot: bool,
+    pub username: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

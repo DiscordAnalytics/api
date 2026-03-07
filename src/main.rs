@@ -84,12 +84,12 @@ async fn main() -> Result<()> {
                 Ok(deleted_count) => info!(
                     code = %LogCode::Server,
                     deleted_count = %deleted_count,
-                    "Deleted expired votes",
+                    "Deleted expired team invitations",
                 ),
                 Err(e) => error!(
                     code = %LogCode::Server,
                     error = %e,
-                    "Failed to delete expired votes"
+                    "Failed to delete expired team invitations"
                 ),
             }
         }

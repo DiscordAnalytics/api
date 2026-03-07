@@ -24,7 +24,6 @@ use crate::{
 )]
 async fn get_team(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<Vec<TeamResponse>>> {
@@ -71,7 +70,7 @@ async fn get_team(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -188,7 +187,7 @@ async fn add_to_team(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -263,7 +262,14 @@ async fn delete_from_team(
 ) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        user_id = %body.user_id,
+        "Removing user from bot team"
+    );
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
             bot_id = %bot_id,
@@ -291,7 +297,7 @@ async fn delete_from_team(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,

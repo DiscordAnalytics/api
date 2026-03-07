@@ -155,9 +155,9 @@ async fn handle_topgg_integration(
         "topgg",
         WebhookConfig {
             connection_id: Some(payload.data.connection_id),
-            webhook_url: None,
             webhook_secret: payload.data.webhook_secret,
         },
+        None,
     );
 
     repos.bots.update(&project.platform_id, update).await?;

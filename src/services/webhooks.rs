@@ -164,19 +164,19 @@ impl WebhooksService {
         raw_data: Value,
         webhook_manager: &Arc<Mutex<VotesWebhooksManager>>,
     ) -> Result<()> {
-        if let Some(webhook_config) = bot.webhooks_config.get(provider) {
-            let webhook_url = match &webhook_config.webhook_url {
-                Some(url) if !url.is_empty() => url.clone(),
-                _ => {
-                    info!(
-                        code = %LogCode::Webhook,
-                        bot_id = %bot.bot_id,
-                        provider = %provider,
-                        "Webhook URL not configured, skipping notification"
-                    );
-                    return Ok(());
-                }
-            };
+        let webhook_url = match &bot.webhooks_config.webhook_url {
+            Some(url) if !url.is_empty() => url.clone(),
+            _ => {
+                info!(
+                    code = %LogCode::Webhook,
+                    bot_id = %bot.bot_id,
+                    provider = %provider,
+                    "Webhook URL not configured, skipping notification"
+                );
+                return Ok(());
+            }
+        };
+        if let Some(webhook_config) = bot.webhooks_config.webhooks.get(provider) {
             let webhook_secret = match &webhook_config.webhook_secret {
                 Some(secret) if !secret.is_empty() => secret.clone(),
                 _ => {

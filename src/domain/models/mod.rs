@@ -13,7 +13,7 @@ mod webhook;
 
 pub use achievement::{Achievement, AchievementObjective, AchievementType};
 pub use blog_article::BlogArticle;
-pub use bot::{Bot, Framework, Language, WebhookConfig};
+pub use bot::{Bot, Framework, Language, WebhookConfig, WebhooksConfig};
 pub use bot_stats::{BotStats, Guild, GuildMembers, Interaction, Locale, UserType};
 pub use custom_event::CustomEvent;
 pub use global_stats::GlobalStats;

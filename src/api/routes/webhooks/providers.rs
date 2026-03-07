@@ -103,9 +103,15 @@ async fn handle_botlistme(
     bot: &Bot,
     authorization: Option<&str>,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.get("botlistme").ok_or_else(|| {
-        ApiError::WebhookError("Bot does not have webhook configured for botlist.me".to_string())
-    })?;
+    let webhook_config = bot
+        .webhooks_config
+        .webhooks
+        .get("botlistme")
+        .ok_or_else(|| {
+            ApiError::WebhookError(
+                "Bot does not have webhook configured for botlist.me".to_string(),
+            )
+        })?;
 
     let webhook_secret = match &webhook_config.webhook_secret {
         Some(secret) if !secret.is_empty() => secret,
@@ -140,7 +146,7 @@ async fn handle_dblist(
     bot: &Bot,
     authorization: Option<&str>,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.get("dblist").ok_or_else(|| {
+    let webhook_config = bot.webhooks_config.webhooks.get("dblist").ok_or_else(|| {
         ApiError::WebhookError("Bot does not have webhook configured for dblist".to_string())
     })?;
 
@@ -172,9 +178,15 @@ async fn handle_dblist(
 }
 
 async fn handle_discordlist(body_bytes: &[u8], bot: &Bot) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.get("discordlist").ok_or_else(|| {
-        ApiError::WebhookError("Bot does not have webhook configured for discordlist".to_string())
-    })?;
+    let webhook_config = bot
+        .webhooks_config
+        .webhooks
+        .get("discordlist")
+        .ok_or_else(|| {
+            ApiError::WebhookError(
+                "Bot does not have webhook configured for discordlist".to_string(),
+            )
+        })?;
 
     let webhook_secret = match &webhook_config.webhook_secret {
         Some(secret) if !secret.is_empty() => secret,
@@ -203,9 +215,15 @@ async fn handle_discordplace(
     bot: &Bot,
     authorization: Option<&str>,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.get("discordplace").ok_or_else(|| {
-        ApiError::WebhookError("Bot does not have webhook configured for discord.place".to_string())
-    })?;
+    let webhook_config = bot
+        .webhooks_config
+        .webhooks
+        .get("discordplace")
+        .ok_or_else(|| {
+            ApiError::WebhookError(
+                "Bot does not have webhook configured for discord.place".to_string(),
+            )
+        })?;
 
     let webhook_secret = match &webhook_config.webhook_secret {
         Some(secret) if !secret.is_empty() => secret,
@@ -240,9 +258,15 @@ async fn handle_discordscom(
     bot: &Bot,
     authorization: Option<&str>,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.get("discordscom").ok_or_else(|| {
-        ApiError::WebhookError("Bot does not have webhook configured for discords.com".to_string())
-    })?;
+    let webhook_config = bot
+        .webhooks_config
+        .webhooks
+        .get("discordscom")
+        .ok_or_else(|| {
+            ApiError::WebhookError(
+                "Bot does not have webhook configured for discords.com".to_string(),
+            )
+        })?;
 
     let webhook_secret = match &webhook_config.webhook_secret {
         Some(secret) if !secret.is_empty() => secret,
@@ -282,7 +306,7 @@ async fn handle_topgg(
     bot: &Bot,
     headers: &HeaderMap,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.get("topgg").ok_or_else(|| {
+    let webhook_config = bot.webhooks_config.webhooks.get("topgg").ok_or_else(|| {
         ApiError::WebhookError("Bot does not have webhook configured for top.gg".to_string())
     })?;
 

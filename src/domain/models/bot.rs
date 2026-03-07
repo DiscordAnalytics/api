@@ -23,7 +23,7 @@ pub struct Bot {
     pub version: Option<String>,
     pub warn_level: i32,
     pub watched_since: DateTime,
-    pub webhooks_config: HashMap<String, WebhookConfig>,
+    pub webhooks_config: WebhooksConfig,
 }
 
 impl Bot {
@@ -50,7 +50,7 @@ impl Bot {
             version: None,
             warn_level: 0,
             watched_since: DateTime::now(),
-            webhooks_config: HashMap::new(),
+            webhooks_config: WebhooksConfig::default(),
         }
     }
 
@@ -145,10 +145,19 @@ impl From<Language> for String {
     }
 }
 
+#[derive(
+    Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhooksConfig {
+    pub webhook_url: Option<String>,
+    #[serde(flatten)]
+    pub webhooks: HashMap<String, WebhookConfig>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WebhookConfig {
     pub connection_id: Option<String>,
-    pub webhook_url: Option<String>,
     pub webhook_secret: Option<String>,
 }

@@ -179,7 +179,7 @@ async fn post_bot(
             bot_id = %bot_id,
             "User ID provided is not a bot according to Discord API",
         );
-        return Err(ApiError::NotFound(format!(
+        return Err(ApiError::InvalidInput(format!(
             "User ID {} is not a bot according to Discord API",
             bot_id
         )));

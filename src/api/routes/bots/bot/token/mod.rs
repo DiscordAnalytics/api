@@ -13,7 +13,6 @@ use crate::{
     },
     openapi::schemas::BotTokenResponse,
     repository::{BotUpdate, Repositories},
-    services::Services,
     utils::logger::LogCode,
 };
 
@@ -24,7 +23,6 @@ use crate::{
 )]
 async fn get_token(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<BotTokenResponse>> {
@@ -35,6 +33,15 @@ async fn get_token(
         bot_id = %bot_id,
         "Retrieving bot token"
     );
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        warn!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for token retrieval",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
 
     let ctx = &auth.0;
 
@@ -53,7 +60,7 @@ async fn get_token(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -71,15 +78,6 @@ async fn get_token(
         return Err(ApiError::Forbidden);
     }
 
-    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
-        warn!(
-            code = %LogCode::Request,
-            bot_id = %bot_id,
-            "Bot not found for token retrieval",
-        );
-        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
-    })?;
-
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
@@ -96,7 +94,6 @@ async fn get_token(
 )]
 async fn refresh_token(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<BotTokenResponse>> {
@@ -107,6 +104,15 @@ async fn refresh_token(
         bot_id = %bot_id,
         "Refreshing bot token"
     );
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        warn!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for token refresh",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
 
     let ctx = &auth.0;
 
@@ -125,7 +131,7 @@ async fn refresh_token(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -142,15 +148,6 @@ async fn refresh_token(
         );
         return Err(ApiError::Forbidden);
     }
-
-    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
-        warn!(
-            code = %LogCode::Request,
-            bot_id = %bot_id,
-            "Bot not found for token refresh",
-        );
-        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
-    })?;
 
     if bot.suspended {
         warn!(

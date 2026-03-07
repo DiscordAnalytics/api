@@ -41,7 +41,7 @@ async fn get_event(
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
-            "Access denied for suspended bot team",
+            "Access denied for suspended bot",
         );
         return Err(ApiError::BotSuspended);
     }

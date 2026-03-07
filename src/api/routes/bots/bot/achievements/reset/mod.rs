@@ -13,7 +13,6 @@ use crate::{
     },
     openapi::schemas::MessageResponse,
     repository::Repositories,
-    services::Services,
     utils::logger::LogCode,
 };
 
@@ -24,7 +23,6 @@ use crate::{
 )]
 async fn reset_achievements(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<MessageResponse>> {
@@ -55,7 +53,7 @@ async fn reset_achievements(
         );
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,

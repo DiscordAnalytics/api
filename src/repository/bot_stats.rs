@@ -305,7 +305,8 @@ impl BotStatsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&BOT_STATS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == BOT_STATS_COLLECTION)
         {
             let ts_opts = TimeseriesOptions::builder()
                 .time_field("date")
@@ -320,11 +321,6 @@ impl BotStatsRepository {
         Ok(Self {
             collection: db.collection(BOT_STATS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<BotStats>> {
@@ -383,12 +379,6 @@ impl BotStatsRepository {
         self.collection
             .find_one_and_update(doc! { "botId": bot_id, "date": date }, updates)
             .with_options(options)
-            .await
-    }
-
-    pub async fn delete_by_date(&self, bot_id: &str, date: &DateTime) -> Result<DeleteResult> {
-        self.collection
-            .delete_one(doc! { "botId": bot_id, "date": date })
             .await
     }
 

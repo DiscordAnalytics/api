@@ -34,7 +34,8 @@ impl StatsReportsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&STATS_REPORTS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == STATS_REPORTS_COLLECTION)
         {
             db.create_collection(STATS_REPORTS_COLLECTION).await?;
         }
@@ -42,11 +43,6 @@ impl StatsReportsRepository {
         Ok(Self {
             collection: db.collection(STATS_REPORTS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn find_all(&self) -> Result<Vec<StatsReport>> {

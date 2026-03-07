@@ -64,7 +64,8 @@ impl UsersRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&USERS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == USERS_COLLECTION)
         {
             db.create_collection(USERS_COLLECTION).await?;
         }
@@ -72,11 +73,6 @@ impl UsersRepository {
         Ok(Self {
             collection: db.collection(USERS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn find_all(&self) -> Result<Vec<User>> {

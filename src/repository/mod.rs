@@ -33,6 +33,7 @@ pub struct Repositories {
     pub bots: bots::BotsRepository,
     pub bot_stats: bot_stats::BotStatsRepository,
     pub custom_events: custom_events::CustomEventsRepository,
+    database: connection::DbConnection,
     pub global_stats: global_stats::GlobalStatsRepository,
     pub sessions: sessions::SessionsRepository,
     #[cfg(feature = "reports")]
@@ -55,6 +56,7 @@ impl Repositories {
             bots: bots::BotsRepository::new(db).await?,
             bot_stats: bot_stats::BotStatsRepository::new(db).await?,
             custom_events: custom_events::CustomEventsRepository::new(db).await?,
+            database: connection.clone(),
             global_stats: global_stats::GlobalStatsRepository::new(db).await?,
             sessions: sessions::SessionsRepository::new(db).await?,
             #[cfg(feature = "reports")]
@@ -68,20 +70,9 @@ impl Repositories {
     }
 
     pub async fn ping(&self) -> Result<()> {
-        self.achievements.ping().await?;
-        self.blog_articles.ping().await?;
-        self.bots.ping().await?;
-        self.bot_stats.ping().await?;
-        self.custom_events.ping().await?;
-        self.global_stats.ping().await?;
-        self.sessions.ping().await?;
+        self.database.ping().await?;
         #[cfg(feature = "reports")]
         self.r2.ping().await?;
-        #[cfg(feature = "reports")]
-        self.stats_reports.ping().await?;
-        self.team_invitations.ping().await?;
-        self.users.ping().await?;
-        self.votes.ping().await?;
 
         Ok(())
     }

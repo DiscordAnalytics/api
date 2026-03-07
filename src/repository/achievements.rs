@@ -77,7 +77,8 @@ impl AchievementsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&ACHIEVEMENTS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == ACHIEVEMENTS_COLLECTION)
         {
             db.create_collection(ACHIEVEMENTS_COLLECTION).await?;
         }
@@ -85,11 +86,6 @@ impl AchievementsRepository {
         Ok(Self {
             collection: db.collection(ACHIEVEMENTS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn count_used_by(&self, achievement_id: &str) -> Result<u64> {

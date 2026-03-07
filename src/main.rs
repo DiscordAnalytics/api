@@ -75,6 +75,23 @@ async fn main() -> Result<()> {
                     "Failed to delete expired sessions"
                 ),
             }
+
+            match repos_clone
+                .team_invitations
+                .delete_expired_invitations()
+                .await
+            {
+                Ok(deleted_count) => info!(
+                    code = %LogCode::Server,
+                    deleted_count = %deleted_count,
+                    "Deleted expired votes",
+                ),
+                Err(e) => error!(
+                    code = %LogCode::Server,
+                    error = %e,
+                    "Failed to delete expired votes"
+                ),
+            }
         }
     });
 

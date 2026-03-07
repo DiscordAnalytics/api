@@ -4,7 +4,7 @@ use mongodb::{
     bson::{DateTime, Document, doc},
     error::Result,
     options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument},
-    results::{DeleteResult, InsertOneResult},
+    results::InsertOneResult,
 };
 
 use crate::{domain::models::GlobalStats, utils::constants::GLOBAL_STATS_COLLECTION};
@@ -49,7 +49,8 @@ impl GlobalStatsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&GLOBAL_STATS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == GLOBAL_STATS_COLLECTION)
         {
             db.create_collection(GLOBAL_STATS_COLLECTION).await?;
         }
@@ -57,16 +58,6 @@ impl GlobalStatsRepository {
         Ok(Self {
             collection: db.collection(GLOBAL_STATS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
-    }
-
-    pub async fn find_all(&self) -> Result<Vec<GlobalStats>> {
-        let cursor = self.collection.find(doc! {}).await?;
-        cursor.try_collect().await
     }
 
     pub async fn find_one(&self, date: &DateTime) -> Result<Option<GlobalStats>> {
@@ -117,9 +108,5 @@ impl GlobalStatsRepository {
             .find_one_and_update(doc! { "date": date }, doc! { "$set": updates })
             .with_options(options)
             .await
-    }
-
-    pub async fn delete(&self, date: &DateTime) -> Result<DeleteResult> {
-        self.collection.delete_one(doc! { "date": date }).await
     }
 }

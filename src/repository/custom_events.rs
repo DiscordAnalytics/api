@@ -44,7 +44,8 @@ impl CustomEventsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&CUSTOM_EVENTS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == CUSTOM_EVENTS_COLLECTION)
         {
             db.create_collection(CUSTOM_EVENTS_COLLECTION).await?;
         }
@@ -52,22 +53,6 @@ impl CustomEventsRepository {
         Ok(Self {
             collection: db.collection(CUSTOM_EVENTS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
-    }
-
-    pub async fn find_all(&self) -> Result<Vec<CustomEvent>> {
-        let cursor = self.collection.find(doc! {}).await?;
-        cursor.try_collect().await
-    }
-
-    pub async fn find_by_event_key(&self, event_key: &str) -> Result<Option<CustomEvent>> {
-        self.collection
-            .find_one(doc! { "eventKey": event_key })
-            .await
     }
 
     pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<CustomEvent>> {

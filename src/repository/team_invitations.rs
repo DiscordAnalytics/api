@@ -33,7 +33,8 @@ impl TeamInvitationsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&TEAM_INVITATIONS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == TEAM_INVITATIONS_COLLECTION)
         {
             db.create_collection(TEAM_INVITATIONS_COLLECTION).await?;
         }
@@ -41,11 +42,6 @@ impl TeamInvitationsRepository {
         Ok(Self {
             collection: db.collection(TEAM_INVITATIONS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn find_all(&self) -> Result<Vec<TeamInvitation>> {
@@ -57,16 +53,6 @@ impl TeamInvitationsRepository {
         self.collection
             .find_one(doc! { "invitationId": team_invitation_id })
             .await
-    }
-
-    pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<TeamInvitation>> {
-        let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
-        cursor.try_collect().await
-    }
-
-    pub async fn find_by_user(&self, user_id: &str) -> Result<Vec<TeamInvitation>> {
-        let cursor = self.collection.find(doc! { "userId": user_id }).await?;
-        cursor.try_collect().await
     }
 
     pub async fn find_by_bot_and_user(
@@ -81,25 +67,6 @@ impl TeamInvitationsRepository {
 
     pub async fn insert(&self, team_invitation: &TeamInvitation) -> Result<InsertOneResult> {
         self.collection.insert_one(team_invitation).await
-    }
-
-    pub async fn update(
-        &self,
-        invitation_id: &str,
-        updated_team_invitation: TeamInvitationUpdate,
-    ) -> Result<UpdateResult> {
-        let updates = updated_team_invitation.build();
-
-        if updates.is_empty() {
-            return Ok(UpdateResult::default());
-        }
-
-        self.collection
-            .update_one(
-                doc! { "invitationId": invitation_id },
-                doc! { "$set": updates },
-            )
-            .await
     }
 
     pub async fn accept_invitation(&self, invitation_id: &str) -> Result<UpdateResult> {
@@ -137,9 +104,11 @@ impl TeamInvitationsRepository {
             .await
     }
 
-    pub async fn delete_expired_invitations(&self) -> Result<DeleteResult> {
-        self.collection
+    pub async fn delete_expired_invitations(&self) -> Result<u64> {
+        let result = self
+            .collection
             .delete_many(doc! { "expiration": { "$lte": DateTime::now() } })
-            .await
+            .await?;
+        Ok(result.deleted_count)
     }
 }

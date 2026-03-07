@@ -112,7 +112,8 @@ impl BotsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&BOTS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == BOTS_COLLECTION)
         {
             db.create_collection(BOTS_COLLECTION).await?;
         }
@@ -120,11 +121,6 @@ impl BotsRepository {
         Ok(Self {
             collection: db.collection(BOTS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn find_all(&self) -> Result<Vec<Bot>> {
@@ -201,12 +197,5 @@ impl BotsRepository {
 
     pub async fn delete(&self, bot_id: &str) -> Result<DeleteResult> {
         self.collection.delete_one(doc! { "botId": bot_id }).await
-    }
-
-    pub async fn delete_by_user_id(&self, user_id: &str) -> Result<()> {
-        self.collection
-            .delete_many(doc! { "ownerId": user_id })
-            .await?;
-        Ok(())
     }
 }

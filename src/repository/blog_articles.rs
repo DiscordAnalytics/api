@@ -69,7 +69,8 @@ impl BlogArticlesRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&BLOG_ARTICLES_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == BLOG_ARTICLES_COLLECTION)
         {
             db.create_collection(BLOG_ARTICLES_COLLECTION).await?;
         }
@@ -77,11 +78,6 @@ impl BlogArticlesRepository {
         Ok(Self {
             collection: db.collection(BLOG_ARTICLES_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn find_all(&self) -> Result<Vec<BlogArticle>> {

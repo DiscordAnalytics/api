@@ -18,7 +18,8 @@ impl SessionsRepository {
         if !db
             .list_collection_names()
             .await?
-            .contains(&SESSIONS_COLLECTION.to_string())
+            .iter()
+            .any(|name| name == SESSIONS_COLLECTION)
         {
             db.create_collection(SESSIONS_COLLECTION).await?;
         }
@@ -26,11 +27,6 @@ impl SessionsRepository {
         Ok(Self {
             collection: db.collection(SESSIONS_COLLECTION),
         })
-    }
-
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
     }
 
     pub async fn insert(&self, session: &Session) -> Result<InsertOneResult> {

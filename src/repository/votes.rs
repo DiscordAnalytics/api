@@ -37,11 +37,6 @@ impl VotesRepository {
         })
     }
 
-    pub async fn ping(&self) -> Result<()> {
-        self.collection.find_one(doc! {}).await?;
-        Ok(())
-    }
-
     pub async fn find_by_date(&self, bot_id: &str, date: &DateTime) -> Result<Option<Vote>> {
         self.collection
             .find_one(doc! { "botId": bot_id, "date": date })

@@ -27,7 +27,13 @@ async fn get_achievements(
     let achievements = if let Some(ctx) = auth.0
         && ctx.is_admin()
     {
-        repos.achievements.find_all().await?
+        repos
+            .achievements
+            .find_all()
+            .await?
+            .into_iter()
+            .filter(|a| a.from.is_none())
+            .collect()
     } else {
         repos.achievements.find_all_shared().await?
     };

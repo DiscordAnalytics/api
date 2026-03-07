@@ -1,11 +1,17 @@
-use std::sync::OnceLock;
+use std::{
+    collections::HashMap,
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
+use actix_web::rt;
 use anyhow::Result;
 use regex::Regex;
 use reqwest::{
     Client,
     header::{HeaderMap, HeaderValue},
 };
+use tokio::{sync::Mutex, time::sleep};
 use tracing::info;
 
 use crate::{
@@ -16,16 +22,27 @@ use crate::{
 static DISCORD_WEBHOOK_REGEX: OnceLock<Regex> = OnceLock::new();
 
 pub struct VotesWebhooksManager {
-    pub waitlist: Vec<Webhook>,
+    pub waitlist: HashMap<String, Webhook>,
     client: Client,
+}
+
+impl Default for VotesWebhooksManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl VotesWebhooksManager {
     pub fn new() -> Self {
         Self {
-            waitlist: Vec::new(),
+            waitlist: HashMap::new(),
             client: Client::new(),
         }
+    }
+
+    pub fn queue_webhook(&mut self, webhook: Webhook) {
+        let key = Self::build_key(&webhook);
+        self.waitlist.insert(key, webhook);
     }
 
     fn is_discord_webhook(url: &str) -> bool {
@@ -37,37 +54,14 @@ impl VotesWebhooksManager {
             .is_match(url)
     }
 
-    pub fn retry(&mut self, webhook: Webhook) {
-        if let Some(idx) = self.waitlist.iter().position(|w| {
-            w.data.bot_id == webhook.data.bot_id
-                && w.data.voter_id == webhook.data.voter_id
-                && w.data.provider == webhook.data.provider
-                && w.data.date == webhook.data.date
-                && w.data.raw_data == webhook.data.raw_data
-        }) {
-            if let Some(w) = self.waitlist.get_mut(idx) {
-                w.try_count += 1;
-
-                if w.try_count > MAX_WEBHOOK_RETRIES {
-                    self.waitlist.remove(idx);
-                }
-            }
-        } else {
-            self.waitlist.push(Webhook {
-                try_count: 1,
-                ..webhook
-            });
-        }
-    }
-
-    pub async fn send_webhook(&mut self, webhook: Webhook) -> Result<()> {
+    fn build_payload(webhook: &Webhook) -> Result<(WebhookSendData<'_>, HeaderMap)> {
         let mut headers = HeaderMap::new();
         headers.insert(
             "Authorization",
             HeaderValue::from_str(&webhook.webhook_secret)?,
         );
 
-        let provider_str = webhook.data.provider.as_str();
+        let provider_str = webhook.data.provider.to_str();
 
         let content = if Self::is_discord_webhook(&webhook.webhook_url) {
             match &webhook.data.provider {
@@ -89,52 +83,96 @@ impl VotesWebhooksManager {
             None
         };
 
-        let res = self
-            .client
+        let data = WebhookSendData {
+            bot_id: &webhook.data.bot_id,
+            voter_id: &webhook.data.voter_id,
+            provider: provider_str,
+            date: webhook.data.date,
+            raw_data: webhook.data.raw_data.as_ref(),
+            content,
+        };
+
+        Ok((data, headers))
+    }
+
+    fn build_key(webhook: &Webhook) -> String {
+        format!(
+            "{}:{}:{}",
+            webhook.webhook_url,
+            webhook.data.voter_id,
+            webhook.data.provider.to_str()
+        )
+    }
+
+    pub async fn send(manager: Arc<Mutex<Self>>, webhook: Webhook) {
+        let (client, payload, headers) = {
+            let manager = manager.lock().await;
+            let (payload, headers) =
+                Self::build_payload(&webhook).expect("Failed to build webhook payload");
+            (manager.client.clone(), payload, headers)
+        };
+
+        let result = client
             .post(&webhook.webhook_url)
-            .json(&WebhookSendData {
-                bot_id: webhook.data.bot_id.clone(),
-                voter_id: webhook.data.voter_id.clone(),
-                provider: provider_str.to_string(),
-                date: webhook.data.date,
-                raw_data: webhook.data.raw_data.clone(),
-                content,
-            })
+            .json(&payload)
             .headers(headers)
             .send()
             .await;
 
-        match res {
-            Ok(res) => {
-                if res.status().is_success() {
-                    info!(
-                        code = %LogCode::Request,
-                        "Vote webhook of bot {} for provider {} has been sent",
-                        webhook.data.bot_id.as_str(),
-                        webhook.data.provider.as_str()
-                    );
-                    self.waitlist.retain(|w| *w != webhook);
-                } else {
-                    info!(
-                        code = %LogCode::Request,
-                        "Vote webhook of bot {} for provider {} did not return a successful status code",
-                        webhook.data.bot_id.as_str(),
-                        webhook.data.provider.as_str()
-                    );
-                    self.retry(webhook)
-                }
+        let mut mgr = manager.lock().await;
+        match result {
+            Ok(res) if res.status().is_success() => {
+                info!(
+                    code = %LogCode::Request,
+                    "Vote webhook of bot {} for provider {} has been sent",
+                    webhook.data.bot_id.as_str(),
+                    webhook.data.provider.to_str()
+                );
+                let key = Self::build_key(&webhook);
+                mgr.waitlist.remove(&key);
             }
-            Err(_) => {
+            _ => {
                 info!(
                     code = %LogCode::Request,
                     "Vote webhook of bot {} for provider {} has failed to be sent",
                     webhook.data.bot_id.as_str(),
-                    webhook.data.provider.as_str()
+                    webhook.data.provider.to_str()
                 );
-                self.retry(webhook)
+
+                if let Some(delay) = mgr.retry(&webhook) {
+                    drop(mgr);
+                    Self::schedule_retry(manager.clone(), webhook, delay);
+                }
             }
         }
+    }
 
-        Ok(())
+    fn retry(&mut self, webhook: &Webhook) -> Option<Duration> {
+        let key = Self::build_key(webhook);
+
+        let entry = self.waitlist.entry(key).or_insert_with(|| {
+            let mut w = webhook.clone();
+            w.try_count = 0;
+            w
+        });
+
+        entry.try_count = entry.try_count.saturating_add(1);
+
+        if entry.try_count > MAX_WEBHOOK_RETRIES {
+            self.waitlist.remove(&Self::build_key(webhook));
+            return None;
+        }
+
+        let exp = (entry.try_count.min(6)) as u32;
+        let delay = Duration::from_secs(2u64.pow(exp));
+
+        Some(delay)
+    }
+
+    fn schedule_retry(manager: Arc<Mutex<Self>>, webhook: Webhook, delay: Duration) {
+        rt::spawn(async move {
+            sleep(delay).await;
+            Self::send(manager, webhook).await;
+        });
     }
 }

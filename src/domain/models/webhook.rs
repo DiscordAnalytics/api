@@ -14,7 +14,7 @@ pub enum Provider {
 }
 
 impl Provider {
-    pub fn as_str(&self) -> &'static str {
+    pub fn to_str(&self) -> &'static str {
         match self {
             Provider::TopGG => "topgg",
             Provider::DiscordList => "discordlist",
@@ -26,7 +26,7 @@ impl Provider {
         }
     }
 
-    pub fn from_str(provider: &str) -> Self {
+    pub fn parse_str(provider: &str) -> Self {
         match provider {
             "topgg" => Provider::TopGG,
             "discordlist" => Provider::DiscordList,
@@ -40,6 +40,7 @@ impl Provider {
 }
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WebhookData {
     pub bot_id: String,
     pub voter_id: String,
@@ -49,12 +50,13 @@ pub struct WebhookData {
 }
 
 #[derive(Clone, Serialize)]
-pub struct WebhookSendData {
-    pub bot_id: String,
-    pub voter_id: String,
-    pub provider: String,
+#[serde(rename_all = "camelCase")]
+pub struct WebhookSendData<'a> {
+    pub bot_id: &'a str,
+    pub voter_id: &'a str,
+    pub provider: &'a str,
     pub date: DateTime<Utc>,
-    pub raw_data: Option<Value>,
+    pub raw_data: Option<&'a Value>,
     pub content: Option<String>,
 }
 

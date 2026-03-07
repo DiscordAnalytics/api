@@ -1,73 +1,59 @@
+use anyhow::Result;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BlogArticle {
-    #[serde(rename = "authorId")]
     pub author_id: String,
-    #[serde(rename = "articleId")]
     pub article_id: String,
     pub content: String,
     pub cover: Option<String>,
-    #[serde(rename = "createdAt")]
     pub created_at: DateTime,
     pub description: String,
-    #[serde(rename = "isDraft")]
     pub is_draft: bool,
     pub tags: Vec<String>,
     pub title: String,
-    #[serde(rename = "updatedAt")]
     pub updated_at: Option<DateTime>,
 }
 
 impl BlogArticle {
-    pub fn with_author_id(mut self, author_id: String) -> Self {
-        self.author_id = author_id;
+    pub fn new(
+        author_id: &str,
+        content: &str,
+        description: &str,
+        tags: Vec<String>,
+        title: &str,
+    ) -> Result<Self> {
+        Ok(Self {
+            author_id: author_id.to_string(),
+            article_id: Self::generate_article_id(title)?,
+            content: content.to_string(),
+            cover: None,
+            created_at: DateTime::now(),
+            description: description.to_string(),
+            is_draft: true,
+            tags,
+            title: title.to_string(),
+            updated_at: None,
+        })
+    }
+
+    pub fn with_cover(mut self, cover: &str) -> Self {
+        self.cover = Some(cover.to_string());
         self
     }
 
-    pub fn with_article_id(mut self, article_id: String) -> Self {
-        self.article_id = article_id;
-        self
-    }
+    pub fn generate_article_id(title: &str) -> Result<String> {
+        let timestamp = DateTime::now().try_to_rfc3339_string()?;
+        let sanitized_title = title
+            .to_lowercase()
+            .chars()
+            .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+            .map(|c| if c.is_whitespace() { '-' } else { c })
+            .collect::<String>();
 
-    pub fn with_content(mut self, content: String) -> Self {
-        self.content = content;
-        self
-    }
-
-    pub fn with_cover(mut self, cover: Option<String>) -> Self {
-        self.cover = cover;
-        self
-    }
-
-    pub fn with_created_at(mut self, created_at: DateTime) -> Self {
-        self.created_at = created_at;
-        self
-    }
-
-    pub fn with_description(mut self, description: String) -> Self {
-        self.description = description;
-        self
-    }
-
-    pub fn with_is_draft(mut self, is_draft: bool) -> Self {
-        self.is_draft = is_draft;
-        self
-    }
-
-    pub fn with_tags(mut self, tags: Vec<String>) -> Self {
-        self.tags = tags;
-        self
-    }
-
-    pub fn with_title(mut self, title: String) -> Self {
-        self.title = title;
-        self
-    }
-
-    pub fn with_updated_at(mut self, updated_at: Option<DateTime>) -> Self {
-        self.updated_at = updated_at;
-        self
+        let article_id = format!("{}-{}", timestamp, sanitized_title);
+        Ok(article_id.chars().take(100).collect())
     }
 }

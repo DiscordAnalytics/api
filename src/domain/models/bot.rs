@@ -1,112 +1,61 @@
+use std::collections::HashMap;
+
+use apistos::ApiComponent;
 use mongodb::bson::DateTime;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Bot {
-    #[serde(rename = "advancedStats")]
     pub advanced_stats: bool,
     pub avatar: Option<String>,
-    #[serde(rename = "botId")]
     pub bot_id: String,
     pub framework: Option<String>,
-    pub goals_limit: Option<i32>,
+    pub goals_limit: i32,
     pub language: Option<String>,
-    #[serde(rename = "lastPush")]
     pub last_push: Option<DateTime>,
-    #[serde(rename = "ownerId")]
     pub owner_id: String,
     pub suspended: bool,
     pub team: Vec<String>,
     pub(crate) token: String,
     pub username: String,
     pub version: Option<String>,
-    #[serde(rename = "votesWebhookUrl")]
-    pub votes_webhook_url: Option<String>,
-    #[serde(rename = "warnLevel")]
-    pub warn_level: Option<i32>,
-    #[serde(rename = "watchedSince")]
-    pub watched_since: Option<DateTime>,
+    pub warn_level: i32,
+    pub watched_since: DateTime,
+    pub webhooks_config: WebhooksConfig,
 }
 
 impl Bot {
-    pub fn with_advanced_stats(mut self, advanced_stats: bool) -> Self {
-        self.advanced_stats = advanced_stats;
-        self
+    pub fn new(
+        bot_id: &str,
+        owner_id: &str,
+        token: String,
+        username: &str,
+        avatar: Option<&str>,
+    ) -> Self {
+        Self {
+            advanced_stats: false,
+            avatar: avatar.map(|s| s.to_string()),
+            bot_id: bot_id.to_string(),
+            framework: None,
+            goals_limit: 30,
+            language: None,
+            last_push: None,
+            owner_id: owner_id.to_string(),
+            suspended: false,
+            team: Vec::new(),
+            token,
+            username: username.to_string(),
+            version: None,
+            warn_level: 0,
+            watched_since: DateTime::now(),
+            webhooks_config: WebhooksConfig::default(),
+        }
     }
 
-    pub fn with_avatar(mut self, avatar: Option<String>) -> Self {
-        self.avatar = avatar;
-        self
-    }
-
-    pub fn with_bot_id(mut self, bot_id: String) -> Self {
-        self.bot_id = bot_id;
-        self
-    }
-
-    pub fn with_framework(mut self, framework: Framework) -> Self {
-        self.framework = Some(framework.into());
-        self
-    }
-
-    pub fn with_goals_limit(mut self, goals_limit: Option<i32>) -> Self {
-        self.goals_limit = goals_limit;
-        self
-    }
-
-    pub fn with_language(mut self, language: Language) -> Self {
-        self.language = Some(language.into());
-        self
-    }
-
-    pub fn with_last_push(mut self, last_push: Option<DateTime>) -> Self {
-        self.last_push = last_push;
-        self
-    }
-
-    pub fn with_owner_id(mut self, owner_id: String) -> Self {
-        self.owner_id = owner_id;
-        self
-    }
-
-    pub fn with_suspended(mut self, suspended: bool) -> Self {
-        self.suspended = suspended;
-        self
-    }
-
-    pub fn with_team(mut self, team: Vec<String>) -> Self {
-        self.team = team;
-        self
-    }
-
-    pub fn with_token(mut self, token: String) -> Self {
-        self.token = token;
-        self
-    }
-
-    pub fn with_username(mut self, username: String) -> Self {
-        self.username = username;
-        self
-    }
-
-    pub fn with_version(mut self, version: Option<String>) -> Self {
-        self.version = version;
-        self
-    }
-
-    pub fn with_votes_webhook_url(mut self, votes_webhook_url: Option<String>) -> Self {
-        self.votes_webhook_url = votes_webhook_url;
-        self
-    }
-
-    pub fn with_warn_level(mut self, warn_level: Option<i32>) -> Self {
-        self.warn_level = warn_level;
-        self
-    }
-
-    pub fn with_watched_since(mut self, watched_since: Option<DateTime>) -> Self {
-        self.watched_since = watched_since;
-        self
+    pub fn token(self) -> String {
+        self.token
     }
 
     pub fn is_owner(&self, user_id: &str) -> bool {
@@ -119,18 +68,6 @@ impl Bot {
 
     pub fn has_access(&self, user_id: &str) -> bool {
         self.is_owner(user_id) || self.is_team_member(user_id)
-    }
-
-    pub fn add_team_member(mut self, user_id: String) -> Self {
-        if !self.team.contains(&user_id) {
-            self.team.push(user_id);
-        }
-        self
-    }
-
-    pub fn remove_team_member(mut self, user_id: &str) -> Self {
-        self.team.retain(|id| id != user_id);
-        self
     }
 }
 
@@ -146,7 +83,7 @@ pub enum Framework {
 }
 
 impl Framework {
-    pub fn from_str(lib: &str) -> Framework {
+    pub fn parse_str(lib: &str) -> Framework {
         match lib {
             "discord.py" => Framework::DiscordPy,
             "pycord" => Framework::PyCord,
@@ -158,7 +95,7 @@ impl Framework {
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn to_str(&self) -> &str {
         match self {
             Framework::DiscordPy => "discord.py",
             Framework::PyCord => "pycord",
@@ -173,7 +110,7 @@ impl Framework {
 
 impl From<Framework> for String {
     fn from(framework: Framework) -> Self {
-        framework.as_str().to_string()
+        framework.to_str().to_string()
     }
 }
 
@@ -185,7 +122,7 @@ pub enum Language {
 }
 
 impl Language {
-    pub fn from_str(lang: &str) -> Language {
+    pub fn parse_str(lang: &str) -> Language {
         match lang {
             "python" => Language::Python,
             "javascript" => Language::JavaScript,
@@ -193,7 +130,7 @@ impl Language {
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn to_str(&self) -> &str {
         match self {
             Language::Python => "python",
             Language::JavaScript => "javascript",
@@ -204,6 +141,23 @@ impl Language {
 
 impl From<Language> for String {
     fn from(language: Language) -> Self {
-        language.as_str().to_string()
+        language.to_str().to_string()
     }
+}
+
+#[derive(
+    Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhooksConfig {
+    pub webhook_url: Option<String>,
+    #[serde(flatten)]
+    pub webhooks: HashMap<String, WebhookConfig>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhookConfig {
+    pub connection_id: Option<String>,
+    pub webhook_secret: Option<String>,
 }

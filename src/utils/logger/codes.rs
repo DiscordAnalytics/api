@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogCode {
@@ -12,6 +12,10 @@ pub enum LogCode {
     Auth,
     /// Unauthorized access attempts
     Unauthorized,
+    /// Forbidden access attempts
+    Forbidden,
+    /// Invalid token or authentication failures
+    InvalidToken,
     /// Admin actions
     AdminAction,
     /// Bot-related events
@@ -20,6 +24,8 @@ pub enum LogCode {
     BotExpiration,
     /// User-related events
     User,
+    /// Conflict events (e.g., duplicate entries)
+    Conflict,
     /// Achievement events
     Achievement,
     /// General information
@@ -30,6 +36,10 @@ pub enum LogCode {
     DbError,
     /// Mail-related events
     Mail,
+    /// Webhooks events
+    Webhook,
+    /// Websocket events
+    Websocket,
 }
 
 impl LogCode {
@@ -40,21 +50,26 @@ impl LogCode {
             LogCode::Database => "DB",
             LogCode::Auth => "AUTH",
             LogCode::Unauthorized => "UNAUTH",
+            LogCode::Forbidden => "FORBID",
+            LogCode::InvalidToken => "INV_TOKEN",
             LogCode::AdminAction => "ADMIN",
             LogCode::Bot => "BOT",
             LogCode::BotExpiration => "BOT_EXP",
             LogCode::User => "USER",
+            LogCode::Conflict => "CONFLICT",
             LogCode::Achievement => "ACHV",
             LogCode::Info => "INFO",
             LogCode::System => "SYS",
             LogCode::DbError => "DB_ERR",
             LogCode::Mail => "MAIL",
+            LogCode::Webhook => "WH",
+            LogCode::Websocket => "WS",
         }
     }
 }
 
-impl fmt::Display for LogCode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for LogCode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.as_str())
     }
 }

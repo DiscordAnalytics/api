@@ -5,11 +5,26 @@ mod bots;
 mod connection;
 mod custom_events;
 mod global_stats;
+#[cfg(feature = "reports")]
 mod r2;
+mod sessions;
+#[cfg(feature = "reports")]
 mod stats_reports;
 mod team_invitations;
 mod users;
 mod votes;
+
+pub use achievements::AchievementUpdate;
+use anyhow::Result;
+pub use blog_articles::BlogArticleUpdate;
+pub use bot_stats::BotStatsUpdate;
+pub use bots::BotUpdate;
+pub use custom_events::CustomEventUpdate;
+pub use global_stats::GlobalStatsUpdate;
+#[cfg(feature = "reports")]
+pub use stats_reports::StatsReportUpdate;
+pub use team_invitations::TeamInvitationUpdate;
+pub use users::UserUpdate;
 
 #[derive(Clone)]
 pub struct Repositories {
@@ -18,8 +33,12 @@ pub struct Repositories {
     pub bots: bots::BotsRepository,
     pub bot_stats: bot_stats::BotStatsRepository,
     pub custom_events: custom_events::CustomEventsRepository,
+    database: connection::DbConnection,
     pub global_stats: global_stats::GlobalStatsRepository,
+    pub sessions: sessions::SessionsRepository,
+    #[cfg(feature = "reports")]
     pub r2: r2::R2Repository,
+    #[cfg(feature = "reports")]
     pub stats_reports: stats_reports::StatsReportsRepository,
     pub team_invitations: team_invitations::TeamInvitationsRepository,
     pub users: users::UsersRepository,
@@ -27,22 +46,34 @@ pub struct Repositories {
 }
 
 impl Repositories {
-    pub async fn init() -> anyhow::Result<Self> {
+    pub async fn init() -> Result<Self> {
         let connection = connection::DbConnection::init().await?;
         let db = connection.database();
 
         Ok(Self {
-            achievements: achievements::AchievementsRepository::new(db),
-            blog_articles: blog_articles::BlogArticlesRepository::new(db),
-            bots: bots::BotsRepository::new(db),
-            bot_stats: bot_stats::BotStatsRepository::new(db),
-            custom_events: custom_events::CustomEventsRepository::new(db),
-            global_stats: global_stats::GlobalStatsRepository::new(db),
+            achievements: achievements::AchievementsRepository::new(db).await?,
+            blog_articles: blog_articles::BlogArticlesRepository::new(db).await?,
+            bots: bots::BotsRepository::new(db).await?,
+            bot_stats: bot_stats::BotStatsRepository::new(db).await?,
+            custom_events: custom_events::CustomEventsRepository::new(db).await?,
+            database: connection.clone(),
+            global_stats: global_stats::GlobalStatsRepository::new(db).await?,
+            sessions: sessions::SessionsRepository::new(db).await?,
+            #[cfg(feature = "reports")]
             r2: r2::R2Repository::new()?,
-            stats_reports: stats_reports::StatsReportsRepository::new(db),
-            team_invitations: team_invitations::TeamInvitationsRepository::new(db),
-            users: users::UsersRepository::new(db),
-            votes: votes::VotesRepository::new(db),
+            #[cfg(feature = "reports")]
+            stats_reports: stats_reports::StatsReportsRepository::new(db).await?,
+            team_invitations: team_invitations::TeamInvitationsRepository::new(db).await?,
+            users: users::UsersRepository::new(db).await?,
+            votes: votes::VotesRepository::new(db).await?,
         })
+    }
+
+    pub async fn ping(&self) -> Result<()> {
+        self.database.ping().await?;
+        #[cfg(feature = "reports")]
+        self.r2.ping().await?;
+
+        Ok(())
     }
 }

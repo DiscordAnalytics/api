@@ -1,21 +1,28 @@
-use std::sync::Arc;
+use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, dev::Service, http, web};
+use actix_web::{App, HttpServer, http, rt, web::Data};
 use anyhow::Result;
-use tokio::{sync::Mutex, try_join};
-use tracing::{Level, info};
+use apistos::app::OpenApiWrapper;
+use tokio::{
+    spawn,
+    sync::Mutex,
+    time::{Duration, interval},
+    try_join,
+};
+use tracing::{Level, error, info};
+use tracing_actix_web::TracingLogger;
 
 use api::{
-    api::middleware::AuthMiddleware,
+    api::{middleware::AuthMiddleware, routes},
     app_env,
     config::env::init_env,
-    managers::webhook::VotesWebhooksManager,
+    managers::{ChatServer, VotesWebhooksManager},
+    openapi::build_spec,
     repository::Repositories,
     services::Services,
     utils::logger::{LogCode, Logger},
 };
-use tracing_actix_web::TracingLogger;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -48,22 +55,70 @@ async fn main() -> Result<()> {
         "Repositories initialized",
     );
 
+    let repos_clone = repos.clone();
+    rt::spawn(async move {
+        let repos_clone = repos_clone.clone();
+        let mut interval = interval(Duration::from_secs(3600));
+
+        loop {
+            interval.tick().await;
+
+            match repos_clone.sessions.delete_expired().await {
+                Ok(deleted_count) => info!(
+                    code = %LogCode::Server,
+                    deleted_count = %deleted_count,
+                    "Deleted expired sessions",
+                ),
+                Err(e) => error!(
+                    code = %LogCode::Server,
+                    error = %e,
+                    "Failed to delete expired sessions"
+                ),
+            }
+
+            match repos_clone
+                .team_invitations
+                .delete_expired_invitations()
+                .await
+            {
+                Ok(deleted_count) => info!(
+                    code = %LogCode::Server,
+                    deleted_count = %deleted_count,
+                    "Deleted expired votes",
+                ),
+                Err(e) => error!(
+                    code = %LogCode::Server,
+                    error = %e,
+                    "Failed to delete expired votes"
+                ),
+            }
+        }
+    });
+
     let services = Services::new(repos.clone());
     info!(
         code = %LogCode::Server,
         "Services initialized",
     );
 
-    let votes_webhooks_manager = web::Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
+    let votes_webhooks_manager = Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
     info!(
         code = %LogCode::Server,
         "VotesWebhooksManager initialized",
     );
 
+    let (chat_server, chat_server_handle) = ChatServer::new();
+    let chat_server = spawn(chat_server.run());
+    let chat_server_handle = Data::new(chat_server_handle);
+    info!(
+        code = %LogCode::Server,
+        "ChatServer initialized",
+    );
+
     let http_server = HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin(&app_env!().client_url)
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "PATCH"])
+            .allowed_methods(vec!["GET", "POST", "DELETE", "PATCH"])
             .allowed_headers(vec![
                 http::header::AUTHORIZATION,
                 http::header::ACCEPT,
@@ -72,32 +127,21 @@ async fn main() -> Result<()> {
             .supports_credentials()
             .max_age(3600);
 
+        let spec = build_spec();
+
         App::new()
-            .app_data(web::Data::new(repos.clone()))
-            .app_data(web::Data::new(services.clone()))
+            .document(spec)
+            .app_data(Data::new(repos.clone()))
+            .app_data(Data::new(services.clone()))
             .app_data(votes_webhooks_manager.clone())
+            .app_data(chat_server_handle.clone())
             .wrap(TracingLogger::default())
             .wrap(cors)
             .wrap(AuthMiddleware)
-            .wrap_fn(move |req, srv| {
-                let fut = srv.call(req);
-                Box::pin(async move {
-                    let res = fut.await?;
-
-                    info!(
-                        "[{}] {} {} {}",
-                        LogCode::Request,
-                        res.request().method(),
-                        res.request().uri(),
-                        res.status()
-                    );
-
-                    Ok(res)
-                })
-            })
-            .route("/", actix_web::web::get().to(|| async { "Hello, world!" }))
+            .configure(routes::configure)
+            .build("/openapi.json")
     })
-    .bind(("0.0.0.0", app_env!().port))?
+    .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?
     .run();
 
     info!(
@@ -120,7 +164,7 @@ async fn main() -> Result<()> {
         app_env!().client_url,
     );
 
-    try_join!(http_server)?;
+    try_join!(http_server, async { chat_server.await? })?;
 
     Ok(())
 }

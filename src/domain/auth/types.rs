@@ -1,6 +1,9 @@
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use apistos::ApiComponent;
+use schemars::JsonSchema;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, JsonSchema, ApiComponent)]
 pub enum AuthType {
     Admin,
     Bot,
@@ -9,7 +12,7 @@ pub enum AuthType {
 }
 
 impl AuthType {
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse_str(s: &str) -> Self {
         match s {
             "Admin" => AuthType::Admin,
             "Bot" => AuthType::Bot,
@@ -18,7 +21,7 @@ impl AuthType {
         }
     }
 
-    pub fn as_str(&self) -> &'static str {
+    pub fn to_str(&self) -> &'static str {
         match self {
             AuthType::Admin => "Admin",
             AuthType::Bot => "Bot",
@@ -30,7 +33,7 @@ impl AuthType {
 
 impl fmt::Display for AuthType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.as_str())
+        write!(f, "{}", self.to_str())
     }
 }
 
@@ -49,17 +52,19 @@ impl Authorization {
         }
 
         Some(Self {
-            auth_type: AuthType::from_str(parts[0]),
+            auth_type: AuthType::parse_str(parts[0]),
             token: parts[1].to_string(),
         })
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, JsonSchema, ApiComponent)]
 pub struct AuthContext {
     pub auth_type: AuthType,
     pub user_id: Option<String>,
     pub bot_id: Option<String>,
+    pub session_id: Option<String>,
+    pub token: Option<String>,
 }
 
 impl AuthContext {
@@ -68,6 +73,8 @@ impl AuthContext {
             auth_type,
             user_id: None,
             bot_id: None,
+            session_id: None,
+            token: None,
         }
     }
 
@@ -78,6 +85,16 @@ impl AuthContext {
 
     pub fn with_bot_id(mut self, bot_id: String) -> Self {
         self.bot_id = Some(bot_id);
+        self
+    }
+
+    pub fn with_session_id(mut self, session_id: String) -> Self {
+        self.session_id = Some(session_id);
+        self
+    }
+
+    pub fn with_token(mut self, token: String) -> Self {
+        self.token = Some(token);
         self
     }
 

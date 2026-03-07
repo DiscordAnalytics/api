@@ -1,4 +1,4 @@
-use mongodb::{Client, Database, error::Result};
+use mongodb::{Client, Database, bson::doc, error::Result};
 
 use crate::{app_env, utils::constants::DB_NAME};
 
@@ -16,5 +16,10 @@ impl DbConnection {
 
     pub fn database(&self) -> &Database {
         &self.db
+    }
+
+    pub async fn ping(&self) -> Result<()> {
+        self.db.run_command(doc! {"ping": 1}).await?;
+        Ok(())
     }
 }

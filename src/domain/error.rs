@@ -1,0 +1,168 @@
+use std::fmt;
+
+use actix_web::{Error as ActixError, HttpResponse, ResponseError, http::StatusCode};
+use anyhow::Error as AnyError;
+use apistos::ApiErrorComponent;
+use mongodb::{bson::error::Error as BsonError, error::Error as MongoError};
+use reqwest::Error as ReqwestError;
+use serde::{Deserialize, Serialize};
+
+#[allow(clippy::duplicated_attributes)]
+#[derive(Debug, Clone, Serialize, Deserialize, ApiErrorComponent)]
+#[openapi_error(
+    status(
+        code = 400,
+        description = "Bad request due to invalid input or validation errors"
+    ),
+    status(
+        code = 401,
+        description = "Unauthorized access due to missing or invalid authentication"
+    ),
+    status(
+        code = 403,
+        description = "Forbidden access due to insufficient permissions"
+    ),
+    status(code = 404, description = "Resource not found"),
+    status(code = 409, description = "Conflict due to resource already existing"),
+    status(code = 429, description = "Too many requests due to rate limiting"),
+    status(
+        code = 500,
+        description = "Internal server error due to unexpected conditions"
+    )
+)]
+pub enum ApiError {
+    // Database errors
+    DatabaseError(String),
+    NotFound(String),
+    AlreadyExists(String),
+
+    // Auth errors
+    Unauthorized,
+    Forbidden,
+    InvalidToken,
+    TokenGenerationFailed,
+    MissingAuth,
+
+    // Invitation errors
+    InvitationExpired,
+    InvitationAlreadyAccepted,
+
+    /// Article errors
+    AlreadyPublished,
+
+    // Validation errors
+    InvalidId,
+    InvalidInput(String),
+    ValidationError(String),
+
+    // Business logic errors
+    BotSuspended,
+    BotUnsuspended,
+    UserSuspended,
+    UserUnsuspended,
+    LimitExceeded,
+    Conflict(String),
+
+    // External service errors
+    StorageError(String),
+    WebhookError(String),
+
+    // Generic
+    InternalError(String),
+}
+
+impl fmt::Display for ApiError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ApiError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
+            ApiError::NotFound(resource) => write!(f, "{} not found", resource),
+            ApiError::AlreadyExists(resource) => write!(f, "{} already exists", resource),
+            ApiError::Unauthorized => write!(f, "Unauthorized"),
+            ApiError::Forbidden => write!(f, "Forbidden"),
+            ApiError::InvalidToken => write!(f, "Invalid authentication token"),
+            ApiError::TokenGenerationFailed => write!(f, "Failed to generate authentication token"),
+            ApiError::MissingAuth => write!(f, "Authentication required"),
+            ApiError::InvitationExpired => write!(f, "Invitation has expired"),
+            ApiError::InvitationAlreadyAccepted => {
+                write!(f, "Invitation has already been accepted")
+            }
+            ApiError::AlreadyPublished => write!(f, "Article is already published"),
+            ApiError::InvalidId => write!(f, "Invalid ID format"),
+            ApiError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
+            ApiError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
+            ApiError::BotSuspended => write!(f, "Bot is suspended"),
+            ApiError::BotUnsuspended => write!(f, "Bot is not suspended"),
+            ApiError::UserSuspended => write!(f, "User is suspended"),
+            ApiError::UserUnsuspended => write!(f, "User is not suspended"),
+            ApiError::LimitExceeded => write!(f, "Rate limit exceeded"),
+            ApiError::Conflict(msg) => write!(f, "Conflict: {}", msg),
+            ApiError::StorageError(msg) => write!(f, "Storage error: {}", msg),
+            ApiError::WebhookError(msg) => write!(f, "Webhook error: {}", msg),
+            _ => write!(f, "{:?}", self),
+        }
+    }
+}
+
+impl ResponseError for ApiError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            ApiError::NotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::Unauthorized | ApiError::InvalidToken | ApiError::MissingAuth => {
+                StatusCode::UNAUTHORIZED
+            }
+            ApiError::Forbidden => StatusCode::FORBIDDEN,
+            ApiError::InvalidId
+            | ApiError::InvalidInput(_)
+            | ApiError::ValidationError(_)
+            | ApiError::InvitationExpired
+            | ApiError::InvitationAlreadyAccepted
+            | ApiError::BotSuspended
+            | ApiError::BotUnsuspended
+            | ApiError::UserSuspended
+            | ApiError::UserUnsuspended
+            | ApiError::AlreadyPublished => StatusCode::BAD_REQUEST,
+            ApiError::AlreadyExists(_) | ApiError::Conflict(_) => StatusCode::CONFLICT,
+            ApiError::LimitExceeded => StatusCode::TOO_MANY_REQUESTS,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code()).json(serde_json::json!({
+            "error": self.to_string(),
+            "status": self.status_code().as_u16(),
+        }))
+    }
+}
+
+impl From<MongoError> for ApiError {
+    fn from(err: MongoError) -> Self {
+        ApiError::DatabaseError(err.to_string())
+    }
+}
+
+impl From<BsonError> for ApiError {
+    fn from(err: BsonError) -> Self {
+        ApiError::DatabaseError(err.to_string())
+    }
+}
+
+impl From<ActixError> for ApiError {
+    fn from(err: ActixError) -> Self {
+        ApiError::InternalError(err.to_string())
+    }
+}
+
+impl From<ReqwestError> for ApiError {
+    fn from(err: ReqwestError) -> Self {
+        ApiError::InternalError(err.to_string())
+    }
+}
+
+impl From<AnyError> for ApiError {
+    fn from(err: AnyError) -> Self {
+        ApiError::InternalError(err.to_string())
+    }
+}
+
+pub type ApiResult<T> = Result<T, ApiError>;

@@ -1,12 +1,27 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{doc, serialize_to_document},
+    bson::{DateTime, Document, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::TeamInvitation, utils::constants::TEAM_INVITATIONS_COLLECTION};
+
+#[derive(Clone, Default)]
+pub struct TeamInvitationUpdate {
+    updates: Document,
+}
+
+impl TeamInvitationUpdate {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Document {
+        self.updates
+    }
+}
 
 #[derive(Clone)]
 pub struct TeamInvitationsRepository {
@@ -14,10 +29,19 @@ pub struct TeamInvitationsRepository {
 }
 
 impl TeamInvitationsRepository {
-    pub fn new(db: &Database) -> Self {
-        Self {
-            collection: db.collection(TEAM_INVITATIONS_COLLECTION),
+    pub async fn new(db: &Database) -> Result<Self> {
+        if !db
+            .list_collection_names()
+            .await?
+            .iter()
+            .any(|name| name == TEAM_INVITATIONS_COLLECTION)
+        {
+            db.create_collection(TEAM_INVITATIONS_COLLECTION).await?;
         }
+
+        Ok(Self {
+            collection: db.collection(TEAM_INVITATIONS_COLLECTION),
+        })
     }
 
     pub async fn find_all(&self) -> Result<Vec<TeamInvitation>> {
@@ -27,36 +51,64 @@ impl TeamInvitationsRepository {
 
     pub async fn find_by_id(&self, team_invitation_id: &str) -> Result<Option<TeamInvitation>> {
         self.collection
-            .find_one(doc! { "invitation_id": team_invitation_id })
+            .find_one(doc! { "invitationId": team_invitation_id })
             .await
     }
 
-    pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<TeamInvitation>> {
-        let cursor = self.collection.find(doc! { "bot_id": bot_id }).await?;
-        cursor.try_collect().await
-    }
-
-    pub async fn find_by_user(&self, user_id: &str) -> Result<Vec<TeamInvitation>> {
-        let cursor = self.collection.find(doc! { "user_id": user_id }).await?;
-        cursor.try_collect().await
+    pub async fn find_by_bot_and_user(
+        &self,
+        bot_id: &str,
+        user_id: &str,
+    ) -> Result<Option<TeamInvitation>> {
+        self.collection
+            .find_one(doc! { "botId": bot_id, "userId": user_id })
+            .await
     }
 
     pub async fn insert(&self, team_invitation: &TeamInvitation) -> Result<InsertOneResult> {
         self.collection.insert_one(team_invitation).await
     }
 
-    pub async fn update(&self, team_invitation: &TeamInvitation) -> Result<UpdateResult> {
+    pub async fn accept_invitation(&self, invitation_id: &str) -> Result<UpdateResult> {
         self.collection
             .update_one(
-                doc! { "invitation_id": &team_invitation.invitation_id },
-                doc! { "$set": serialize_to_document(team_invitation)? },
+                doc! { "invitationId": invitation_id },
+                doc! { "$set": { "accepted": true } },
             )
             .await
     }
 
-    pub async fn delete(&self, team_invitation_id: &str) -> Result<DeleteResult> {
+    pub async fn delete_by_id(&self, team_invitation_id: &str) -> Result<DeleteResult> {
         self.collection
-            .delete_one(doc! { "invitation_id": team_invitation_id })
+            .delete_one(doc! { "invitationId": team_invitation_id })
             .await
+    }
+
+    pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
+        self.collection.delete_many(doc! { "botId": bot_id }).await
+    }
+
+    pub async fn delete_by_user_id(&self, user_id: &str) -> Result<DeleteResult> {
+        self.collection
+            .delete_many(doc! { "userId": user_id })
+            .await
+    }
+
+    pub async fn delete_by_bot_and_user(
+        &self,
+        bot_id: &str,
+        user_id: &str,
+    ) -> Result<DeleteResult> {
+        self.collection
+            .delete_one(doc! { "botId": bot_id, "userId": user_id })
+            .await
+    }
+
+    pub async fn delete_expired_invitations(&self) -> Result<u64> {
+        let result = self
+            .collection
+            .delete_many(doc! { "expiration": { "$lte": DateTime::now() } })
+            .await?;
+        Ok(result.deleted_count)
     }
 }

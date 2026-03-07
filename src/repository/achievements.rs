@@ -98,11 +98,6 @@ impl AchievementsRepository {
             .await
     }
 
-    pub async fn find_all(&self) -> Result<Vec<Achievement>> {
-        let cursor = self.collection.find(doc! {}).await?;
-        cursor.try_collect().await
-    }
-
     pub async fn find_all_shared(&self) -> Result<Vec<Achievement>> {
         let cursor = self
             .collection

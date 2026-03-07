@@ -6,8 +6,8 @@ use apistos::{
 use tracing::info;
 
 use crate::{
-    api::middleware::OptionalAuth, domain::error::ApiResult, openapi::schemas::AchievementResponse,
-    repository::Repositories, utils::logger::LogCode,
+    domain::error::ApiResult, openapi::schemas::AchievementResponse, repository::Repositories,
+    utils::logger::LogCode,
 };
 
 #[api_operation(
@@ -15,28 +15,13 @@ use crate::{
     description = "Retrieve a list of all achievements in the system",
     tag = "Achievements"
 )]
-async fn get_achievements(
-    auth: OptionalAuth,
-    repos: Data<Repositories>,
-) -> ApiResult<Json<Vec<AchievementResponse>>> {
+async fn get_achievements(repos: Data<Repositories>) -> ApiResult<Json<Vec<AchievementResponse>>> {
     info!(
         code = %LogCode::Request,
         "Fetching all achievements",
     );
 
-    let achievements = if let Some(ctx) = auth.0
-        && ctx.is_admin()
-    {
-        repos
-            .achievements
-            .find_all()
-            .await?
-            .into_iter()
-            .filter(|a| a.from.is_none())
-            .collect()
-    } else {
-        repos.achievements.find_all_shared().await?
-    };
+    let achievements = repos.achievements.find_all_shared().await?;
 
     let achievement_reponses = achievements
         .into_iter()

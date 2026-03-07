@@ -1,7 +1,7 @@
 use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest,
     dev::Payload,
-    error::{ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
+    error::{ErrorBadRequest, ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
     web::Data,
 };
 use apistos::{ApiComponent, ApiSecurity};
@@ -129,7 +129,7 @@ impl FromRequest for Snowflake {
         {
             ready(Ok(Snowflake(id.to_string())))
         } else {
-            ready(Err(ErrorForbidden(ApiError::InvalidId)))
+            ready(Err(ErrorBadRequest(ApiError::InvalidId)))
         }
     }
 }

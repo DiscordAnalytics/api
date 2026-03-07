@@ -36,7 +36,7 @@ pub struct DiscordOAuthUser {
 #[derive(Debug, Clone, Deserialize)]
 pub struct DiscordBot {
     pub avatar: Option<String>,
-    pub bot: bool,
+    pub bot: Option<bool>,
     pub username: String,
 }
 

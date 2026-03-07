@@ -173,7 +173,7 @@ async fn post_bot(
     }
 
     let bot_details = services.discord.get_bot(&bot_id).await?;
-    if !bot_details.bot {
+    if !bot_details.bot.unwrap_or(false) {
         warn!(
             code = %LogCode::Request,
             bot_id = %bot_id,

@@ -70,9 +70,15 @@ impl Repositories {
     }
 
     pub async fn ping(&self) -> Result<()> {
-        self.database.ping().await?;
+        self.database
+            .ping()
+            .await
+            .map_err(|e| anyhow::anyhow!("Database ping failed: {}", e))?;
         #[cfg(feature = "reports")]
-        self.r2.ping().await?;
+        self.r2
+            .ping()
+            .await
+            .map_err(|e| anyhow::anyhow!("R2 ping failed: {}", e))?;
 
         Ok(())
     }

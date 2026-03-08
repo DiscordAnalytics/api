@@ -32,7 +32,11 @@ impl R2Repository {
     }
 
     pub async fn ping(&self) -> Result<()> {
-        self.client.buckets().list().send().await?;
+        self.client
+            .objects()
+            .list_v2(&self.bucket_name)
+            .send()
+            .await?;
         Ok(())
     }
 

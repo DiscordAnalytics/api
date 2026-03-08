@@ -1,24 +1,24 @@
 # ── Build Stage ──────────────────────────────────────────────────────────────
-FROM rust:1-bullseye AS build
+FROM rust:1-alpine AS build
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        pkg-config \
-        libssl-dev \
-        g++ \
-        lld \
+RUN apk add --no-cache \
+        pkgconfig \
+        openssl-dev \
+        build-base \
         clang \
-        musl-tools \
-    && rm -rf /var/lib/apt/lists/*
+        lld \
+        musl-dev
 
-RUN rustup target add x86_64-unknown-linux-musl
+WORKDIR /usr/src/discord-analytics-api
 
-COPY . .
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
 
 ARG BUILD_ARGS=""
 
-RUN cargo build --release --target x86_64-unknown-linux-musl ${BUILD_ARGS}
+RUN cargo build --release ${BUILD_ARGS}
 
+#── Runtime Stage ─────────────────────────────────────────────────────────────
 FROM alpine:3 AS final
 
 LABEL maintainer="Discord Analytics"
@@ -32,7 +32,7 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-COPY --from=build /usr/src/app/target/x86_64-unknown-linux-musl/release/discord-analytics-api ./discord-analytics-api
+COPY --from=build /usr/src/discord-analytics-api/target/release/discord-analytics-api ./discord-analytics-api
 # COPY ./templates ./templates
 
 EXPOSE 3001

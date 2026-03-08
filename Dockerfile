@@ -2,12 +2,12 @@
 FROM rust:1-alpine AS build
 
 RUN apk add --no-cache \
-        pkgconfig \
-        openssl-dev \
-        build-base \
-        clang \
-        lld \
-        musl-dev
+    pkgconfig \
+    openssl-dev \
+    build-base \
+    clang \
+    lld \
+    musl-dev
 
 WORKDIR /usr/src/discord-analytics-api
 
@@ -36,5 +36,8 @@ COPY --from=build /usr/src/discord-analytics-api/target/release/discord-analytic
 # COPY ./templates ./templates
 
 EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["sh", "-c", "curl -fs http://localhost:3001/health | grep -qv 'degraded'"]
 
 CMD ["./discord-analytics-api"]

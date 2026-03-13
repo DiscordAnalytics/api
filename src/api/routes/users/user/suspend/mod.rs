@@ -4,7 +4,11 @@ use apistos::{
     web::{ServiceConfig, delete, post, scope},
 };
 use tracing::info;
+#[cfg(feature = "mails")]
+use tracing::warn;
 
+#[cfg(feature = "mails")]
+use crate::services::Services;
 use crate::{
     api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
@@ -12,6 +16,9 @@ use crate::{
     repository::{Repositories, UserUpdate},
     utils::logger::LogCode,
 };
+
+#[cfg(not(feature = "mails"))]
+type Services = ();
 
 #[api_operation(
     summary = "Suspend a user",
@@ -21,6 +28,7 @@ use crate::{
 )]
 async fn suspend_user(
     _admin: RequireAdmin,
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))] services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<UserSuspendRequest>,
     id: Snowflake,
@@ -58,6 +66,18 @@ async fn suspend_user(
 
     repos.users.update(&user_id, user_update).await?;
     repos.sessions.revoke_all_for_user(&user_id).await?;
+    repos.bots.set_suspension_for_owner(&user_id, true).await?;
+
+    #[cfg(feature = "mails")]
+    if let Err(e) = services.mail.send_user_suspended(&user, reason) {
+        warn!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            reason = %reason,
+            "Failed to send suspension email: {}",
+            e
+        );
+    }
 
     info!(
         code = %LogCode::AdminAction,
@@ -111,6 +131,7 @@ async fn unsuspend_user(
     let user_update = UserUpdate::new().with_suspended(false);
 
     repos.users.update(&user_id, user_update).await?;
+    repos.bots.set_suspension_for_owner(&user_id, false).await?;
 
     info!(
         code = %LogCode::AdminAction,

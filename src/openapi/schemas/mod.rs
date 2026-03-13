@@ -28,8 +28,8 @@ pub use auth::{
     DiscordTokenResponse, LinkedRolesQuery,
 };
 pub use bot::{
-    BotCreationBody, BotResponse, BotSettingsPayload, BotSuspendRequest, BotTokenResponse,
-    BotUpdateBody,
+    BotCreationBody, BotDeletionPayload, BotResponse, BotSettingsPayload, BotSuspendRequest,
+    BotTokenResponse, BotUpdateBody,
 };
 pub use bot_stat::{
     BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, NormalizedStatsBody,

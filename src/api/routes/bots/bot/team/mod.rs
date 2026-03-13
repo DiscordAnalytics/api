@@ -231,11 +231,54 @@ async fn add_to_team(
 
     let response = TeamResponse {
         avatar: None,
-        invitation_id: Some(invitation.invitation_id),
+        invitation_id: Some(invitation.invitation_id.clone()),
         pending_invitation: true,
         registered: false,
         user_id: body.user_id.clone(),
         username: None,
+    };
+
+    #[cfg(feature = "mails")]
+    {
+        let owner = repos
+            .users
+            .find_by_id(&bot.owner_id)
+            .await?
+            .ok_or_else(|| {
+                warn!(
+                    code = %LogCode::Mail,
+                    bot_id = %bot_id,
+                    user_id = %body.user_id,
+                    "Bot owner not found for sending team invitation email",
+                );
+                ApiError::NotFound(format!("Bot owner with ID {} not found", bot.owner_id))
+            })?;
+
+        match repos.users.find_by_id(&body.user_id).await? {
+            Some(user) => {
+                if let Err(e) =
+                    services
+                        .mail
+                        .send_team_invite(&user, &owner, &bot, invitation.invitation_id)
+                {
+                    warn!(
+                        code = %LogCode::Mail,
+                        bot_id = %bot_id,
+                        user_id = %body.user_id,
+                        "Failed to send team invitation email: {}",
+                        e
+                    );
+                }
+            }
+            None => {
+                warn!(
+                    code = %LogCode::Mail,
+                    bot_id = %bot_id,
+                    user_id = %body.user_id,
+                    "User not found for sending team invitation email",
+                );
+            }
+        }
     };
 
     info!(

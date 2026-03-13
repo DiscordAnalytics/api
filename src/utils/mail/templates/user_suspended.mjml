@@ -1,0 +1,19 @@
+<mjml><mj-head><mj-preview>Account banned</mj-preview></mj-head>
+  <mj-body><mj-section><mj-column>
+
+        <mj-image width="100px" src="https://r2.discordanalytics.xyz/images/long_logo_light.png"></mj-image>
+
+        <mj-divider border-color="#5865F2"></mj-divider>
+
+        <mj-text font-family="helvetica">Dear {{user_username}},
+          <br />
+          Your account has been suspended from our platform for the following reason:</mj-text>
+
+        <mj-text font-family="helvetica">{{reason}}</mj-text>
+
+        <mj-text font-family="helvetica">All your bots have been suspended, but all data will be kept.</mj-text>
+
+        <mj-text font-family="helvetica">Thank you for trusting us,<br />The Discord Analytics team.</mj-text>
+
+      </mj-column></mj-section></mj-body>
+</mjml>

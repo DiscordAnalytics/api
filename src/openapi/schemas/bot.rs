@@ -65,6 +65,11 @@ pub struct BotUpdateBody {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct BotDeletionPayload {
+    pub reason: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct BotSuspendRequest {
     pub reason: String,
 }

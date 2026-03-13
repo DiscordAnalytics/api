@@ -8,7 +8,7 @@ use tokio::sync::Mutex;
 use tracing::info;
 
 use crate::{
-    domain::models::{AchievementType, Bot, Provider, Vote, Webhook, WebhookData},
+    domain::models::{AchievementType, Bot, Provider, User, Vote, Webhook, WebhookData},
     managers::VotesWebhooksManager,
     repository::Repositories,
     utils::logger::LogCode,
@@ -175,6 +175,7 @@ impl WebhooksService {
                 return Ok(());
             }
         };
+
         if let Some(webhook_config) = bot.webhooks_config.webhooks.get(provider) {
             let webhook_secret = match &webhook_config.webhook_secret {
                 Some(secret) if !secret.is_empty() => secret.clone(),
@@ -219,6 +220,59 @@ impl WebhooksService {
             );
         }
 
+        Ok(())
+    }
+
+    #[cfg(feature = "mails")]
+    pub async fn send_test_webhook_email(
+        &self,
+        bot: &Bot,
+        owner: &User,
+        provider_name: &str,
+        provider_support_url: &str,
+    ) -> Result<()> {
+        use tracing::error;
+
+        use crate::services::mail::MailService;
+
+        let mail_service = MailService::new();
+
+        let result =
+            mail_service.send_test_webhook(owner, bot, provider_name, provider_support_url)?;
+
+        if result.success {
+            info!(
+                code = %LogCode::Webhook,
+                bot_id = %bot.bot_id,
+                user_email = %owner.mail,
+                provider_name = %provider_name,
+                "Test webhook email sent successfully"
+            );
+        } else {
+            error!(
+                code = %LogCode::Webhook,
+                bot_id = %bot.bot_id,
+                user_email = %owner.mail,
+                provider_name = %provider_name,
+                "Failed to send test webhook email"
+            );
+        }
+
+        Ok(())
+    }
+
+    #[cfg(not(feature = "mails"))]
+    pub async fn send_test_webhook_email(
+        &self,
+        _bot: &Bot,
+        _owner: &User,
+        _provider_name: &str,
+        _provider_support_url: &str,
+    ) -> Result<()> {
+        info!(
+            code = %LogCode::Webhook,
+            "Mail feature not enabled, skipping test webhook email"
+        );
         Ok(())
     }
 }

@@ -8,6 +8,8 @@ use apistos::{
 };
 use tracing::{info, warn};
 
+#[cfg(feature = "mails")]
+use crate::services::Services;
 use crate::{
     api::middleware::{Authenticated, RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
@@ -120,6 +122,9 @@ async fn update_user(
     Ok(Json(UserResponse::try_from(updated_user)?))
 }
 
+#[cfg(not(feature = "mails"))]
+type Services = ();
+
 #[api_operation(
     summary = "Delete a user",
     description = "Delete a specific user from the Discord Analytics API",
@@ -127,6 +132,7 @@ async fn update_user(
 )]
 async fn delete_user(
     auth: Authenticated,
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))] services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<MessageResponse>> {
@@ -137,6 +143,16 @@ async fn delete_user(
         user_id = %user_id,
         "Received request to delete user account"
     );
+
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))]
+    let user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found for deletion"
+        );
+        ApiError::NotFound(format!("User with ID {} not found", user_id))
+    })?;
 
     let ctx = &auth.0;
 
@@ -174,6 +190,16 @@ async fn delete_user(
             "User with ID {} not found",
             user_id
         )));
+    }
+
+    #[cfg(feature = "mails")]
+    if let Err(e) = services.mail.send_user_deleted_by_admin(&user) {
+        warn!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            error = ?e,
+            "Failed to send account deletion email to user"
+        );
     }
 
     info!(

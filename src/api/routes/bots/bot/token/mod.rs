@@ -5,6 +5,8 @@ use apistos::{
 };
 use tracing::{info, warn};
 
+#[cfg(feature = "mails")]
+use crate::services::Services;
 use crate::{
     api::middleware::{Authenticated, Snowflake},
     domain::{
@@ -87,6 +89,9 @@ async fn get_token(
     Ok(Json(BotTokenResponse { token: bot.token }))
 }
 
+#[cfg(not(feature = "mails"))]
+type Services = ();
+
 #[api_operation(
     summary = "Refresh Bot Token",
     description = "Refresh the authentication token for a bot. This endpoint is used when a bot's token has been compromised or needs to be rotated for security reasons. The old token will be invalidated, and a new token will be generated and returned in the response. Ensure to update your bot's configuration with the new token to maintain uninterrupted service.",
@@ -94,6 +99,7 @@ async fn get_token(
 )]
 async fn refresh_token(
     auth: Authenticated,
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))] services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<BotTokenResponse>> {
@@ -161,7 +167,45 @@ async fn refresh_token(
     let new_token = generate_bot_token(&bot_id)?;
     let bot_update = BotUpdate::new().with_token(new_token.clone());
 
-    repos.bots.update(&bot_id, bot_update).await?;
+    let update_result = repos
+        .bots
+        .update(&bot_id, bot_update)
+        .await?
+        .ok_or_else(|| {
+            warn!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                "Bot not found during token refresh update",
+            );
+            ApiError::NotFound(format!("Bot with ID {} not found during update", bot_id))
+        })?;
+
+    #[cfg(feature = "mails")]
+    {
+        use tracing::error;
+
+        let owner = repos
+            .users
+            .find_by_id(&bot.owner_id)
+            .await?
+            .ok_or_else(|| {
+                warn!(
+                    code = %LogCode::Request,
+                    bot_id = %bot_id,
+                    "Bot owner not found for token refresh notification",
+                );
+                ApiError::NotFound(format!("Owner with ID {} not found", bot.owner_id))
+            })?;
+        if let Err(e) = services.mail.send_bot_token_regen(&owner, &update_result) {
+            error!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %owner.user_id,
+                error = %e,
+                "Failed to send bot token regeneration email",
+            );
+        };
+    };
 
     info!(
         code = %LogCode::Request,
@@ -169,7 +213,9 @@ async fn refresh_token(
         "Bot token refreshed successfully",
     );
 
-    Ok(Json(BotTokenResponse { token: new_token }))
+    Ok(Json(BotTokenResponse {
+        token: update_result.token,
+    }))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {

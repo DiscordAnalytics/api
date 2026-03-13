@@ -1,0 +1,19 @@
+<mjml><mj-head><mj-preview>Invitation to access to {{bot_username}}'s stats</mj-preview></mj-head>
+  <mj-body><mj-section><mj-column>
+
+        <mj-image width="100px" src="https://r2.discordanalytics.xyz/images/long_logo_light.png"></mj-image>
+
+        <mj-divider border-color="#5865F2"></mj-divider>
+
+        <mj-text font-family="helvetica">You have been invited to join the team of {{bot_username}} ({{bot_id}}) by {{owner_username}} ({{owner_id}}) on Discord Analytics.</mj-text>
+
+        <mj-text font-family="helvetica">To accept or reject the invitation, please click on the button below.</mj-text>
+
+        <mj-button font-family="Helvetica" background-color="#5865F2" color="white" href="{{accept_link}}">Accept or reject invitation</mj-button>
+
+        <mj-text font-family="helvetica">For security reason, this invitation will expire in 7 days.</mj-text>
+
+        <mj-text font-family="helvetica">Thank you for trusting us,<br />The Discord Analytics team.</mj-text>
+
+      </mj-column></mj-section></mj-body>
+</mjml>

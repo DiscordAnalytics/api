@@ -179,7 +179,11 @@ async fn oauth_callback(
                 bots_limit: MAX_BOTS_PER_USER,
                 created_at: user_created_at,
                 joined_at: DateTime::now(),
-                mail: discord_user.email.unwrap_or_default(),
+                mail: if cfg!(feature = "mails") {
+                    discord_user.email
+                } else {
+                    None
+                },
                 username: discord_user.username.clone(),
                 user_id: user_id.clone(),
             };

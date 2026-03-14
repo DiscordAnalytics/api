@@ -30,13 +30,25 @@ impl MailService {
         template: Template,
         vars: impl Into<TemplateVars>,
     ) -> Result<MailResult> {
-        let recipient = Recipient::new(&user.mail).with_name(&user.username);
-        let subject = template.default_subject();
-        let html = template.render(vars.into())?;
+        if let Some(mail) = &user.mail {
+            let recipient = Recipient::new(mail).with_name(&user.username);
+            let subject = template.default_subject();
+            let html = template.render(vars.into())?;
 
-        let options = MailOptions::new(subject, html).to(recipient);
+            let options = MailOptions::new(subject, html).to(recipient);
 
-        self.client.send(options)
+            self.client.send(options)
+        } else {
+            info!(
+                code = %LogCode::Mail,
+                user_id = %user.user_id,
+                "User {} does not have an email address, skipping email sending",
+                user.username
+            );
+            Ok(MailResult::failure(
+                "User does not have an email address".to_string(),
+            ))
+        }
     }
 
     pub fn send_bot_deleted_by_admin(
@@ -139,7 +151,7 @@ impl MailService {
     ) -> Result<MailResult> {
         info!(
             code = %LogCode::Mail,
-            user_email = %owner.mail,
+            user_id = %owner.user_id,
             "Sending test webhook email to user {} for bot {} with provider {}",
             owner.username, bot.username, provider_name
         );

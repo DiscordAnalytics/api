@@ -244,7 +244,7 @@ impl WebhooksService {
             info!(
                 code = %LogCode::Webhook,
                 bot_id = %bot.bot_id,
-                user_email = %owner.mail,
+                user_id = %owner.user_id,
                 provider_name = %provider_name,
                 "Test webhook email sent successfully"
             );
@@ -252,7 +252,7 @@ impl WebhooksService {
             error!(
                 code = %LogCode::Webhook,
                 bot_id = %bot.bot_id,
-                user_email = %owner.mail,
+                user_id = %owner.user_id,
                 provider_name = %provider_name,
                 "Failed to send test webhook email"
             );

@@ -9,9 +9,7 @@
           <br />
           We're sorry to inform you that your account has been deleted from our platform.</mj-text>
 
-        <mj-text font-family="helvetica">All data associated with your account and your bots have been deleted and will not be recoverable.
-          <br />
-          You can still register again, but please keep in mind the comment above.</mj-text>
+        <mj-text font-family="helvetica">All data associated with your account and your bots have been deleted and will not be recoverable.</mj-text>
 
         <mj-text font-family="helvetica">Thank you for trusting us,<br />The Discord Analytics team.</mj-text>
 

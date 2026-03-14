@@ -181,7 +181,7 @@ async fn refresh_token(
         })?;
 
     #[cfg(feature = "mails")]
-    {
+    if ctx.is_admin() || ctx.is_bot() {
         use tracing::error;
 
         let owner = repos

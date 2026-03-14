@@ -5,8 +5,7 @@ pub const PUBLIC_ROUTES: [&str; 2] = ["/articles", "/articles/{id}"];
 pub const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 pub const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-pub const MAX_DATE_RANGE: i64 = 367 * 24 * 60 * 60;
-
+pub const MAX_DATE_RANGE: i64 = 367 * 24 * 60 * 60; // 365 days + 2 extra buffer days in seconds
 pub const MAX_BOTS_PER_USER: i32 = 3;
 
 pub const MAX_WEBHOOK_RETRIES: u8 = 15;

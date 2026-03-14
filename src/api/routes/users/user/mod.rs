@@ -193,7 +193,7 @@ async fn delete_user(
     }
 
     #[cfg(feature = "mails")]
-    if let Err(e) = services.mail.send_user_deleted_by_admin(&user) {
+    if ctx.is_admin() && let Err(e) = services.mail.send_user_deleted_by_admin(&user) {
         warn!(
             code = %LogCode::Mail,
             user_id = %user_id,

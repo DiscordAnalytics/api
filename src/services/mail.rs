@@ -26,14 +26,15 @@ impl MailService {
 
     pub fn send(
         &self,
-        to: impl Into<Recipient>,
+        user: &User,
         template: Template,
         vars: impl Into<TemplateVars>,
     ) -> Result<MailResult> {
+        let recipient = Recipient::new(&user.mail).with_name(&user.username);
         let subject = template.default_subject();
         let html = template.render(vars.into())?;
 
-        let options = MailOptions::new(subject, html).to(to);
+        let options = MailOptions::new(subject, html).to(recipient);
 
         self.client.send(options)
     }
@@ -52,14 +53,13 @@ impl MailService {
             owner.username, bot.username, reason
         );
 
-        let recipient = Recipient::new(&owner.mail).with_name(&owner.username);
         let vars = TemplateBuilder::new()
             .var("user_username", &owner.username)
             .var("bot_username", &bot.username)
             .var("bot_id", &bot.bot_id)
             .var("reason", reason)
             .build();
-        self.send(recipient, Template::BotDeletedByAdmin, vars)
+        self.send(owner, Template::BotDeletedByAdmin, vars)
     }
 
     pub fn send_bot_suspended(&self, owner: &User, bot: &Bot, reason: &str) -> Result<MailResult> {
@@ -71,14 +71,13 @@ impl MailService {
             owner.username, bot.username, reason
         );
 
-        let recipient = Recipient::new(&owner.mail).with_name(&owner.username);
         let vars = TemplateBuilder::new()
             .var("user_username", &owner.username)
             .var("bot_username", &bot.username)
             .var("bot_id", &bot.bot_id)
             .var("reason", reason)
             .build();
-        self.send(recipient, Template::BotSuspended, vars)
+        self.send(owner, Template::BotSuspended, vars)
     }
 
     pub fn send_bot_token_regen(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
@@ -90,13 +89,12 @@ impl MailService {
             owner.username, bot.username
         );
 
-        let recipient = Recipient::new(&owner.mail).with_name(&owner.username);
         let vars = TemplateBuilder::new()
             .var("user_username", &owner.username)
             .var("bot_username", &bot.username)
             .var("bot_id", &bot.bot_id)
             .build();
-        self.send(recipient, Template::BotTokenRegen, vars)
+        self.send(owner, Template::BotTokenRegen, vars)
     }
 
     pub fn send_team_invite(
@@ -114,8 +112,6 @@ impl MailService {
             user.username, owner.username, bot.username
         );
 
-        let recipient = Recipient::new(&user.mail).with_name(&user.username);
-
         let vars = TemplateBuilder::new()
             .var("bot_username", &bot.username)
             .var("bot_id", &bot.bot_id)
@@ -131,7 +127,7 @@ impl MailService {
             )
             .build();
 
-        self.send(recipient, Template::TeamInvite, vars)
+        self.send(user, Template::TeamInvite, vars)
     }
 
     pub fn send_test_webhook(
@@ -148,8 +144,6 @@ impl MailService {
             owner.username, bot.username, provider_name
         );
 
-        let recipient = Recipient::new(&owner.mail).with_name(&owner.username);
-
         let vars = TemplateBuilder::new()
             .var("user_username", &owner.username)
             .var("bot_username", &bot.username)
@@ -158,7 +152,7 @@ impl MailService {
             .var("provider_support_url", provider_support_url)
             .build();
 
-        self.send(recipient, Template::TestWebhook, vars)
+        self.send(owner, Template::TestWebhook, vars)
     }
 
     pub fn send_user_deleted_by_admin(&self, user: &User) -> Result<MailResult> {
@@ -169,11 +163,10 @@ impl MailService {
             user.username
         );
 
-        let recipient = Recipient::new(&user.mail).with_name(&user.username);
         let vars = TemplateBuilder::new()
             .var("user_username", &user.username)
             .build();
-        self.send(recipient, Template::UserDeletedByAdmin, vars)
+        self.send(user, Template::UserDeletedByAdmin, vars)
     }
 
     pub fn send_user_suspended(&self, user: &User, reason: &str) -> Result<MailResult> {
@@ -184,11 +177,10 @@ impl MailService {
             user.username, reason
         );
 
-        let recipient = Recipient::new(&user.mail).with_name(&user.username);
         let vars = TemplateBuilder::new()
             .var("user_username", &user.username)
             .var("reason", reason)
             .build();
-        self.send(recipient, Template::UserSuspended, vars)
+        self.send(user, Template::UserSuspended, vars)
     }
 }

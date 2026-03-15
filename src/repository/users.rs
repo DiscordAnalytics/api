@@ -19,12 +19,12 @@ impl UserUpdate {
         Self::default()
     }
 
-    pub fn with_avatar(mut self, avatar: String) -> Self {
+    pub fn with_avatar(mut self, avatar: Option<String>) -> Self {
         self.updates.insert("avatar", avatar);
         self
     }
 
-    pub fn with_avatar_decoration(mut self, avatar_decoration: String) -> Self {
+    pub fn with_avatar_decoration(mut self, avatar_decoration: Option<String>) -> Self {
         self.updates.insert("avatarDecoration", avatar_decoration);
         self
     }

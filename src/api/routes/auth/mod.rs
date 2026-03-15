@@ -123,21 +123,17 @@ async fn oauth_callback(
                 .permanent();
             }
 
-            let mut user_update = UserUpdate::new();
-            if let Some(avatar) = discord_user.avatar.as_deref() {
-                user_update = user_update.with_avatar(avatar.to_string());
-            }
-            if let Some(decoration) = discord_user
+            let decoration = discord_user
                 .avatar_decoration_data
                 .as_ref()
-                .and_then(|data| data.asset.as_deref())
-            {
-                user_update = user_update.with_avatar_decoration(decoration.to_string());
-            }
+                .and_then(|data| data.asset.clone());
+            let mut user_update = UserUpdate::new()
+                .with_avatar(discord_user.avatar)
+                .with_username(discord_user.username.clone())
+                .with_avatar_decoration(decoration);
             if let Some(mail) = discord_user.email.as_deref() {
                 user_update = user_update.with_mail(mail.to_string());
             }
-            user_update = user_update.with_username(discord_user.username.clone());
 
             if let Err(e) = repos.users.update(&user_id, user_update).await {
                 error!(

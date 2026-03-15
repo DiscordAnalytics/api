@@ -23,10 +23,10 @@ async fn get_event(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
-    event_key: Path<String>,
+    path: Path<(String, String)>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let bot_id = id.0;
+    let (bot_id, event_key) = path.into_inner();
+    let bot_id = Snowflake(bot_id).0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -45,8 +45,6 @@ async fn get_event(
         );
         return Err(ApiError::BotSuspended);
     }
-
-    let event_key = event_key.into_inner();
 
     let ctx = &auth.0;
 
@@ -117,10 +115,10 @@ async fn update_event(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<CustomEventBody>,
-    id: Snowflake,
-    event_key: Path<String>,
+    path: Path<(String, String)>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let bot_id = id.0;
+    let (bot_id, event_key) = path.into_inner();
+    let bot_id = Snowflake(bot_id).0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -139,8 +137,6 @@ async fn update_event(
         );
         return Err(ApiError::BotSuspended);
     }
-
-    let event_key = event_key.into_inner();
 
     let ctx = &auth.0;
 
@@ -240,10 +236,10 @@ async fn delete_event(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
-    event_key: Path<String>,
+    path: Path<(String, String)>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let (bot_id, event_key) = path.into_inner();
+    let bot_id = Snowflake(bot_id).0;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -262,8 +258,6 @@ async fn delete_event(
         );
         return Err(ApiError::BotSuspended);
     }
-
-    let event_key = event_key.into_inner();
 
     let ctx = &auth.0;
 

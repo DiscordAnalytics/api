@@ -3,16 +3,18 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, post, scope},
 };
-use tracing::info;
+use tracing::{error, info, warn};
 
-#[cfg(feature = "mails")]
-use crate::services::Services;
 use crate::{
     api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{BotSuspendRequest, MessageResponse},
     repository::{BotUpdate, Repositories},
-    utils::logger::LogCode,
+    services::Services,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -23,7 +25,7 @@ use crate::{
 )]
 async fn suspend_bot(
     _admin: RequireAdmin,
-    #[cfg(feature = "mails")] services: Data<Services>,
+    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<BotSuspendRequest>,
     id: Snowflake,
@@ -61,31 +63,51 @@ async fn suspend_bot(
 
     repos.bots.update(&bot_id, bot_update).await?;
 
-    #[cfg(feature = "mails")]
-    {
-        use tracing::{error, warn};
-
-        let owner = repos
-            .users
-            .find_by_id(&bot.owner_id)
-            .await?
-            .ok_or_else(|| {
-                warn!(
-                    code = %LogCode::Request,
-                    bot_id = %bot_id,
-                    "Bot owner not found for bot suspension email",
-                );
-                ApiError::NotFound(format!("Owner with ID {} not found", bot.owner_id))
-            })?;
-
-        if let Err(e) = services.mail.send_bot_suspended(&owner, &bot, reason) {
-            error!(
-                code = %LogCode::Mail,
+    let owner = repos
+        .users
+        .find_by_id(&bot.owner_id)
+        .await?
+        .ok_or_else(|| {
+            warn!(
+                code = %LogCode::Request,
                 bot_id = %bot_id,
-                error = %e,
-                "Failed to send bot suspension email",
+                "Bot owner not found for bot suspension email",
             );
-        }
+            ApiError::NotFound(format!("Owner with ID {} not found", bot.owner_id))
+        })?;
+
+    if let Err(e) = services
+        .discord
+        .send_dm(
+            &owner.user_id,
+            None,
+            Some(DiscordNotification::create(
+                NotificationType::BotSuspended {
+                    bot_username: bot.username.clone(),
+                    bot_id: bot.bot_id.clone(),
+                    reason: reason.to_string(),
+                },
+            )),
+        )
+        .await
+    {
+        error!(
+            code = %LogCode::Mail,
+            bot_id = %bot_id,
+            user_id = %owner.user_id,
+            error = %e,
+            "Failed to send bot suspension DM",
+        );
+    }
+
+    #[cfg(feature = "mails")]
+    if let Err(e) = services.mail.send_bot_suspended(&owner, &bot, reason) {
+        error!(
+            code = %LogCode::Mail,
+            bot_id = %bot_id,
+            error = %e,
+            "Failed to send bot suspension email",
+        );
     }
 
     info!(

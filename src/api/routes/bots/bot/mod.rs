@@ -12,7 +12,7 @@ use apistos::{
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
 use mongodb::bson::DateTime;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
@@ -26,7 +26,10 @@ use crate::{
     },
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -409,7 +412,6 @@ async fn delete_bot(
 
     services.bots.delete_bot(&bot_id).await?;
 
-    #[cfg(feature = "mails")]
     if ctx.is_admin() {
         let owner = repos
             .users
@@ -434,10 +436,35 @@ async fn delete_bot(
             .unwrap_or_else(|| "Deleted by admin".to_string());
 
         if let Err(e) = services
+            .discord
+            .send_dm(
+                &owner.user_id,
+                None,
+                Some(DiscordNotification::create(
+                    NotificationType::BotDeletedByAdmin {
+                        bot_username: bot.username.clone(),
+                        bot_id: bot_id.clone(),
+                        reason: reason.clone(),
+                    },
+                )),
+            )
+            .await
+        {
+            error!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %owner.user_id,
+                error = ?e,
+                "Failed to send bot deletion DM to owner",
+            );
+        }
+
+        #[cfg(feature = "mails")]
+        if let Err(e) = services
             .mail
             .send_bot_deleted_by_admin(&owner, &bot, &reason)
         {
-            warn!(
+            error!(
                 code = %LogCode::Mail,
                 bot_id = %bot_id,
                 user_id = %owner.user_id,

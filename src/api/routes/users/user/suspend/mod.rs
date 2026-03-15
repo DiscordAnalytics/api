@@ -3,22 +3,19 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, post, scope},
 };
-use tracing::info;
-#[cfg(feature = "mails")]
-use tracing::warn;
+use tracing::{error, info};
 
-#[cfg(feature = "mails")]
-use crate::services::Services;
 use crate::{
     api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{MessageResponse, UserSuspendRequest},
     repository::{Repositories, UserUpdate},
-    utils::logger::LogCode,
+    services::Services,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
-
-#[cfg(not(feature = "mails"))]
-type Services = ();
 
 #[api_operation(
     summary = "Suspend a user",
@@ -28,7 +25,7 @@ type Services = ();
 )]
 async fn suspend_user(
     _admin: RequireAdmin,
-    #[cfg_attr(not(feature = "mails"), allow(unused_variables))] services: Data<Services>,
+    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<UserSuspendRequest>,
     id: Snowflake,
@@ -68,13 +65,37 @@ async fn suspend_user(
     repos.sessions.revoke_all_for_user(&user_id).await?;
     repos.bots.set_suspension_for_owner(&user_id, true).await?;
 
-    #[cfg(feature = "mails")]
-    if let Err(e) = services.mail.send_user_suspended(&user, reason) {
-        warn!(
+    if let Err(e) = services
+        .discord
+        .send_dm(
+            &user_id,
+            None,
+            Some(DiscordNotification::create(
+                NotificationType::UserSuspended {
+                    username: user.username.clone(),
+                    user_id: user_id.to_string(),
+                    reason: reason.to_string(),
+                },
+            )),
+        )
+        .await
+    {
+        error!(
             code = %LogCode::Mail,
             user_id = %user_id,
             reason = %reason,
-            "Failed to send suspension email: {}",
+            "Failed to send user suspension DM: {}",
+            e
+        );
+    }
+
+    #[cfg(feature = "mails")]
+    if let Err(e) = services.mail.send_user_suspended(&user, reason) {
+        error!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            reason = %reason,
+            "Failed to send user suspension email: {}",
             e
         );
     }

@@ -1,11 +1,14 @@
 use anyhow::{Result, anyhow};
 use reqwest::Client;
-use tracing::error;
+use tracing::{error, info};
 
 use crate::{
     app_env,
     openapi::schemas::{DiscordBot, DiscordOAuthUser, DiscordTokenResponse},
-    utils::logger::LogCode,
+    utils::{
+        discord::{DiscordEmbed, DmChannel},
+        logger::LogCode,
+    },
 };
 
 #[derive(Clone)]
@@ -172,5 +175,102 @@ impl DiscordService {
         }
 
         Ok(())
+    }
+
+    pub async fn send_dm(
+        &self,
+        user_id: &str,
+        content: Option<String>,
+        embeds: Option<Vec<DiscordEmbed>>,
+    ) -> Result<()> {
+        let bot_token = &app_env!().discord_token;
+
+        let dm_channel = self.create_dm_channel(user_id, bot_token).await?;
+
+        let mut payload = serde_json::json!({});
+
+        if let Some(content) = content {
+            payload["content"] = serde_json::json!(content);
+        }
+
+        if let Some(embeds) = embeds {
+            payload["embeds"] = serde_json::json!(embeds);
+        }
+
+        let response = self
+            .client
+            .post(format!(
+                "https://discord.com/api/channels/{}/messages",
+                dm_channel.id
+            ))
+            .header("Authorization", format!("Bot {}", bot_token))
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_text = response.text().await?;
+            error!(
+                code = %LogCode::Mail,
+                status = %status,
+                error = %error_text,
+                "Failed to send DM message"
+            );
+            return Err(anyhow!(
+                "Failed to send DM message: {} - {}",
+                status,
+                error_text
+            ));
+        }
+
+        info!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            "Successfully sent DM message"
+        );
+
+        Ok(())
+    }
+
+    async fn create_dm_channel(&self, user_id: &str, bot_token: &str) -> Result<DmChannel> {
+        let response = self
+            .client
+            .post("https://discord.com/api/users/@me/channels")
+            .header("Authorization", format!("Bot {}", bot_token))
+            .header("Content-Type", "application/json")
+            .json(&serde_json::json!({
+                "recipient_id": user_id
+            }))
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_text = response.text().await?;
+            error!(
+                code = %LogCode::Mail,
+                status = %status,
+                error = %error_text,
+                "Failed to create DM channel"
+            );
+            return Err(anyhow!(
+                "Failed to create DM channel: {} - {}",
+                status,
+                error_text
+            ));
+        }
+
+        let dm_channel: DmChannel = response.json().await?;
+
+        info!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            channel_id = %dm_channel.id,
+            "Successfully created DM channel"
+        );
+
+        Ok(dm_channel)
     }
 }

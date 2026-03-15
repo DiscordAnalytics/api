@@ -5,13 +5,17 @@ use chrono::{Duration, Utc};
 use mongodb::bson::DateTime;
 use serde_json::Value;
 use tokio::sync::Mutex;
-use tracing::info;
+use tracing::{error, info};
 
 use crate::{
     domain::models::{AchievementType, Bot, Provider, User, Vote, Webhook, WebhookData},
     managers::VotesWebhooksManager,
     repository::Repositories,
-    utils::logger::LogCode,
+    services::discord::DiscordService,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[derive(Clone)]
@@ -223,7 +227,6 @@ impl WebhooksService {
         Ok(())
     }
 
-    #[cfg(feature = "mails")]
     pub async fn send_test_webhook_email(
         &self,
         bot: &Bot,
@@ -231,48 +234,59 @@ impl WebhooksService {
         provider_name: &str,
         provider_support_url: &str,
     ) -> Result<()> {
-        use tracing::error;
+        let discord_service = DiscordService::new();
 
-        use crate::services::mail::MailService;
-
-        let mail_service = MailService::new();
-
-        let result =
-            mail_service.send_test_webhook(owner, bot, provider_name, provider_support_url)?;
-
-        if result.success {
-            info!(
-                code = %LogCode::Webhook,
-                bot_id = %bot.bot_id,
-                user_id = %owner.user_id,
-                provider_name = %provider_name,
-                "Test webhook email sent successfully"
-            );
-        } else {
+        if let Err(e) = discord_service
+            .send_dm(
+                &owner.user_id,
+                None,
+                Some(DiscordNotification::create(NotificationType::TestWebhook {
+                    bot_username: bot.username.to_owned(),
+                    bot_id: bot.bot_id.to_owned(),
+                    provider: provider_name.to_string(),
+                    provider_url: provider_support_url.to_string(),
+                })),
+            )
+            .await
+        {
             error!(
                 code = %LogCode::Webhook,
                 bot_id = %bot.bot_id,
                 user_id = %owner.user_id,
                 provider_name = %provider_name,
-                "Failed to send test webhook email"
+                error = %e,
+                "Failed to send test webhook DM, falling back to email"
             );
         }
 
-        Ok(())
-    }
+        #[cfg(feature = "mails")]
+        {
+            use crate::services::mail::MailService;
 
-    #[cfg(not(feature = "mails"))]
-    pub async fn send_test_webhook_email(
-        &self,
-        _bot: &Bot,
-        _owner: &User,
-        _provider_name: &str,
-        _provider_support_url: &str,
-    ) -> Result<()> {
+            let mail_service = MailService::new();
+
+            let result =
+                mail_service.send_test_webhook(owner, bot, provider_name, provider_support_url)?;
+
+            if !result.success {
+                error!(
+                    code = %LogCode::Webhook,
+                    bot_id = %bot.bot_id,
+                    user_id = %owner.user_id,
+                    provider_name = %provider_name,
+                    "Failed to send test webhook email"
+                );
+            }
+        }
+
         info!(
             code = %LogCode::Webhook,
-            "Mail feature not enabled, skipping test webhook email"
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            provider_name = %provider_name,
+            "Test webhook notification sent"
         );
+
         Ok(())
     }
 }

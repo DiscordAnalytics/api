@@ -11,7 +11,7 @@ use crate::{
         error::{ApiError, ApiResult},
         models::TeamInvitation,
     },
-    openapi::schemas::{MessageResponse, TeamRequestBody, TeamResponse},
+    openapi::schemas::{MessageResponse, NewInvitationResponse, TeamRequestBody, TeamResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::{
@@ -142,7 +142,7 @@ async fn add_to_team(
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
     id: Snowflake,
-) -> ApiResult<Json<TeamResponse>> {
+) -> ApiResult<Json<NewInvitationResponse>> {
     let bot_id = id.0;
 
     info!(
@@ -255,6 +255,8 @@ async fn add_to_team(
             ApiError::NotFound(format!("Bot owner with ID {} not found", bot.owner_id))
         })?;
 
+    let mut invitation_sent = true;
+
     match repos.users.find_by_id(&body.user_id).await? {
         Some(user) => {
             if let Err(e) = services
@@ -277,6 +279,8 @@ async fn add_to_team(
                     "Failed to send team invitation DM: {}",
                     e
                 );
+
+                invitation_sent = false;
             }
 
             #[cfg(feature = "mails")]
@@ -292,6 +296,8 @@ async fn add_to_team(
                     "Failed to send team invitation email: {}",
                     e
                 );
+
+                invitation_sent = false;
             }
         }
         None => {
@@ -301,6 +307,8 @@ async fn add_to_team(
                 user_id = %body.user_id,
                 "User not found for sending team invitation email",
             );
+
+            invitation_sent = false;
         }
     }
 
@@ -311,7 +319,10 @@ async fn add_to_team(
         "Added user to bot team",
     );
 
-    Ok(Json(response))
+    Ok(Json(NewInvitationResponse {
+        sent: invitation_sent,
+        details: response,
+    }))
 }
 
 #[api_operation(

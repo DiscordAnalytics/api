@@ -45,6 +45,8 @@ lettre = { version = "0.11.19", optional = true, default-features = false, featu
   "builder",
   "native-tls",
   "smtp-transport",
+  "tokio1-native-tls",
+  "pool",
 ] }
 mongodb = { version = "3.5.1", default-features = false, features = [
   "bson-3",
@@ -60,6 +62,8 @@ opentelemetry-appender-tracing = { version = "0.31.1", optional = true, default-
 opentelemetry-otlp = { version = "0.31.0", optional = true, default-features = false, features = [
   "http-proto",
   "logs",
+  "reqwest-blocking-client",
+  "reqwest-rustls",
 ] }
 opentelemetry_sdk = { version = "0.31.0", optional = true, default-features = false }
 regex = { version = "1.12.3", default-features = false, features = ["std"] }

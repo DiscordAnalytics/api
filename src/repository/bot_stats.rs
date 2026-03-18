@@ -382,6 +382,16 @@ impl BotStatsRepository {
             .await
     }
 
+    pub async fn remove_event_from_stats(&self, bot_id: &str, event_key: &str) -> Result<()> {
+        let field = format!("customEvents.{}", event_key);
+
+        self.collection
+            .update_many(doc! { "botId": bot_id }, doc! { "$unset": { field: "" } })
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<DeleteResult> {
         self.collection.delete_many(doc! { "botId": bot_id }).await
     }

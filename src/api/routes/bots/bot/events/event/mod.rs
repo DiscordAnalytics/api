@@ -3,7 +3,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
@@ -312,6 +312,20 @@ async fn delete_event(
             "Custom event with key {} for bot ID {} not found",
             event_key, bot_id
         )));
+    }
+
+    if let Err(e) = repos
+        .bot_stats
+        .remove_event_from_stats(&bot_id, &event_key)
+        .await
+    {
+        error!(
+            code = %LogCode::System,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Failed to remove event from bot stats: {}",
+            e,
+        );
     }
 
     info!(

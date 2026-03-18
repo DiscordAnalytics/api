@@ -34,7 +34,7 @@ pub use bot::{
 pub use bot_stat::{
     BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, NormalizedStatsBody,
 };
-pub use custom_event::{CustomEventBody, CustomEventResponse};
+pub use custom_event::{CustomEventBody, CustomEventResponse, CustomEventUpdatePayload};
 pub use health::HealthResponse;
 pub use integrations::TopGGIntegrationPayload;
 pub use invitation::{

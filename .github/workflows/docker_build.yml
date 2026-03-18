@@ -40,6 +40,9 @@ jobs:
           - feature: none
             args: "--no-default-features"
             suffix: ""
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
@@ -101,6 +104,10 @@ jobs:
             suffix: "-reports"
           - feature: none
             suffix: ""
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4

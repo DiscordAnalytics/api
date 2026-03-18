@@ -5,7 +5,6 @@ on:
     workflows: ["Release"]
     types: [ completed ]
   workflow_dispatch:
-  pull_request:
 
 env:
   REGISTRY_GHCR: ghcr.io
@@ -130,7 +129,7 @@ jobs:
       - name: Create manifest and push
         working-directory: /tmp/digests
         run: |
-          NORMALIZED_BRANCH=$(echo "${{ github.head_ref || github.ref_name }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          NORMALIZED_BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
           
           TAGS="-t ${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}${{ matrix.suffix }}"
           
@@ -153,7 +152,7 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     needs: merge
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       pull-requests: write
 
@@ -162,11 +161,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
           MARKER: "<!-- docker-preview-comment -->"
         run: |
-          NORMALIZED_BRANCH=$(echo "${{ github.head_ref }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          NORMALIZED_BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          BRANCH_DISPLAY="${{ github.ref_name }}"
 
+          # Find the open PR for the current branch, if any
+          PR_NUMBER=$(gh api "repos/${REPO}/pulls" \
+            --jq ".[] | select(.head.ref == \"${{ github.ref_name }}\" and .state == \"open\") | .number" \
+            | head -n1)
+
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "No open PR found for branch ${{ github.ref_name }}, skipping comment."
+            exit 0
+          fi
           BODY="${MARKER}
           ## 🐳 Docker preview images are ready!
 

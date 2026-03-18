@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY_GHCR: ghcr.io
-  GHCR_REPO: ghcr.io/${{ github.repository }}
+  GHCR_REPO: ghcr.io/discordanalytics/api
 
 jobs:
   build:

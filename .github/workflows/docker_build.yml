@@ -5,6 +5,7 @@ on:
     workflows: ["Release"]
     types: [ completed ]
   workflow_dispatch:
+  pull_request:
 
 env:
   REGISTRY_GHCR: ghcr.io
@@ -74,6 +75,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.GHCR_REPO }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=${{ env.GHCR_REPO }}:cache-${{ matrix.feature }}-${{ matrix.arch }}
+          cache-to: type=registry,ref=${{ env.GHCR_REPO }}:cache-${{ matrix.feature }}-${{ matrix.arch }},mode=max
 
       - name: Export digest
         run: |
@@ -107,6 +110,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: write
 
     steps:
       - name: Download digests
@@ -145,3 +149,51 @@ jobs:
           
           docker buildx imagetools create $TAGS \
             $(printf '${{ env.GHCR_REPO }}@sha256:%s ' *)
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: merge
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Post or update preview comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MARKER: "<!-- docker-preview-comment -->"
+        run: |
+          NORMALIZED_BRANCH=$(echo "${{ github.head_ref }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+
+          BODY="${MARKER}
+          ## 🐳 Docker preview images are ready!
+
+          Preview images are available for this PR:
+
+          | Variant | Tag |
+          |---------|-----|
+          | Default | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}\` |
+          | Full    | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}-full\` |
+          | Mails   | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}-mails\` |
+          | Reports | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}-reports\` |
+
+          > You can mention a maintainer to update it."
+
+          # Look for an existing comment with the marker
+          EXISTING_ID=$(gh api \
+            "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --paginate \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" \
+            | head -n1)
+
+          if [[ -n "$EXISTING_ID" ]]; then
+            gh api --method PATCH \
+              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              -f body="$BODY"
+          else
+            gh api --method POST \
+              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              -f body="$BODY"
+          fi

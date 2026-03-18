@@ -126,7 +126,13 @@ jobs:
       - name: Create manifest and push
         working-directory: /tmp/digests
         run: |
-          TAGS="-t ${{ env.GHCR_REPO }}:latest${{ matrix.suffix }}"
+          NORMALIZED_BRANCH=$(echo "${{ github.head_ref || github.ref_name }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          
+          TAGS="-t ${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}${{ matrix.suffix }}"
+          
+          if [[ "$NORMALIZED_BRANCH" == "master" ]]; then
+            TAGS="$TAGS -t ${{ env.GHCR_REPO }}:latest${{ matrix.suffix }}"
+          fi
           
           if [[ "${{ github.event_name }}" == "release" ]]; then
             VERSION="${{ github.event.release.tag_name }}"

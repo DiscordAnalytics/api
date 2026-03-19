@@ -38,6 +38,8 @@ impl DiscordService {
             ("scope", scopes),
         ];
 
+        println!("{:?}", params);
+
         let response = self
             .client
             .post("https://discord.com/api/oauth2/token")

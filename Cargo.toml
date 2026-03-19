@@ -84,7 +84,9 @@ serde = { version = "1.0.228", default-features = false }
 serde_json = { version = "1.0.149", default-features = false }
 tokio = "1.50.0"
 tracing = { version = "0.1.44", default-features = false }
-tracing-actix-web = { version = "0.7.21", default-features = false }
+tracing-actix-web = { version = "0.7.21", default-features = false, features = [
+  "emit_event_on_error",
+] }
 tracing-subscriber = { version = "0.3.23", default-features = false, features = [
   "ansi",
   "env-filter",

@@ -431,7 +431,7 @@ async fn delete_achievement(
             );
             return Err(ApiError::Forbidden);
         }
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

@@ -113,6 +113,16 @@ impl AchievementsRepository {
         cursor.try_collect().await
     }
 
+    pub async fn find_existing_by_bot(
+        &self,
+        bot_id: &str,
+        from: &str,
+    ) -> Result<Option<Achievement>> {
+        self.collection
+            .find_one(doc! { "botId": bot_id, "from": from })
+            .await
+    }
+
     pub async fn find_unachieved_by_bot(&self, bot_id: &str) -> Result<Vec<Achievement>> {
         let cursor = self
             .collection

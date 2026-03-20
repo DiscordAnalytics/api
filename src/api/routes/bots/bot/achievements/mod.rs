@@ -187,7 +187,7 @@ async fn create_achievement(
     }
     if let Some(from) = payload.from {
         repos.achievements.find_by_id(&from).await?.ok_or_else(|| {
-            info!(
+            warn!(
                 code = %LogCode::Request,
                 bot_id = %bot_id,
                 from_id = %from,
@@ -198,6 +198,23 @@ async fn create_achievement(
                 from
             ))
         })?;
+
+        if let Some(_) = repos
+            .achievements
+            .find_existing_by_bot(&bot_id, &from)
+            .await?
+        {
+            warn!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                from_id = %from,
+                "Referenced 'from' achievement already exists for bot",
+            );
+            return Err(ApiError::AlreadyExists(format!(
+                "Referenced 'from' achievement with ID {} already exists for bot",
+                from
+            )));
+        }
 
         achievement = achievement.with_from(&from);
 

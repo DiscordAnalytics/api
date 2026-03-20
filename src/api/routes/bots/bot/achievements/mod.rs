@@ -216,7 +216,7 @@ async fn create_achievement(
 
     let inserted_oid = insert_result.inserted_id.as_object_id().ok_or_else(|| {
         ApiError::DatabaseError(format!(
-            "Achievement with ID {} not found after creation",
+            "Failed to get inserted achievement ID {}",
             insert_result.inserted_id
         ))
     })?;

@@ -1,4 +1,5 @@
 use actix_web::web::{Data, Json};
+use anyhow::Result;
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
@@ -23,9 +24,9 @@ async fn get_achievements(repos: Data<Repositories>) -> ApiResult<Json<Vec<Achie
 
     let achievements = repos.achievements.find_all_shared().await?;
 
-    let achievement_reponses = achievements
+    let reponses = achievements
         .into_iter()
-        .map(AchievementResponse::try_from)
+        .map(AchievementResponse::from_shared)
         .collect::<Result<Vec<_>, _>>()?;
 
     info!(
@@ -33,7 +34,7 @@ async fn get_achievements(repos: Data<Repositories>) -> ApiResult<Json<Vec<Achie
         "All achievements fetched successfully",
     );
 
-    Ok(Json(achievement_reponses))
+    Ok(Json(reponses))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {

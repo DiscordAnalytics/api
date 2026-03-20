@@ -21,6 +21,15 @@ pub struct AchievementResponse {
     pub used_by: i64,
 }
 
+impl AchievementResponse {
+    pub fn from_shared(achievement: Achievement) -> anyhow::Result<Self> {
+        let mut res = Self::try_from(achievement)?;
+        res.achieved_on = None;
+        res.current = None;
+        Ok(res)
+    }
+}
+
 impl TryFrom<Achievement> for AchievementResponse {
     type Error = anyhow::Error;
 

@@ -157,7 +157,7 @@ async fn create_achievement(
             );
             return Err(ApiError::Forbidden);
         }
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -316,7 +316,7 @@ async fn update_achievement(
             );
             return Err(ApiError::Forbidden);
         }
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -336,7 +336,7 @@ async fn update_achievement(
         return Err(ApiError::BotSuspended);
     }
 
-    repos
+    let existing = repos
         .achievements
         .find_by_id(&payload.id)
         .await?
@@ -350,7 +350,30 @@ async fn update_achievement(
             ApiError::NotFound(format!("Achievement with ID {} not found", payload.id))
         })?;
 
+    if existing.from.is_some() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            achievement_id = %payload.id,
+            "Attempt to update achievement with from field set",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
     let payload = payload.into_inner();
+
+    if let Some(shared) = payload.shared {
+        if shared && !existing.shared {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                achievement_id = %payload.id,
+                "Attempt to update shared achievement to non-shared",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    }
+
     let mut updates = AchievementUpdate::new();
     if let Some(description) = payload.description {
         updates = updates.with_description(description);
@@ -465,7 +488,7 @@ async fn delete_achievement(
             ApiError::NotFound(format!("Achievement with ID {} not found", query.id))
         })?;
 
-    if achievement.from.is_some() || achievement.shared {
+    if achievement.shared {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

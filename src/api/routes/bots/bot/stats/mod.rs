@@ -417,10 +417,7 @@ async fn post_stats(
             .achievements
             .update_progress(
                 &bot_id,
-                &achievement
-                    .id
-                    .ok_or_else(|| anyhow::anyhow!("Achievement ID missing"))?
-                    .to_string(),
+                &achievement.id.to_string(),
                 achievement.current,
                 achievement.achieved_on,
             )

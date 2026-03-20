@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Achievement {
-    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<ObjectId>,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
     pub achieved_on: Option<DateTime>,
     pub bot_id: String,
     pub current: Option<i64>,
@@ -30,7 +30,7 @@ impl Achievement {
         objective: AchievementObjective,
     ) -> Self {
         Self {
-            id: None,
+            id: ObjectId::new(),
             achieved_on: None,
             bot_id: bot_id.to_owned(),
             current: None,
@@ -71,7 +71,7 @@ impl Achievement {
     pub fn defaults(bot_id: &str) -> Vec<Self> {
         vec![
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -94,7 +94,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -118,7 +118,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -141,7 +141,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -164,7 +164,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -187,7 +187,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -210,7 +210,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -233,7 +233,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -257,7 +257,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -280,7 +280,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -303,7 +303,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -326,7 +326,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -350,7 +350,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -374,7 +374,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -397,7 +397,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -420,7 +420,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -443,7 +443,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),
@@ -466,7 +466,7 @@ impl Achievement {
                 used_by: 0,
             },
             Self {
-                id: None,
+                id: ObjectId::new(),
                 achieved_on: None,
                 bot_id: bot_id.to_owned(),
                 current: Some(0),

@@ -63,7 +63,7 @@ mrml = { version = "5.1.0", optional = true, default-features = false, features 
   "render",
 ] }
 opentelemetry-appender-tracing = { version = "0.31.1", optional = true, default-features = false }
-opentelemetry-otlp = { version = "0.31.0", optional = true, default-features = false, features = [
+opentelemetry-otlp = { version = "0.31.1", optional = true, default-features = false, features = [
   "http-proto",
   "logs",
   "reqwest-blocking-client",

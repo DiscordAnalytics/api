@@ -3,7 +3,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, post, resource, scope},
 };
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
@@ -11,10 +11,13 @@ use crate::{
         error::{ApiError, ApiResult},
         models::TeamInvitation,
     },
-    openapi::schemas::{MessageResponse, TeamRequestBody, TeamResponse},
+    openapi::schemas::{MessageResponse, NewInvitationResponse, TeamRequestBody, TeamResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -139,7 +142,7 @@ async fn add_to_team(
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
     id: Snowflake,
-) -> ApiResult<Json<TeamResponse>> {
+) -> ApiResult<Json<NewInvitationResponse>> {
     let bot_id = id.0;
 
     info!(
@@ -231,12 +234,83 @@ async fn add_to_team(
 
     let response = TeamResponse {
         avatar: None,
-        invitation_id: Some(invitation.invitation_id),
+        invitation_id: Some(invitation.invitation_id.clone()),
         pending_invitation: true,
         registered: false,
         user_id: body.user_id.clone(),
         username: None,
     };
+
+    let owner = repos
+        .users
+        .find_by_id(&bot.owner_id)
+        .await?
+        .ok_or_else(|| {
+            warn!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %body.user_id,
+                "Bot owner not found for sending team invitation email",
+            );
+            ApiError::NotFound(format!("Bot owner with ID {} not found", bot.owner_id))
+        })?;
+
+    let mut invitation_sent = true;
+
+    match repos.users.find_by_id(&body.user_id).await? {
+        Some(user) => {
+            if let Err(e) = services
+                .discord
+                .send_dm(
+                    &user.user_id,
+                    None,
+                    Some(DiscordNotification::create(NotificationType::TeamInvite {
+                        bot_username: bot.username.clone(),
+                        owner_username: owner.username.clone(),
+                        invitation_id: invitation.invitation_id.clone(),
+                    })),
+                )
+                .await
+            {
+                error!(
+                    code = %LogCode::Mail,
+                    bot_id = %bot_id,
+                    user_id = %body.user_id,
+                    "Failed to send team invitation DM: {}",
+                    e
+                );
+
+                invitation_sent = false;
+            }
+
+            #[cfg(feature = "mails")]
+            if let Err(e) =
+                services
+                    .mail
+                    .send_team_invite(&user, &owner, &bot, invitation.invitation_id)
+            {
+                error!(
+                    code = %LogCode::Mail,
+                    bot_id = %bot_id,
+                    user_id = %body.user_id,
+                    "Failed to send team invitation email: {}",
+                    e
+                );
+
+                invitation_sent = false;
+            }
+        }
+        None => {
+            warn!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %body.user_id,
+                "User not found for sending team invitation email",
+            );
+
+            invitation_sent = false;
+        }
+    }
 
     info!(
         code = %LogCode::Request,
@@ -245,7 +319,10 @@ async fn add_to_team(
         "Added user to bot team",
     );
 
-    Ok(Json(response))
+    Ok(Json(NewInvitationResponse {
+        sent: invitation_sent,
+        details: response,
+    }))
 }
 
 #[api_operation(

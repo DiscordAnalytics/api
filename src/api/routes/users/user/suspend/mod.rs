@@ -3,14 +3,18 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, post, scope},
 };
-use tracing::info;
+use tracing::{error, info};
 
 use crate::{
     api::middleware::{RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{MessageResponse, UserSuspendRequest},
     repository::{Repositories, UserUpdate},
-    utils::logger::LogCode,
+    services::Services,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -21,6 +25,7 @@ use crate::{
 )]
 async fn suspend_user(
     _admin: RequireAdmin,
+    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<UserSuspendRequest>,
     id: Snowflake,
@@ -58,6 +63,42 @@ async fn suspend_user(
 
     repos.users.update(&user_id, user_update).await?;
     repos.sessions.revoke_all_for_user(&user_id).await?;
+    repos.bots.set_suspension_for_owner(&user_id, true).await?;
+
+    if let Err(e) = services
+        .discord
+        .send_dm(
+            &user_id,
+            None,
+            Some(DiscordNotification::create(
+                NotificationType::UserSuspended {
+                    username: user.username.clone(),
+                    user_id: user_id.to_string(),
+                    reason: reason.to_string(),
+                },
+            )),
+        )
+        .await
+    {
+        error!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            reason = %reason,
+            "Failed to send user suspension DM: {}",
+            e
+        );
+    }
+
+    #[cfg(feature = "mails")]
+    if let Err(e) = services.mail.send_user_suspended(&user, reason) {
+        error!(
+            code = %LogCode::Mail,
+            user_id = %user_id,
+            reason = %reason,
+            "Failed to send user suspension email: {}",
+            e
+        );
+    }
 
     info!(
         code = %LogCode::AdminAction,
@@ -111,6 +152,7 @@ async fn unsuspend_user(
     let user_update = UserUpdate::new().with_suspended(false);
 
     repos.users.update(&user_id, user_update).await?;
+    repos.bots.set_suspension_for_owner(&user_id, false).await?;
 
     info!(
         code = %LogCode::AdminAction,

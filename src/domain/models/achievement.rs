@@ -13,7 +13,6 @@ pub struct Achievement {
     pub current: Option<i64>,
     pub description: String,
     pub description_i18n: Option<String>,
-    pub editable: bool,
     pub from: Option<String>,
     pub lang: Option<String>,
     pub objective: AchievementObjective,
@@ -28,7 +27,6 @@ impl Achievement {
         bot_id: &str,
         description: &str,
         title: &str,
-        editable: bool,
         objective: AchievementObjective,
     ) -> Self {
         Self {
@@ -38,7 +36,6 @@ impl Achievement {
             current: None,
             description: description.to_owned(),
             description_i18n: None,
-            editable,
             from: None,
             lang: None,
             objective,
@@ -83,7 +80,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.1.description"
                         .to_owned(),
                 ),
-                editable: false,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -108,7 +104,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.2.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -132,7 +127,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.3.description"
                         .to_owned(),
                 ),
-                editable: false,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -156,7 +150,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.4.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -180,7 +173,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.5.description"
                         .to_owned(),
                 ),
-                editable: false,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -204,7 +196,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.6.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -228,7 +219,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.7.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -253,7 +243,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.8.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -277,7 +266,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.9.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -303,7 +291,6 @@ impl Achievement {
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
-                editable: true,
                 objective: AchievementObjective {
                     achievement_type: AchievementType::UserCount,
                     value: 1000000,
@@ -325,7 +312,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.11.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -350,7 +336,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.12.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -375,7 +360,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.13.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -399,7 +383,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.14.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -423,7 +406,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.15.description"
                         .to_owned(),
                 ),
-                editable: false,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -458,7 +440,6 @@ impl Achievement {
                 title_i18n: Some(
                     "pages.dashboard.bots.achievements.default_achievements.16.title".to_owned(),
                 ),
-                editable: true,
                 used_by: 0,
             },
             Self {
@@ -471,7 +452,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.17.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {
@@ -495,7 +475,6 @@ impl Achievement {
                     "pages.dashboard.bots.achievements.default_achievements.18.description"
                         .to_owned(),
                 ),
-                editable: true,
                 from: Some("DiscordAnalytics".to_owned()),
                 lang: None,
                 objective: AchievementObjective {

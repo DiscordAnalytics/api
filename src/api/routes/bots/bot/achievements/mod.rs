@@ -180,7 +180,6 @@ async fn create_achievement(
         &bot_id,
         &payload.description,
         &payload.title,
-        payload.editable,
         payload.objective,
     );
     if let Some(description_i18n) = payload.description_i18n {
@@ -438,7 +437,7 @@ async fn delete_achievement(
             ApiError::NotFound(format!("Achievement with ID {} not found", query.id))
         })?;
 
-    if !achievement.editable {
+    if achievement.from.is_some() || achievement.shared {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

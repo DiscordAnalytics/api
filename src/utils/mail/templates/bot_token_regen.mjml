@@ -1,0 +1,19 @@
+<mjml><mj-head><mj-preview>Bot token regenerated</mj-preview></mj-head>
+  <mj-body><mj-section><mj-column>
+
+        <mj-image width="100px" src="https://r2.discordanalytics.xyz/images/long_logo_light.png"></mj-image>
+
+        <mj-divider border-color="#5865F2"></mj-divider>
+
+        <mj-text font-family="helvetica">Dear {{user_username}},
+          <br />
+          The token of your bot {{bot_username}} ({{bot_id}}) has been regenerated. Please make sure to update your bot's token in your code to continue using our services.</mj-text>
+
+        <mj-text font-family="helvetica">You can access the new token in your bot's dashboard. If you have any problems with the new token, please refer to our documentation or contact us!</mj-text>
+
+        <mj-text font-family="helvetica">Thank you for trusting us,
+          <br />
+          The Discord Analytics team.</mj-text>
+
+      </mj-column></mj-section></mj-body>
+</mjml>

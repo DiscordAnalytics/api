@@ -9,7 +9,7 @@ pub struct User {
     pub bots_limit: i32,
     pub created_at: DateTime,
     pub joined_at: DateTime,
-    pub mail: String,
+    pub mail: Option<String>,
     pub suspended: bool,
     pub username: String,
     pub user_id: String,

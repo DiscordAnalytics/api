@@ -3,7 +3,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, patch, resource, scope},
 };
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
@@ -13,7 +13,11 @@ use crate::{
     },
     openapi::schemas::BotTokenResponse,
     repository::{BotUpdate, Repositories},
-    utils::logger::LogCode,
+    services::Services,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -94,6 +98,7 @@ async fn get_token(
 )]
 async fn refresh_token(
     auth: Authenticated,
+    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<BotTokenResponse>> {
@@ -161,7 +166,67 @@ async fn refresh_token(
     let new_token = generate_bot_token(&bot_id)?;
     let bot_update = BotUpdate::new().with_token(new_token.clone());
 
-    repos.bots.update(&bot_id, bot_update).await?;
+    let update_result = repos
+        .bots
+        .update(&bot_id, bot_update)
+        .await?
+        .ok_or_else(|| {
+            warn!(
+                code = %LogCode::Request,
+                bot_id = %bot_id,
+                "Bot not found during token refresh update",
+            );
+            ApiError::NotFound(format!("Bot with ID {} not found during update", bot_id))
+        })?;
+
+    if ctx.is_admin() || ctx.is_bot() {
+        let owner = repos
+            .users
+            .find_by_id(&bot.owner_id)
+            .await?
+            .ok_or_else(|| {
+                warn!(
+                    code = %LogCode::Request,
+                    bot_id = %bot_id,
+                    "Bot owner not found for token refresh notification",
+                );
+                ApiError::NotFound(format!("Owner with ID {} not found", bot.owner_id))
+            })?;
+
+        if let Err(e) = services
+            .discord
+            .send_dm(
+                &owner.user_id,
+                None,
+                Some(DiscordNotification::create(
+                    NotificationType::BotTokenRegen {
+                        bot_username: bot.username,
+                        bot_id: bot.bot_id,
+                    },
+                )),
+            )
+            .await
+        {
+            error!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %owner.user_id,
+                error = %e,
+                "Failed to send bot token regeneration DM",
+            );
+        }
+
+        #[cfg(feature = "mails")]
+        if let Err(e) = services.mail.send_bot_token_regen(&owner, &update_result) {
+            error!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %owner.user_id,
+                error = %e,
+                "Failed to send bot token regeneration email",
+            );
+        };
+    };
 
     info!(
         code = %LogCode::Request,
@@ -169,7 +234,9 @@ async fn refresh_token(
         "Bot token refreshed successfully",
     );
 
-    Ok(Json(BotTokenResponse { token: new_token }))
+    Ok(Json(BotTokenResponse {
+        token: update_result.token,
+    }))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {

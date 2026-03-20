@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    types: [ opened, reopened, synchronize, ready_for_review ]
+    types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
 
 concurrency:
@@ -67,5 +67,7 @@ jobs:
       - name: Install rust stable toolchain
         run: rustup update stable && rustup default stable
       - uses: Swatinem/rust-cache@v2
-      - name: Run Cargo Test
-        run: cargo test
+      - name: Install cargo-nextest
+        run: cargo install --locked cargo-nextest
+      - name: Run Tests
+        run: cargo nextest run --all-features --no-fail-fast

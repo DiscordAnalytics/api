@@ -3,6 +3,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct NewInvitationResponse {
+    pub sent: bool,
+    pub details: TeamResponse,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TeamResponse {
     pub avatar: Option<String>,

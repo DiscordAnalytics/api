@@ -181,6 +181,28 @@ impl BotsRepository {
             .await
     }
 
+    pub async fn set_suspension_for_owner(&self, owner_id: &str, suspended: bool) -> Result<()> {
+        let options = FindOneAndUpdateOptions::builder()
+            .return_document(ReturnDocument::After)
+            .build();
+
+        let cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
+
+        let bots: Vec<Bot> = cursor.try_collect().await?;
+
+        for bot in bots {
+            self.collection
+                .find_one_and_update(
+                    doc! { "botId": &bot.bot_id },
+                    doc! { "$set": { "suspended": suspended } },
+                )
+                .with_options(options.clone())
+                .await?;
+        }
+
+        Ok(())
+    }
+
     pub async fn remove_user_from_team(&self, bot_id: &str, user_id: &str) -> Result<Option<Bot>> {
         let options = FindOneAndUpdateOptions::builder()
             .return_document(ReturnDocument::After)

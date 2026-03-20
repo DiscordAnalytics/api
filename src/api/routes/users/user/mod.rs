@@ -6,14 +6,18 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, RequireAdmin, Snowflake},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{MessageResponse, UserResponse, UserUpdateRequest},
     repository::{Repositories, UserUpdate},
-    utils::logger::LogCode,
+    services::Services,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -127,6 +131,7 @@ async fn update_user(
 )]
 async fn delete_user(
     auth: Authenticated,
+    services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
 ) -> ApiResult<Json<MessageResponse>> {
@@ -137,6 +142,16 @@ async fn delete_user(
         user_id = %user_id,
         "Received request to delete user account"
     );
+
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))]
+    let user = repos.users.find_by_id(&user_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            user_id = %user_id,
+            "User not found for deletion"
+        );
+        ApiError::NotFound(format!("User with ID {} not found", user_id))
+    })?;
 
     let ctx = &auth.0;
 
@@ -174,6 +189,40 @@ async fn delete_user(
             "User with ID {} not found",
             user_id
         )));
+    }
+
+    if ctx.is_admin() {
+        if let Err(e) = services
+            .discord
+            .send_dm(
+                &user.user_id,
+                None,
+                Some(DiscordNotification::create(
+                    NotificationType::UserDeletedByAdmin {
+                        username: user.username.clone(),
+                        user_id: user_id.clone(),
+                    },
+                )),
+            )
+            .await
+        {
+            error!(
+                code = %LogCode::Mail,
+                user_id = %user_id,
+                error = ?e,
+                "Failed to send account deletion DM to user"
+            );
+        }
+
+        #[cfg(feature = "mails")]
+        if let Err(e) = services.mail.send_user_deleted_by_admin(&user) {
+            error!(
+                code = %LogCode::Mail,
+                user_id = %user_id,
+                error = ?e,
+                "Failed to send account deletion email to user"
+            );
+        }
     }
 
     info!(

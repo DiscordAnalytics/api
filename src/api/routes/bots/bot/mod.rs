@@ -12,7 +12,7 @@ use apistos::{
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
 use mongodb::bson::DateTime;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
@@ -21,10 +21,15 @@ use crate::{
         error::{ApiError, ApiResult},
         models::{Achievement, AchievementType, Bot},
     },
-    openapi::schemas::{BotCreationBody, BotResponse, BotUpdateBody, MessageResponse},
+    openapi::schemas::{
+        BotCreationBody, BotDeletionPayload, BotResponse, BotUpdateBody, MessageResponse,
+    },
     repository::{BotUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{
+        discord::{DiscordNotification, NotificationType},
+        logger::LogCode,
+    },
 };
 
 #[api_operation(
@@ -341,6 +346,7 @@ async fn delete_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))] payload: Json<BotDeletionPayload>,
 ) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
@@ -349,6 +355,16 @@ async fn delete_bot(
         bot_id = %bot_id,
         "Attempting to delete bot",
     );
+
+    #[cfg_attr(not(feature = "mails"), allow(unused_variables))]
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for deletion",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
 
     let ctx = &auth.0;
 
@@ -395,6 +411,68 @@ async fn delete_bot(
     })?;
 
     services.bots.delete_bot(&bot_id).await?;
+
+    if ctx.is_admin() {
+        let owner = repos
+            .users
+            .find_by_id(&bot.owner_id)
+            .await?
+            .ok_or_else(|| {
+                warn!(
+                    code = %LogCode::DbError,
+                    bot_id = %bot_id,
+                    user_id = %bot.owner_id,
+                    "Bot owner not found for deletion email",
+                );
+                ApiError::DatabaseError(format!(
+                    "Owner with ID {} not found for deletion email",
+                    bot.owner_id
+                ))
+            })?;
+
+        let payload_data = payload.into_inner();
+        let reason = payload_data
+            .reason
+            .unwrap_or_else(|| "Deleted by admin".to_string());
+
+        if let Err(e) = services
+            .discord
+            .send_dm(
+                &owner.user_id,
+                None,
+                Some(DiscordNotification::create(
+                    NotificationType::BotDeletedByAdmin {
+                        bot_username: bot.username.clone(),
+                        bot_id: bot_id.clone(),
+                        reason: reason.clone(),
+                    },
+                )),
+            )
+            .await
+        {
+            error!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %owner.user_id,
+                error = ?e,
+                "Failed to send bot deletion DM to owner",
+            );
+        }
+
+        #[cfg(feature = "mails")]
+        if let Err(e) = services
+            .mail
+            .send_bot_deleted_by_admin(&owner, &bot, &reason)
+        {
+            error!(
+                code = %LogCode::Mail,
+                bot_id = %bot_id,
+                user_id = %owner.user_id,
+                error = ?e,
+                "Failed to send bot deletion email to owner",
+            );
+        }
+    }
 
     info!(
         code = %LogCode::Request,

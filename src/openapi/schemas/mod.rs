@@ -28,13 +28,13 @@ pub use auth::{
     DiscordTokenResponse, LinkedRolesQuery,
 };
 pub use bot::{
-    BotCreationBody, BotResponse, BotSettingsPayload, BotSuspendRequest, BotTokenResponse,
-    BotUpdateBody,
+    BotCreationBody, BotDeletionPayload, BotResponse, BotSettingsPayload, BotSuspendRequest,
+    BotTokenResponse, BotUpdateBody,
 };
 pub use bot_stat::{
     BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, NormalizedStatsBody,
 };
-pub use custom_event::{CustomEventBody, CustomEventResponse};
+pub use custom_event::{CustomEventBody, CustomEventResponse, CustomEventUpdatePayload};
 pub use health::HealthResponse;
 pub use integrations::TopGGIntegrationPayload;
 pub use invitation::{
@@ -42,7 +42,7 @@ pub use invitation::{
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 pub use stat::{StatResponse, StatsQuery};
-pub use team::{TeamRequestBody, TeamResponse};
+pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};
 pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateRequest};
 pub use vote::VoteResponse;
 pub use webhook::{

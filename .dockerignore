@@ -1,10 +1,31 @@
+# Rust build output
 target
+
+# Logs
 logs
-**/.github
-**/.dockerignore
-**/.git
-**/.gitignore
-**/.vscode
-**/docker-compose*
-**/Dockerfile*
-**/docker
+*.log
+
+# Git
+.git
+.gitignore
+.github
+
+# Docker
+Dockerfile*
+docker-compose*
+docker/
+
+# Editor
+.vscode
+.idea
+.zed
+
+# OS
+.DS_Store
+
+# Environment
+.env
+.env.*
+
+# Misc
+node_modules

@@ -1,4 +1,4 @@
-use std::str::from_utf8;
+use std::{collections::HashMap, str::from_utf8};
 
 use actix_web::http::header::HeaderMap;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
@@ -32,6 +32,11 @@ pub enum ProviderResponse {
 struct TopGGSignature {
     timestamp: String,
     signature: String,
+}
+
+pub struct ProviderInfo {
+    pub name: String,
+    pub support_url: String,
 }
 
 fn extract_discordlist_payload(secret: &str, body_bytes: &[u8]) -> Option<DiscordListPayload> {
@@ -69,6 +74,34 @@ fn compute_topgg_signature(secret: &str, timestamp: &str, body: &[u8]) -> String
 
 fn verify_topgg_signature(signature: &str, computed_signature: &str) -> bool {
     signature == computed_signature
+}
+
+pub fn get_provider_info(provider: &str) -> Option<ProviderInfo> {
+    let infos = HashMap::from([
+        ("botlistme", ("botlist.me", "https://discord.botlist.me")),
+        ("dblist", ("discordbotlist", "support@discordbotlist.com")),
+        (
+            "discordlist",
+            ("DiscordList", "https://discordlist.gg/help"),
+        ),
+        (
+            "discordplace",
+            ("discord.place", "https://invite.discord.place"),
+        ),
+        (
+            "discordscom",
+            (
+                "discords.com",
+                "https://docs.discords.com/discords.com-bots/receiving-webhooks",
+            ),
+        ),
+        ("topgg", ("top.gg", "https://support.top.gg")),
+    ]);
+
+    infos.get(provider).map(|(name, support_url)| ProviderInfo {
+        name: name.to_string(),
+        support_url: support_url.to_string(),
+    })
 }
 
 pub async fn handle_provider(

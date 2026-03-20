@@ -5,3 +5,10 @@ otel = "run --no-default-features --features otel"
 reports = "run --no-default-features --features reports"
 mails-otel = "run --no-default-features --features mails,otel"
 full = "run --no-default-features --features full"
+
+[target.x86_64-unknown-linux-musl]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"

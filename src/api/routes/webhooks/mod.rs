@@ -17,7 +17,7 @@ use tracing::{info, warn};
 use self::providers::{ProviderResponse, handle_provider};
 
 use crate::{
-    api::middleware::RawBody,
+    api::{middleware::RawBody, routes::webhooks::providers::get_provider_info},
     domain::error::{ApiError, ApiResult},
     managers::VotesWebhooksManager,
     openapi::schemas::MessageResponse,
@@ -97,6 +97,8 @@ async fn vote_webhook(
         ApiError::NotFound("Bot not found".to_string())
     })?;
 
+    let owner = repos.users.find_by_id(&bot.owner_id).await?;
+
     let response = handle_provider(
         &provider,
         body_value.clone(),
@@ -146,16 +148,52 @@ async fn vote_webhook(
             }))
         }
         ProviderResponse::TestWebhook => {
-            info!(
-                code = %LogCode::Webhook,
-                provider = %provider,
-                bot_id = %bot_id,
-                "Received test webhook, ignoring vote processing"
-            );
+            let _ = services
+                .webhooks
+                .trigger_webhook_notification(&bot, "0", &provider, body_value, &webhook_manager)
+                .await;
 
-            return Ok(Json(MessageResponse {
-                message: "Test webhook received".to_string(),
-            }));
+            if let Some(owner) = owner {
+                let provider_info = get_provider_info(&provider).ok_or_else(|| {
+                    warn!(
+                        code = %LogCode::Webhook,
+                        provider = %provider,
+                        "Unknown provider for test webhook email"
+                    );
+                    ApiError::WebhookError("Unknown provider".to_string())
+                })?;
+                let _ = services
+                    .webhooks
+                    .send_test_webhook_email(
+                        &bot,
+                        &owner,
+                        &provider_info.name,
+                        &provider_info.support_url,
+                    )
+                    .await;
+
+                info!(
+                    code = %LogCode::Webhook,
+                    provider = %provider,
+                    bot_id = %bot_id,
+                    "Test webhook processed"
+                );
+
+                Ok(Json(MessageResponse {
+                    message: "Test webhook received".to_string(),
+                }))
+            } else {
+                warn!(
+                    code = %LogCode::Webhook,
+                    provider = %provider,
+                    bot_id = %bot_id,
+                    "Bot owner not found for test webhook email"
+                );
+
+                Ok(Json(MessageResponse {
+                    message: "Test webhook received, but bot owner not found for email".to_string(),
+                }))
+            }
         }
         ProviderResponse::Ignored => {
             info!(

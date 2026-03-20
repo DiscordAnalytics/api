@@ -12,7 +12,6 @@ pub struct AchievementResponse {
     pub current: Option<i64>,
     pub description: String,
     pub description_i18n: Option<String>,
-    pub editable: bool,
     pub lang: Option<String>,
     pub objective: AchievementObjective,
     pub shared: bool,
@@ -37,7 +36,6 @@ impl TryFrom<Achievement> for AchievementResponse {
             current: achievement.current,
             description: achievement.description,
             description_i18n: achievement.description_i18n,
-            editable: achievement.editable,
             lang: achievement.lang,
             objective: achievement.objective,
             shared: achievement.shared,
@@ -53,7 +51,6 @@ impl TryFrom<Achievement> for AchievementResponse {
 pub struct AchievementCreationPayload {
     pub description: String,
     pub description_i18n: Option<String>,
-    pub editable: bool,
     pub from: Option<String>,
     pub objective: AchievementObjective,
     pub shared: Option<bool>,

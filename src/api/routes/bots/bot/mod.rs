@@ -343,7 +343,7 @@ async fn delete_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
-    payload: Json<Option<BotDeletionPayload>>,
+    payload: Option<Json<BotDeletionPayload>>,
 ) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
@@ -427,7 +427,8 @@ async fn delete_bot(
                 ))
             })?;
 
-        if let Some(payload_data) = payload.into_inner() {
+        if let Some(payload) = payload {
+            let payload_data = payload.into_inner();
             let reason = payload_data
                 .reason
                 .unwrap_or_else(|| "Deleted by admin".to_string());

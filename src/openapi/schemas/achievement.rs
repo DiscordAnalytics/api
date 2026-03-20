@@ -58,9 +58,9 @@ pub struct AchievementCreationPayload {
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct AchievementUpdatePayload {
     pub id: String,
-    pub description: String,
+    pub description: Option<String>,
     pub lang: Option<String>,
-    pub title: String,
+    pub title: Option<String>,
     pub shared: Option<bool>,
 }
 

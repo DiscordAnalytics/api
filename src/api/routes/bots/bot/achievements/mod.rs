@@ -334,11 +334,15 @@ async fn update_achievement(
         })?;
 
     let payload = payload.into_inner();
-    let mut updates = AchievementUpdate::new()
-        .with_description(payload.description)
-        .with_title(payload.title);
+    let mut updates = AchievementUpdate::new();
+    if let Some(description) = payload.description {
+        updates = updates.with_description(description);
+    }
     if let Some(lang) = payload.lang {
         updates = updates.with_lang(lang);
+    }
+    if let Some(title) = payload.title {
+        updates = updates.with_title(title);
     }
     if let Some(shared) = payload.shared {
         updates = updates.with_shared(shared);

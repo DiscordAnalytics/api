@@ -29,14 +29,16 @@ FROM chef AS builder
 
 COPY --from=planner /app/recipe.json recipe.json
 
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo chef cook --release --all-features --recipe-path recipe.json
 
 COPY .cargo ./.cargo
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 
-ARG BUILD_ARGS="--features=full"
+# ── Final Build Stage ─────
+FROM builder AS final-build
 
+ARG BUILD_ARGS="--features=full"
 RUN cargo build --release ${BUILD_ARGS} --bin discord-analytics-api
 
 # ── Runtime Stage ─────────
@@ -53,7 +55,7 @@ RUN apk add --no-cache libssl3 ca-certificates curl
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/discord-analytics-api /usr/local/bin
+COPY --from=final-build /app/target/release/discord-analytics-api /usr/local/bin
 
 EXPOSE 3001
 

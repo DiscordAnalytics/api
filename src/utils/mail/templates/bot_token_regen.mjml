@@ -7,7 +7,7 @@
 
         <mj-text font-family="helvetica">Dear {{user_username}},
           <br />
-          The token of your bot {{bot_username}} ({{bot_id}}) has been regenerated. Please make sure to update your bot's token in your code to continue using our services without interruption.</mj-text>
+          The token of your bot {{bot_username}} ({{bot_id}}) has been regenerated. Please make sure to update your bot's token in your code to continue using our services.</mj-text>
 
         <mj-text font-family="helvetica">You can access the new token in your bot's dashboard. If you have any problems with the new token, please refer to our documentation or contact us!</mj-text>
 

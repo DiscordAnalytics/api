@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY_GHCR: ghcr.io
-  GHCR_REPO: ghcr.io/${{ github.repository }}
+  GHCR_REPO: ghcr.io/discordanalytics/api
 
 jobs:
   build:
@@ -40,6 +40,9 @@ jobs:
           - feature: none
             args: "--no-default-features"
             suffix: ""
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
@@ -58,16 +61,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and Push by Digest
         id: build
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/Dockerfile
+          file: Dockerfile
           build-args: BUILD_ARGS=${{ matrix.args }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.GHCR_REPO }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=${{ env.GHCR_REPO }}:cache-${{ matrix.feature }}-${{ matrix.arch }}
+          cache-to: type=registry,ref=${{ env.GHCR_REPO }}:cache-${{ matrix.feature }}-${{ matrix.arch }},mode=max
 
       - name: Export digest
         run: |
@@ -98,6 +106,11 @@ jobs:
             suffix: "-reports"
           - feature: none
             suffix: ""
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
+
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -116,7 +129,13 @@ jobs:
       - name: Create manifest and push
         working-directory: /tmp/digests
         run: |
-          TAGS="-t ${{ env.GHCR_REPO }}:latest${{ matrix.suffix }}"
+          NORMALIZED_BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          
+          TAGS="-t ${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}${{ matrix.suffix }}"
+          
+          if [[ "$NORMALIZED_BRANCH" == "master" ]]; then
+            TAGS="$TAGS -t ${{ env.GHCR_REPO }}:latest${{ matrix.suffix }}"
+          fi
           
           if [[ "${{ github.event_name }}" == "release" ]]; then
             VERSION="${{ github.event.release.tag_name }}"
@@ -129,3 +148,60 @@ jobs:
           
           docker buildx imagetools create $TAGS \
             $(printf '${{ env.GHCR_REPO }}@sha256:%s ' *)
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: merge
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Post or update preview comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          MARKER: "<!-- docker-preview-comment -->"
+        run: |
+          NORMALIZED_BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          BRANCH_DISPLAY="${{ github.ref_name }}"
+
+          # Find the open PR for the current branch, if any
+          PR_NUMBER=$(gh api "repos/${REPO}/pulls" \
+            --jq ".[] | select(.head.ref == \"${{ github.ref_name }}\" and .state == \"open\") | .number" \
+            | head -n1)
+
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "No open PR found for branch ${{ github.ref_name }}, skipping comment."
+            exit 0
+          fi
+          BODY="${MARKER}
+          ## 🐳 Docker preview images are ready!
+
+          Preview images are available for this PR:
+
+          | Variant | Tag |
+          |---------|-----|
+          | Default | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}\` |
+          | Full    | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}-full\` |
+          | Mails   | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}-mails\` |
+          | Reports | \`${{ env.GHCR_REPO }}:${NORMALIZED_BRANCH}-reports\` |
+
+          > You can mention a maintainer to update it."
+
+          # Look for an existing comment with the marker
+          EXISTING_ID=$(gh api \
+            "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --paginate \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" \
+            | head -n1)
+
+          if [[ -n "$EXISTING_ID" ]]; then
+            gh api --method PATCH \
+              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              -f body="$BODY"
+          else
+            gh api --method POST \
+              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              -f body="$BODY"
+          fi

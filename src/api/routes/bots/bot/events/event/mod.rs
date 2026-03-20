@@ -3,12 +3,12 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, Snowflake},
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{CustomEventBody, CustomEventResponse, MessageResponse},
+    openapi::schemas::{CustomEventResponse, CustomEventUpdatePayload, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
@@ -114,7 +114,7 @@ async fn update_event(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    body: Json<CustomEventBody>,
+    body: Json<CustomEventUpdatePayload>,
     path: Path<(String, String)>,
 ) -> ApiResult<Json<CustomEventResponse>> {
     let (bot_id, event_key) = path.into_inner();
@@ -196,9 +196,7 @@ async fn update_event(
 
     let body = body.into_inner();
 
-    let updates = CustomEventUpdate::new()
-        .with_event_key(&body.event_key)
-        .with_graph_name(&body.graph_name);
+    let updates = CustomEventUpdate::new().with_graph_name(&body.graph_name);
 
     let update_result = repos
         .custom_events
@@ -314,6 +312,20 @@ async fn delete_event(
             "Custom event with key {} for bot ID {} not found",
             event_key, bot_id
         )));
+    }
+
+    if let Err(e) = repos
+        .bot_stats
+        .remove_event_from_stats(&bot_id, &event_key)
+        .await
+    {
+        error!(
+            code = %LogCode::System,
+            bot_id = %bot_id,
+            event_key = %event_key,
+            "Failed to remove event from bot stats: {}",
+            e,
+        );
     }
 
     info!(

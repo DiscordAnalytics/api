@@ -29,3 +29,9 @@ pub struct CustomEventBody {
     pub event_key: String,
     pub graph_name: String,
 }
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomEventUpdatePayload {
+    pub graph_name: String,
+}

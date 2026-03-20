@@ -343,7 +343,7 @@ async fn delete_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     id: Snowflake,
-    #[cfg_attr(not(feature = "mails"), allow(unused_variables))] payload: Json<BotDeletionPayload>,
+    payload: Json<Option<BotDeletionPayload>>,
 ) -> ApiResult<Json<MessageResponse>> {
     let bot_id = id.0;
 
@@ -427,47 +427,48 @@ async fn delete_bot(
                 ))
             })?;
 
-        let payload_data = payload.into_inner();
-        let reason = payload_data
-            .reason
-            .unwrap_or_else(|| "Deleted by admin".to_string());
+        if let Some(payload_data) = payload.into_inner() {
+            let reason = payload_data
+                .reason
+                .unwrap_or_else(|| "Deleted by admin".to_string());
 
-        if let Err(e) = services
-            .discord
-            .send_dm(
-                &owner.user_id,
-                None,
-                Some(DiscordNotification::create(
-                    NotificationType::BotDeletedByAdmin {
-                        bot_username: bot.username.clone(),
-                        bot_id: bot_id.clone(),
-                        reason: reason.clone(),
-                    },
-                )),
-            )
-            .await
-        {
-            error!(
-                code = %LogCode::Mail,
-                bot_id = %bot_id,
-                user_id = %owner.user_id,
-                error = ?e,
-                "Failed to send bot deletion DM to owner",
-            );
-        }
+            if let Err(e) = services
+                .discord
+                .send_dm(
+                    &owner.user_id,
+                    None,
+                    Some(DiscordNotification::create(
+                        NotificationType::BotDeletedByAdmin {
+                            bot_username: bot.username.clone(),
+                            bot_id: bot_id.clone(),
+                            reason: reason.clone(),
+                        },
+                    )),
+                )
+                .await
+            {
+                error!(
+                    code = %LogCode::Mail,
+                    bot_id = %bot_id,
+                    user_id = %owner.user_id,
+                    error = ?e,
+                    "Failed to send bot deletion DM to owner",
+                );
+            }
 
-        #[cfg(feature = "mails")]
-        if let Err(e) = services
-            .mail
-            .send_bot_deleted_by_admin(&owner, &bot, &reason)
-        {
-            error!(
-                code = %LogCode::Mail,
-                bot_id = %bot_id,
-                user_id = %owner.user_id,
-                error = ?e,
-                "Failed to send bot deletion email to owner",
-            );
+            #[cfg(feature = "mails")]
+            if let Err(e) = services
+                .mail
+                .send_bot_deleted_by_admin(&owner, &bot, &reason)
+            {
+                error!(
+                    code = %LogCode::Mail,
+                    bot_id = %bot_id,
+                    user_id = %owner.user_id,
+                    error = ?e,
+                    "Failed to send bot deletion email to owner",
+                );
+            }
         }
     }
 

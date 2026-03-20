@@ -95,7 +95,7 @@ impl Framework {
         }
     }
 
-    pub fn to_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Framework::DiscordPy => "discord.py",
             Framework::PyCord => "pycord",
@@ -110,7 +110,7 @@ impl Framework {
 
 impl From<Framework> for String {
     fn from(framework: Framework) -> Self {
-        framework.to_str().to_string()
+        framework.as_str().to_string()
     }
 }
 
@@ -130,7 +130,7 @@ impl Language {
         }
     }
 
-    pub fn to_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Language::Python => "python",
             Language::JavaScript => "javascript",
@@ -141,7 +141,7 @@ impl Language {
 
 impl From<Language> for String {
     fn from(language: Language) -> Self {
-        language.to_str().to_string()
+        language.as_str().to_string()
     }
 }
 

@@ -21,7 +21,7 @@ impl AuthType {
         }
     }
 
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             AuthType::Admin => "Admin",
             AuthType::Bot => "Bot",
@@ -33,7 +33,7 @@ impl AuthType {
 
 impl fmt::Display for AuthType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_str())
+        write!(f, "{}", self.as_str())
     }
 }
 

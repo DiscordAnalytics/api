@@ -214,15 +214,22 @@ async fn create_achievement(
     }
     let insert_result = repos.achievements.insert(&achievement).await?;
 
+    let inserted_oid = insert_result.inserted_id.as_object_id().ok_or_else(|| {
+        ApiError::DatabaseError(format!(
+            "Achievement with ID {} not found after creation",
+            insert_result.inserted_id
+        ))
+    })?;
+
     let result = repos
         .achievements
-        .find_by_id(&insert_result.inserted_id.to_string())
+        .find_by_id(&inserted_oid.to_hex())
         .await?
         .ok_or_else(|| {
             info!(
                 code = %LogCode::Request,
                 bot_id = %bot_id,
-                achievement_id = %insert_result.inserted_id,
+                achievement_id = %inserted_oid,
                 "Achievement not found after creation",
             );
             ApiError::DatabaseError(format!(
@@ -234,7 +241,7 @@ async fn create_achievement(
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
-        achievement_id = %insert_result.inserted_id,
+        achievement_id = %inserted_oid,
         "Achievement created successfully",
     );
 

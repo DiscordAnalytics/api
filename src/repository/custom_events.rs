@@ -19,11 +19,6 @@ impl CustomEventUpdate {
         Self::default()
     }
 
-    pub fn with_event_key(mut self, event_key: &str) -> Self {
-        self.updates.insert("eventKey", event_key);
-        self
-    }
-
     pub fn with_graph_name(mut self, graph_name: &str) -> Self {
         self.updates.insert("graphName", graph_name);
         self

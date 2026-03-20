@@ -23,7 +23,6 @@ pub use custom_events::CustomEventUpdate;
 pub use global_stats::GlobalStatsUpdate;
 #[cfg(feature = "reports")]
 pub use stats_reports::StatsReportUpdate;
-pub use team_invitations::TeamInvitationUpdate;
 pub use users::UserUpdate;
 
 #[derive(Clone)]

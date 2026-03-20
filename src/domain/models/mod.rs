@@ -13,12 +13,12 @@ mod webhook;
 
 pub use achievement::{Achievement, AchievementObjective, AchievementType};
 pub use blog_article::BlogArticle;
-pub use bot::{Bot, Framework, Language, WebhookConfig, WebhooksConfig};
+pub use bot::{Bot, WebhookConfig, WebhooksConfig};
 pub use bot_stats::{BotStats, Guild, GuildMembers, Interaction, Locale, UserType};
 pub use custom_event::CustomEvent;
 pub use global_stats::GlobalStats;
 pub use session::Session;
-pub use stats_report::{StatsReport, StatsReportFrequency};
+pub use stats_report::StatsReport;
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;

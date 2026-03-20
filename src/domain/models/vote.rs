@@ -11,13 +11,3 @@ pub struct Vote {
     #[serde(flatten)]
     pub votes: HashMap<String, u32>,
 }
-
-impl Vote {
-    pub fn new(bot_id: String, date: DateTime) -> Self {
-        Self {
-            bot_id,
-            date,
-            votes: HashMap::new(),
-        }
-    }
-}

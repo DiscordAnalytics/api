@@ -1,3 +1,12 @@
+mod api;
+mod config;
+mod domain;
+mod managers;
+mod openapi;
+mod repository;
+mod services;
+mod utils;
+
 use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
@@ -13,9 +22,8 @@ use tokio::{
 use tracing::{Level, error, info};
 use tracing_actix_web::TracingLogger;
 
-use api::{
+use crate::{
     api::{middleware::AuthMiddleware, routes},
-    app_env,
     config::env::init_env,
     managers::{ChatServer, VotesWebhooksManager},
     openapi::build_spec,

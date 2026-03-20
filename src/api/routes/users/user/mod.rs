@@ -177,18 +177,16 @@ async fn delete_user(
         return Err(ApiError::Forbidden);
     }
 
-    let result = repos.users.delete_by_id(&user_id).await?;
-
-    if result.deleted_count == 0 {
-        info!(
-            code = %LogCode::Request,
+    if let Err(e) = services.users.delete_user(&user_id).await {
+        error!(
+            code = %LogCode::User,
             user_id = %user_id,
-            "User not found for deletion"
+            error = ?e,
+            "Failed to delete user account"
         );
-        return Err(ApiError::NotFound(format!(
-            "User with ID {} not found",
-            user_id
-        )));
+        return Err(ApiError::DatabaseError(
+            "Failed to delete user account".to_string(),
+        ));
     }
 
     if ctx.is_admin() {

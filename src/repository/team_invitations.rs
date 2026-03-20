@@ -1,27 +1,12 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{DateTime, Document, doc},
+    bson::{DateTime, doc},
     error::Result,
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
 use crate::{domain::models::TeamInvitation, utils::constants::TEAM_INVITATIONS_COLLECTION};
-
-#[derive(Clone, Default)]
-pub struct TeamInvitationUpdate {
-    updates: Document,
-}
-
-impl TeamInvitationUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn build(self) -> Document {
-        self.updates
-    }
-}
 
 #[derive(Clone)]
 pub struct TeamInvitationsRepository {

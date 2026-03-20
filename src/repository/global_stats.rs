@@ -19,16 +19,6 @@ impl GlobalStatsUpdate {
         Self::default()
     }
 
-    pub fn with_bot_count(mut self, bot_count: i32) -> Self {
-        self.updates.insert("botCount", bot_count);
-        self
-    }
-
-    pub fn with_registered_bots(mut self, registered_bots: i32) -> Self {
-        self.updates.insert("registeredBots", registered_bots);
-        self
-    }
-
     pub fn with_user_count(mut self, user_count: i32) -> Self {
         self.updates.insert("userCount", user_count);
         self

@@ -37,7 +37,6 @@ pub struct MailOptions {
     pub to: Vec<Recipient>,
     pub subject: String,
     pub html_body: String,
-    pub text_body: Option<String>,
 }
 
 impl MailOptions {
@@ -46,7 +45,6 @@ impl MailOptions {
             to: Vec::new(),
             subject: subject.into(),
             html_body: html_body.into(),
-            text_body: None,
         }
     }
 
@@ -54,34 +52,19 @@ impl MailOptions {
         self.to.push(recipient.into());
         self
     }
-
-    pub fn with_text(mut self, text: impl Into<String>) -> Self {
-        self.text_body = Some(text.into());
-        self
-    }
 }
 
 #[derive(Debug)]
 pub struct MailResult {
     pub success: bool,
-    pub message_id: Option<String>,
-    pub error: Option<String>,
 }
 
 impl MailResult {
-    pub fn success(message_id: impl Into<String>) -> Self {
-        Self {
-            success: true,
-            message_id: Some(message_id.into()),
-            error: None,
-        }
+    pub fn success() -> Self {
+        Self { success: true }
     }
 
-    pub fn failure(error: impl Into<String>) -> Self {
-        Self {
-            success: false,
-            message_id: None,
-            error: Some(error.into()),
-        }
+    pub fn failure() -> Self {
+        Self { success: false }
     }
 }

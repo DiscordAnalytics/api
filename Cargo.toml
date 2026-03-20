@@ -19,10 +19,6 @@ otel = [
 reports = ["dep:s3", "mails"]
 full = ["mails", "otel", "reports"]
 
-[lib]
-name = "api"
-path = "src/lib.rs"
-
 [[bin]]
 name = "discord-analytics-api"
 path = "src/main.rs"

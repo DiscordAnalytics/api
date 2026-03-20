@@ -1,5 +1,5 @@
 use anyhow::Result;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{
     app_env,
@@ -39,15 +39,13 @@ impl MailService {
 
             self.client.send(options)
         } else {
-            info!(
+            warn!(
                 code = %LogCode::Mail,
                 user_id = %user.user_id,
                 "User {} does not have an email address, skipping email sending",
                 user.username
             );
-            Ok(MailResult::failure(
-                "User does not have an email address".to_string(),
-            ))
+            Ok(MailResult::failure())
         }
     }
 

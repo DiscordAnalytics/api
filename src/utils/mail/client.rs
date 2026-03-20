@@ -51,9 +51,10 @@ impl SmtpClient {
             Ok(response) => {
                 info!(
                     code = %LogCode::Mail,
+                    response = ?response,
                     "Email sent successfully"
                 );
-                Ok(MailResult::success(format!("{:?}", response)))
+                Ok(MailResult::success())
             }
             Err(e) => {
                 error!(
@@ -61,7 +62,7 @@ impl SmtpClient {
                     error = %e,
                     "Failed to send email"
                 );
-                Ok(MailResult::failure(e.to_string()))
+                Ok(MailResult::failure())
             }
         }
     }

@@ -38,11 +38,6 @@ impl Session {
         }
     }
 
-    pub fn with_device_info(mut self, device_info: String) -> Self {
-        self.device_info = Some(device_info);
-        self
-    }
-
     pub fn with_ip(mut self, ip: String) -> Self {
         self.ip_address = Some(ip);
         self

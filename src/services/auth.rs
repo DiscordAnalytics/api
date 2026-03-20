@@ -1,10 +1,6 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 
-use crate::{
-    app_env,
-    domain::auth::{AuthContext, AuthType},
-    repository::Repositories,
-};
+use crate::{app_env, repository::Repositories};
 
 #[derive(Clone)]
 pub struct AuthService {
@@ -14,17 +10,6 @@ pub struct AuthService {
 impl AuthService {
     pub fn new(repos: Repositories) -> Self {
         Self { repos }
-    }
-
-    pub async fn verify_bot_token(&self, token: &str, bot_id: &str) -> Result<AuthContext> {
-        let bot = self.repos.bots.find_by_id(bot_id).await?;
-        match bot {
-            Some(bot) if bot.token == token => {
-                Ok(AuthContext::new(AuthType::Bot).with_bot_id(bot_id.to_string()))
-            }
-            Some(_) => bail!("Invalid bot token"),
-            None => bail!("Bot not found"),
-        }
     }
 
     pub fn is_admin(&self, user_id: &str) -> bool {

@@ -323,11 +323,6 @@ impl BotStatsRepository {
         })
     }
 
-    pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<BotStats>> {
-        let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
-        cursor.try_collect().await
-    }
-
     pub async fn find_by_date(&self, bot_id: &str, date: &DateTime) -> Result<Option<BotStats>> {
         self.collection
             .find_one(doc! { "botId": bot_id, "date": date })

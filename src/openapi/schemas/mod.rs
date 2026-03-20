@@ -24,8 +24,8 @@ pub use achievement::{
 };
 pub use article::{ArticleAuthor, ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{
-    AuthCallbackQuery, AuthConfigResponse, AvatarDecoration, DiscordBot, DiscordOAuthUser,
-    DiscordTokenResponse, LinkedRolesQuery,
+    AuthCallbackQuery, AuthConfigResponse, DiscordBot, DiscordOAuthUser, DiscordTokenResponse,
+    LinkedRolesQuery,
 };
 pub use bot::{
     BotCreationBody, BotDeletionPayload, BotResponse, BotSettingsPayload, BotSuspendRequest,

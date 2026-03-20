@@ -61,13 +61,6 @@ impl Achievement {
         self
     }
 
-    pub fn is_achieved(&self) -> bool {
-        match self.current {
-            Some(current) => current >= self.objective.value,
-            None => false,
-        }
-    }
-
     pub fn defaults(bot_id: &str) -> Vec<Self> {
         vec![
             Self {

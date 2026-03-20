@@ -13,8 +13,6 @@ pub struct DiscordEmbed {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fields: Option<Vec<DiscordEmbedField>>,
@@ -43,7 +41,6 @@ impl DiscordEmbed {
         Self {
             title: None,
             description: None,
-            url: None,
             color: None,
             fields: None,
             footer: None,
@@ -58,11 +55,6 @@ impl DiscordEmbed {
 
     pub fn description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
-        self
-    }
-
-    pub fn url(mut self, url: impl Into<String>) -> Self {
-        self.url = Some(url.into());
         self
     }
 

@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, post, scope},
@@ -6,13 +6,13 @@ use apistos::{
 use tracing::{error, info, warn};
 
 use crate::{
-    api::middleware::{RequireAdmin, Snowflake},
+    api::middleware::RequireAdmin,
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{BotSuspendRequest, MessageResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::{
-        discord::{DiscordNotification, NotificationType},
+        discord::{DiscordNotification, NotificationType, Snowflake},
         logger::LogCode,
     },
 };
@@ -28,9 +28,9 @@ async fn suspend_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<BotSuspendRequest>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -130,9 +130,9 @@ async fn suspend_bot(
 async fn unsuspend_bot(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,

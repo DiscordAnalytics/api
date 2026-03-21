@@ -1,7 +1,7 @@
 mod bots;
 mod suspend;
 
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
@@ -9,13 +9,13 @@ use apistos::{
 use tracing::{error, info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, RequireAdmin, Snowflake},
+    api::middleware::{Authenticated, RequireAdmin},
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{MessageResponse, UserResponse, UserUpdateRequest},
     repository::{Repositories, UserUpdate},
     services::Services,
     utils::{
-        discord::{DiscordNotification, NotificationType},
+        discord::{DiscordNotification, NotificationType, Snowflake},
         logger::LogCode,
     },
 };
@@ -28,9 +28,9 @@ use crate::{
 async fn get_user(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<UserResponse>> {
-    let user_id = id.0;
+    let user_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -90,9 +90,9 @@ async fn update_user(
     _admin: RequireAdmin,
     repos: Data<Repositories>,
     body: Json<UserUpdateRequest>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<UserResponse>> {
-    let user_id = id.0;
+    let user_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -133,9 +133,9 @@ async fn delete_user(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let user_id = id.0;
+    let user_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,

@@ -1,6 +1,27 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
+use crate::{domain::error::ApiError, utils::discord::is_valid_snowflake};
+
+pub struct Snowflake(pub String);
+
+impl Snowflake {
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+impl TryFrom<String> for Snowflake {
+    type Error = ApiError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if !is_valid_snowflake(&value) {
+            return Err(ApiError::InvalidId);
+        }
+        Ok(Self(value))
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct DmChannel {
     pub id: String,

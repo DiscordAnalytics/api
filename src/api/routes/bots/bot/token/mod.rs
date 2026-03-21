@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, patch, resource, scope},
@@ -6,7 +6,7 @@ use apistos::{
 use tracing::{error, info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
@@ -15,7 +15,7 @@ use crate::{
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::{
-        discord::{DiscordNotification, NotificationType},
+        discord::{DiscordNotification, NotificationType, Snowflake},
         logger::LogCode,
     },
 };
@@ -28,9 +28,9 @@ use crate::{
 async fn get_token(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<BotTokenResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -100,9 +100,9 @@ async fn refresh_token(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<BotTokenResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,

@@ -1,7 +1,7 @@
 use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest,
     dev::Payload,
-    error::{ErrorBadRequest, ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
+    error::{ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
     web::Data,
 };
 use apistos::{ApiComponent, ApiSecurity};
@@ -14,7 +14,6 @@ use schemars::JsonSchema;
 use crate::{
     domain::{auth::AuthContext, error::ApiError},
     services::Services,
-    utils::discord::is_valid_snowflake,
 };
 
 #[derive(Clone, JsonSchema, ApiSecurity)]
@@ -111,25 +110,6 @@ impl FromRequest for RequireAdmin {
             ready(Ok(RequireAdmin(ctx)))
         } else {
             ready(Err(ErrorForbidden(ApiError::Forbidden)))
-        }
-    }
-}
-
-#[derive(Clone, JsonSchema, ApiComponent)]
-pub struct Snowflake(pub String);
-
-impl FromRequest for Snowflake {
-    type Error = Error;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let id = req.match_info().get("id");
-        if let Some(id) = id
-            && is_valid_snowflake(id)
-        {
-            ready(Ok(Snowflake(id.to_string())))
-        } else {
-            ready(Err(ErrorBadRequest(ApiError::InvalidId)))
         }
     }
 }

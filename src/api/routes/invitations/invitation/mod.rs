@@ -138,7 +138,7 @@ async fn answer_invitation(
             ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
         })?;
 
-    let bot = repos
+    repos
         .bots
         .find_by_id(&invitation.bot_id)
         .await?

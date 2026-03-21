@@ -62,7 +62,7 @@ async fn get_bot(
 
     let ctx = &auth.0;
 
-    let mut ignore_webhooks = true;
+    let mut ignore_webhooks = false;
 
     if ctx.is_admin() {
         info!(
@@ -89,7 +89,7 @@ async fn get_bot(
             return Err(ApiError::Forbidden);
         }
         if !bot.is_owner(user_id) {
-            ignore_webhooks = false;
+            ignore_webhooks = true;
         }
     } else {
         warn!(

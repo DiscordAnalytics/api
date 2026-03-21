@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use actix_web::web::{Data, Json};
 use apistos::{
     api_operation,
@@ -91,34 +93,33 @@ async fn get_team(
         return Err(ApiError::Forbidden);
     }
 
-    let mut team = Vec::new();
+    let invitations = repos.team_invitations.find_by_bot(&bot_id).await?;
 
-    for user_id in bot.team {
-        let mut response = TeamResponse {
-            avatar: None,
-            invitation_id: None,
-            pending_invitation: false,
-            registered: false,
+    let mut user_ids: HashSet<String> = invitations.iter().map(|i| i.user_id.clone()).collect();
+
+    user_ids.extend(bot.team.iter().cloned());
+
+    let users_map = repos.users.find_many_by_ids(&user_ids).await?;
+
+    let invitations_map: HashMap<String, TeamInvitation> = invitations
+        .into_iter()
+        .map(|i| (i.user_id.clone(), i))
+        .collect();
+
+    let mut team = Vec::with_capacity(user_ids.len());
+
+    for user_id in user_ids {
+        let user = users_map.get(&user_id);
+        let invitation = invitations_map.get(&user_id);
+
+        team.push(TeamResponse {
+            avatar: user.and_then(|u| u.avatar.clone()),
+            invitation_id: invitation.map(|i| i.invitation_id.clone()),
+            pending_invitation: invitation.map(|i| i.accepted).unwrap_or(false),
+            registered: user.is_some(),
             user_id: user_id.clone(),
-            username: None,
-        };
-
-        if let Some(user) = repos.users.find_by_id(&user_id).await? {
-            response.avatar = user.avatar;
-            response.username = Some(user.username);
-            response.registered = true;
-        }
-
-        if let Some(invitation) = repos
-            .team_invitations
-            .find_by_bot_and_user(&bot_id, &user_id)
-            .await?
-        {
-            response.invitation_id = Some(invitation.invitation_id);
-            response.pending_invitation = !invitation.accepted;
-        }
-
-        team.push(response);
+            username: user.map(|u| u.username.clone()),
+        });
     }
 
     info!(

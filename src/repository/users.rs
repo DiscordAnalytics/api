@@ -1,4 +1,6 @@
-use futures::stream::TryStreamExt as _;
+use std::collections::{HashMap, HashSet};
+
+use futures::{FutureExt as _, stream::TryStreamExt as _};
 use mongodb::{
     Collection, Database,
     bson::{Document, doc},
@@ -86,6 +88,23 @@ impl UsersRepository {
 
     pub async fn find_by_id(&self, user_id: &str) -> Result<Option<User>> {
         self.collection.find_one(doc! { "userId": user_id }).await
+    }
+
+    pub async fn find_many_by_ids(
+        &self,
+        user_ids: &HashSet<String>,
+    ) -> Result<HashMap<String, User>> {
+        let mut cursor = self
+            .collection
+            .find(doc! { "userId": { "$in": user_ids.iter().cloned().collect::<Vec<_>>() } })
+            .await?;
+
+        let mut map = HashMap::with_capacity(user_ids.len());
+
+        while let Some(user) = cursor.try_next().await? {
+            map.insert(user.user_id.clone(), user);
+        }
+        Ok(map)
     }
 
     pub async fn insert(&self, user: &User) -> Result<InsertOneResult> {

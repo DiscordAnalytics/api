@@ -40,6 +40,11 @@ impl TeamInvitationsRepository {
             .await
     }
 
+    pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<TeamInvitation>> {
+        let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
+        cursor.try_collect().await
+    }
+
     pub async fn find_by_bot_and_user(
         &self,
         bot_id: &str,

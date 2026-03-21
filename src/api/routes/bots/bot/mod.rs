@@ -62,6 +62,8 @@ async fn get_bot(
 
     let ctx = &auth.0;
 
+    let mut ignore_webhooks = true;
+
     if ctx.is_admin() {
         info!(
             code = %LogCode::AdminAction,
@@ -86,6 +88,9 @@ async fn get_bot(
             );
             return Err(ApiError::Forbidden);
         }
+        if !bot.is_owner(user_id) {
+            ignore_webhooks = false;
+        }
     } else {
         warn!(
             code = %LogCode::Forbidden,
@@ -101,7 +106,11 @@ async fn get_bot(
         "Bot details fetched successfully",
     );
 
-    Ok(Json(BotResponse::try_from(bot)?))
+    let mut res = BotResponse::try_from(bot)?;
+    if ignore_webhooks {
+        res.webhooks_config = None;
+    }
+    Ok(Json(res))
 }
 
 #[api_operation(

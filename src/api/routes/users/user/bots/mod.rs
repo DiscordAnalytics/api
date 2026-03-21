@@ -1,4 +1,5 @@
 use actix_web::web::{Data, Json};
+use anyhow::Result;
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
@@ -66,7 +67,11 @@ async fn get_user_bots(
     let team_bots = user_bots
         .into_iter()
         .filter(|b| b.team.contains(&user_id))
-        .map(BotResponse::try_from)
+        .map(|b| -> Result<BotResponse> {
+            let mut res = BotResponse::try_from(b)?;
+            res.webhooks_config = None;
+            Ok(res)
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     info!(

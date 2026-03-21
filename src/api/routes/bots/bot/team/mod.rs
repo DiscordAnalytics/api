@@ -115,7 +115,7 @@ async fn get_team(
         team.push(TeamResponse {
             avatar: user.and_then(|u| u.avatar.clone()),
             invitation_id: invitation.map(|i| i.invitation_id.clone()),
-            pending_invitation: invitation.map(|i| i.accepted).unwrap_or(false),
+            pending_invitation: invitation.map(|i| !i.accepted).unwrap_or(false),
             registered: user.is_some(),
             user_id: user_id.clone(),
             username: user.map(|u| u.username.clone()),

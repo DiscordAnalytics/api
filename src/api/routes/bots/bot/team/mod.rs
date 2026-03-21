@@ -209,6 +209,19 @@ async fn add_to_team(
         return Err(ApiError::Forbidden);
     }
 
+    let discord_bot = services.discord.get_bot(&bot_id).await?;
+    if let Some(is_bot) = discord_bot.bot
+        && is_bot
+    {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            user_id = %body.user_id,
+            "Cannot add a bot to a bot team",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
     if services
         .auth
         .user_has_bot_access(&body.user_id, &bot_id)

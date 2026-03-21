@@ -62,6 +62,7 @@ pub enum ApiError {
     UserUnsuspended,
     LimitExceeded,
     Conflict(String),
+    BadRequest(String),
 
     // External service errors
     StorageError(String),
@@ -96,6 +97,7 @@ impl fmt::Display for ApiError {
             ApiError::UserUnsuspended => write!(f, "User is not suspended"),
             ApiError::LimitExceeded => write!(f, "Rate limit exceeded"),
             ApiError::Conflict(msg) => write!(f, "Conflict: {}", msg),
+            ApiError::BadRequest(msg) => write!(f, "Bad request: {}", msg),
             ApiError::StorageError(msg) => write!(f, "Storage error: {}", msg),
             ApiError::WebhookError(msg) => write!(f, "Webhook error: {}", msg),
             _ => write!(f, "{:?}", self),
@@ -120,7 +122,8 @@ impl ResponseError for ApiError {
             | ApiError::BotUnsuspended
             | ApiError::UserSuspended
             | ApiError::UserUnsuspended
-            | ApiError::AlreadyPublished => StatusCode::BAD_REQUEST,
+            | ApiError::AlreadyPublished
+            | ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
             ApiError::AlreadyExists(_) | ApiError::Conflict(_) => StatusCode::CONFLICT,
             ApiError::LimitExceeded => StatusCode::TOO_MANY_REQUESTS,
             _ => StatusCode::INTERNAL_SERVER_ERROR,

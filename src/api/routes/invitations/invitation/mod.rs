@@ -161,7 +161,7 @@ async fn answer_invitation(
         );
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !bot.is_team_member(user_id) {
+        if invitation.user_id != user_id {
             info!(
                 code = %LogCode::Forbidden,
                 invitation_id = %invitation_id,

@@ -219,7 +219,9 @@ async fn add_to_team(
             user_id = %body.user_id,
             "Cannot add a bot to a bot team",
         );
-        return Err(ApiError::BadRequest("Cannot add a bot to a bot team"));
+        return Err(ApiError::BadRequest(
+            "Cannot add a bot to a bot team".to_string(),
+        ));
     }
 
     if services

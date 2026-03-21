@@ -40,7 +40,7 @@ async fn get_team(
         "Fetching team for bot"
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -172,7 +172,7 @@ async fn add_to_team(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -367,7 +367,7 @@ async fn delete_from_team(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

@@ -60,7 +60,7 @@ async fn get_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     let mut ignore_webhooks = false;
 
@@ -133,7 +133,7 @@ async fn post_bot(
         "Attempting to create bot",
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if !ctx.is_admin() && !ctx.is_user() {
         warn!(
@@ -244,7 +244,7 @@ async fn patch_bot(
         "Attempting to update bot",
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if !(ctx.is_admin() || ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
         warn!(
@@ -372,7 +372,7 @@ async fn delete_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

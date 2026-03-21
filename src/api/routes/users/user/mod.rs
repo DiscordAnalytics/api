@@ -38,7 +38,7 @@ async fn get_user(
         "Received request to fetch user details"
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -153,7 +153,7 @@ async fn delete_user(
         ApiError::NotFound(format!("User with ID {} not found", user_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

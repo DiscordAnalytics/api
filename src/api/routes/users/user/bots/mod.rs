@@ -32,7 +32,7 @@ async fn get_user_bots(
         "Received request to fetch user's bots"
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

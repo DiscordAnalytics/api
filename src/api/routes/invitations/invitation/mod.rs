@@ -151,7 +151,7 @@ async fn answer_invitation(
             ApiError::NotFound(format!("Bot with ID {} not found", invitation.bot_id))
         })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

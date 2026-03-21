@@ -37,7 +37,7 @@ async fn get_article(
         .await?
         .ok_or_else(|| ApiError::NotFound(format!("Article with ID {} not found", article_id)))?;
 
-    let is_admin = auth.0.as_ref().is_some_and(|ctx| ctx.is_admin());
+    let is_admin = auth.as_ref().is_some_and(|ctx| ctx.is_admin());
 
     if article.is_draft && !is_admin {
         return Err(ApiError::NotFound(format!(

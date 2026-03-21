@@ -24,7 +24,7 @@ async fn revoke_session(
     repos: Data<Repositories>,
     session_id: Path<String>,
 ) -> ApiResult<Json<Value>> {
-    let user_id = auth.0.user_id.ok_or(ApiError::Unauthorized)?;
+    let user_id = auth.user_id.as_ref().ok_or(ApiError::Unauthorized)?;
 
     info!(
         code = %LogCode::Auth,
@@ -39,7 +39,7 @@ async fn revoke_session(
         .await?
         .ok_or(ApiError::NotFound("Session not found".to_string()))?;
 
-    if session.user_id != user_id {
+    if session.user_id != *user_id {
         return Err(ApiError::Forbidden);
     }
 

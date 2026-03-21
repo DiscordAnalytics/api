@@ -12,7 +12,7 @@ use crate::{
         models::TeamInvitation,
     },
     openapi::schemas::{MessageResponse, NewInvitationResponse, TeamRequestBody, TeamResponse},
-    repository::{BotUpdate, Repositories},
+    repository::Repositories,
     services::Services,
     utils::{
         discord::{DiscordNotification, NotificationType},
@@ -240,9 +240,6 @@ async fn add_to_team(
             body.user_id
         )));
     }
-
-    let update = BotUpdate::new().with_team_member(&body.user_id);
-    repos.bots.update(&bot_id, update).await?;
 
     let invitation = TeamInvitation::new(&bot_id, &body.user_id);
     repos.team_invitations.insert(&invitation).await?;

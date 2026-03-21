@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use futures::{FutureExt as _, stream::TryStreamExt as _};
+use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
     bson::{Document, doc},

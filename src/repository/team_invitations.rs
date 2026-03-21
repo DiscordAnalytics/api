@@ -45,16 +45,6 @@ impl TeamInvitationsRepository {
         cursor.try_collect().await
     }
 
-    pub async fn find_by_bot_and_user(
-        &self,
-        bot_id: &str,
-        user_id: &str,
-    ) -> Result<Option<TeamInvitation>> {
-        self.collection
-            .find_one(doc! { "botId": bot_id, "userId": user_id })
-            .await
-    }
-
     pub async fn insert(&self, team_invitation: &TeamInvitation) -> Result<InsertOneResult> {
         self.collection.insert_one(team_invitation).await
     }

@@ -1,6 +1,16 @@
 use crate::{app_env, utils::discord::DiscordEmbed};
 
 pub enum NotificationType {
+    #[cfg(not(debug_assertions))]
+    BotConfigurationDeletion {
+        bot_username: String,
+        bot_id: String,
+    },
+    #[cfg(not(debug_assertions))]
+    BotConfigurationWarning {
+        bot_username: String,
+        bot_id: String,
+    },
     BotDeletedByAdmin {
         bot_username: String,
         bot_id: String,
@@ -40,6 +50,38 @@ pub enum NotificationType {
 impl NotificationType {
     pub fn to_embed(&self) -> DiscordEmbed {
         match self {
+            #[cfg(not(debug_assertions))]
+            NotificationType::BotConfigurationDeletion {
+                bot_username,
+                bot_id,
+            } => DiscordEmbed::new()
+                .title("Bot Configuration Deletion")
+                .description(format!(
+                    "Your bot **{}** has been deleted due to not being configured.\n\n\
+                    If you believe this was a mistake or would like more information, please contact [support](https://discordanalytics.xyz/support).",
+                    bot_username
+                ))
+                .color(0xE74C3C) // Red
+                .field("Bot", format!("{} ({})", bot_username, bot_id), false)
+                .footer("Discord Analytics"),
+
+            #[cfg(not(debug_assertions))]
+            NotificationType::BotConfigurationWarning {
+              bot_username,
+              bot_id
+            } => DiscordEmbed::new()
+              .title("Bot Configuration Warning")
+              .description(format!(
+                "Your bot **{}** is not yet configured.\n\n\
+                Please configure your bot in the next 24 hours before we delete it from our platform.\n\n\
+                You can follow our [documentation](https://discordanalytics.xyz/docs/get-started/installation) to get started",
+                bot_username
+              ))
+              .color(0xF1C40F) // Yellow
+              .field("Bot", format!("{} ({})", bot_username, bot_id), false)
+              .footer("Discord Analytics"),
+
+
             NotificationType::BotDeletedByAdmin {
                 bot_username,
                 bot_id,

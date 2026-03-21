@@ -80,7 +80,6 @@ async fn suspend_bot(
         .discord
         .send_dm(
             &owner.user_id,
-            None,
             Some(DiscordNotification::create(
                 NotificationType::BotSuspended {
                     bot_username: bot.username.clone(),

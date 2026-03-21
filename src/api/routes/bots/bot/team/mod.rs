@@ -263,7 +263,6 @@ async fn add_to_team(
                 .discord
                 .send_dm(
                     &user.user_id,
-                    None,
                     Some(DiscordNotification::create(NotificationType::TeamInvite {
                         bot_username: bot.username.clone(),
                         owner_username: owner.username.clone(),

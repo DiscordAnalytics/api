@@ -437,7 +437,6 @@ async fn delete_bot(
                 .discord
                 .send_dm(
                     &owner.user_id,
-                    None,
                     Some(DiscordNotification::create(
                         NotificationType::BotDeletedByAdmin {
                             bot_username: bot.username.clone(),

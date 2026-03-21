@@ -194,7 +194,6 @@ async fn delete_user(
             .discord
             .send_dm(
                 &user.user_id,
-                None,
                 Some(DiscordNotification::create(
                     NotificationType::UserDeletedByAdmin {
                         username: user.username.clone(),

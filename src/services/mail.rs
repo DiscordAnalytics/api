@@ -49,6 +49,42 @@ impl MailService {
         }
     }
 
+    #[cfg(not(debug_assertions))]
+    pub fn send_bot_configuration_deletion(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            "Sending bot configuration deletion email to user {} for bot {}",
+            owner.username, bot.username
+        );
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &owner.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .build();
+        self.send(owner, Template::BotConfigurationDeletion, vars)
+    }
+
+    #[cfg(not(debug_assertions))]
+    pub fn send_bot_configuration_warning(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            "Sending bot configuration warning email to user {} for bot {}",
+            owner.username, bot.username
+        );
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &owner.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .build();
+        self.send(owner, Template::BotConfigurationWarning, vars)
+    }
+
     pub fn send_bot_deleted_by_admin(
         &self,
         owner: &User,

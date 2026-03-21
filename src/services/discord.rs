@@ -177,21 +177,12 @@ impl DiscordService {
         Ok(())
     }
 
-    pub async fn send_dm(
-        &self,
-        user_id: &str,
-        content: Option<String>,
-        embeds: Option<Vec<DiscordEmbed>>,
-    ) -> Result<()> {
+    pub async fn send_dm(&self, user_id: &str, embeds: Option<Vec<DiscordEmbed>>) -> Result<()> {
         let bot_token = &app_env!().discord_token;
 
         let dm_channel = self.create_dm_channel(user_id, bot_token).await?;
 
         let mut payload = serde_json::json!({});
-
-        if let Some(content) = content {
-            payload["content"] = serde_json::json!(content);
-        }
 
         if let Some(embeds) = embeds {
             payload["embeds"] = serde_json::json!(embeds);

@@ -197,7 +197,6 @@ async fn refresh_token(
             .discord
             .send_dm(
                 &owner.user_id,
-                None,
                 Some(DiscordNotification::create(
                     NotificationType::BotTokenRegen {
                         bot_username: bot.username,

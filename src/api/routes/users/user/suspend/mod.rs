@@ -69,7 +69,6 @@ async fn suspend_user(
         .discord
         .send_dm(
             &user_id,
-            None,
             Some(DiscordNotification::create(
                 NotificationType::UserSuspended {
                     username: user.username.clone(),

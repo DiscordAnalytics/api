@@ -20,7 +20,7 @@ pub struct BotResponse {
     pub username: String,
     pub version: Option<String>,
     pub watched_since: String,
-    pub webhooks_config: WebhooksConfig,
+    pub webhooks_config: Option<WebhooksConfig>,
 }
 
 impl TryFrom<Bot> for BotResponse {
@@ -44,7 +44,7 @@ impl TryFrom<Bot> for BotResponse {
             username: bot.username,
             version: bot.version,
             watched_since: bot.watched_since.try_to_rfc3339_string()?,
-            webhooks_config: bot.webhooks_config,
+            webhooks_config: Some(bot.webhooks_config),
         })
     }
 }

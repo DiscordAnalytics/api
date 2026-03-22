@@ -1,6 +1,6 @@
 mod event;
 
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
@@ -8,7 +8,7 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
         models::CustomEvent,
@@ -16,7 +16,7 @@ use crate::{
     openapi::schemas::{CustomEventBody, CustomEventResponse},
     repository::Repositories,
     services::Services,
-    utils::logger::LogCode,
+    utils::{discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -28,9 +28,9 @@ async fn get_all_events(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<Vec<CustomEventResponse>>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -56,7 +56,7 @@ async fn get_all_events(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -114,9 +114,9 @@ async fn create_event(
     services: Data<Services>,
     repos: Data<Repositories>,
     event: Json<CustomEventBody>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -136,7 +136,7 @@ async fn create_event(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

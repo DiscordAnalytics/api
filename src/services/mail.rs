@@ -49,6 +49,40 @@ impl MailService {
         }
     }
 
+    pub fn send_bot_configuration_deletion(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            "Sending bot configuration deletion email to user {} for bot {}",
+            owner.username, bot.username
+        );
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &owner.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .build();
+        self.send(owner, Template::BotConfigurationDeletion, vars)
+    }
+
+    pub fn send_bot_configuration_warning(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            "Sending bot configuration warning email to user {} for bot {}",
+            owner.username, bot.username
+        );
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &owner.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .build();
+        self.send(owner, Template::BotConfigurationWarning, vars)
+    }
+
     pub fn send_bot_deleted_by_admin(
         &self,
         owner: &User,
@@ -70,6 +104,40 @@ impl MailService {
             .var("reason", reason)
             .build();
         self.send(owner, Template::BotDeletedByAdmin, vars)
+    }
+
+    pub fn send_bot_inactive_deletion(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            "Sending bot inactive deletion email to user {} for bot {}",
+            owner.username, bot.username
+        );
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &owner.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .build();
+        self.send(owner, Template::BotInactiveDeletion, vars)
+    }
+
+    pub fn send_bot_inactive_warning(&self, owner: &User, bot: &Bot) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %owner.user_id,
+            "Sending bot inactive warning email to user {} for bot {}",
+            owner.username, bot.username
+        );
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &owner.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .build();
+        self.send(owner, Template::BotInactiveWarning, vars)
     }
 
     pub fn send_bot_suspended(&self, owner: &User, bot: &Bot, reason: &str) -> Result<MailResult> {

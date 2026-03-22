@@ -55,7 +55,7 @@ async fn vote_webhook(
 ) -> ApiResult<Json<MessageResponse>> {
     let provider = path.into_inner();
 
-    let body_bytes = &body.0;
+    let body_bytes = &body.into_inner();
 
     let body_value = from_slice::<Value>(body_bytes).map_err(|e| {
         warn!(
@@ -233,7 +233,7 @@ async fn legacy_vote_webhook(
         "Received webhook on legacy endpoint, this endpoint is deprecated and should not be used"
     );
 
-    let mut body_with_bot_id = from_slice::<Value>(&body.0).unwrap_or(Value::Null);
+    let mut body_with_bot_id = from_slice::<Value>(&body.into_inner()).unwrap_or(Value::Null);
     if let Value::Object(ref mut map) = body_with_bot_id {
         map.insert("bot_id".to_string(), Value::String(bot_id.clone()));
     }

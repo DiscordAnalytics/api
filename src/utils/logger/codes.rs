@@ -18,18 +18,12 @@ pub enum LogCode {
     InvalidToken,
     /// Admin actions
     AdminAction,
-    /// Bot-related events
-    Bot,
     /// Bot expiration warnings
     BotExpiration,
     /// User-related events
     User,
     /// Conflict events (e.g., duplicate entries)
     Conflict,
-    /// Achievement events
-    Achievement,
-    /// General information
-    Info,
     /// System/Internal errors
     System,
     /// Database errors
@@ -53,12 +47,9 @@ impl LogCode {
             LogCode::Forbidden => "FORBID",
             LogCode::InvalidToken => "INV_TOKEN",
             LogCode::AdminAction => "ADMIN",
-            LogCode::Bot => "BOT",
             LogCode::BotExpiration => "BOT_EXP",
             LogCode::User => "USER",
             LogCode::Conflict => "CONFLICT",
-            LogCode::Achievement => "ACHV",
-            LogCode::Info => "INFO",
             LogCode::System => "SYS",
             LogCode::DbError => "DB_ERR",
             LogCode::Mail => "MAIL",

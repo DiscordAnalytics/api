@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use actix_web::web::{Data, Json, Query};
+use actix_web::web::{Data, Json, Path, Query};
 use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
@@ -10,7 +10,7 @@ use mongodb::bson::DateTime;
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
         models::AchievementType,
@@ -21,7 +21,7 @@ use crate::{
     },
     repository::{BotStatsUpdate, Repositories},
     services::Services,
-    utils::{constants::MAX_DATE_RANGE, logger::LogCode},
+    utils::{constants::MAX_DATE_RANGE, discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -34,9 +34,9 @@ async fn get_stats(
     services: Data<Services>,
     repos: Data<Repositories>,
     query: Query<BotStatsQuery>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<BotStatsResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     let from = DateTime::parse_rfc3339_str(format!("{}T00:00:00Z", query.from).as_str()).map_err(
         |_| {
@@ -113,7 +113,7 @@ async fn get_stats(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -190,9 +190,9 @@ async fn post_stats(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotStatsBody>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -218,7 +218,7 @@ async fn post_stats(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

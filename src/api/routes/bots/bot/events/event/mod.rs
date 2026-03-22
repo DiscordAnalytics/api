@@ -6,12 +6,12 @@ use apistos::{
 use tracing::{error, info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{CustomEventResponse, CustomEventUpdatePayload, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -25,8 +25,8 @@ async fn get_event(
     repos: Data<Repositories>,
     path: Path<(String, String)>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let (bot_id, event_key) = path.into_inner();
-    let bot_id = Snowflake(bot_id).0;
+    let (id, event_key) = path.into_inner();
+    let bot_id = Snowflake::try_from(id)?.into_inner();
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -46,7 +46,7 @@ async fn get_event(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -117,8 +117,8 @@ async fn update_event(
     body: Json<CustomEventUpdatePayload>,
     path: Path<(String, String)>,
 ) -> ApiResult<Json<CustomEventResponse>> {
-    let (bot_id, event_key) = path.into_inner();
-    let bot_id = Snowflake(bot_id).0;
+    let (id, event_key) = path.into_inner();
+    let bot_id = Snowflake::try_from(id)?.into_inner();
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -138,7 +138,7 @@ async fn update_event(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -236,8 +236,8 @@ async fn delete_event(
     repos: Data<Repositories>,
     path: Path<(String, String)>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let (bot_id, event_key) = path.into_inner();
-    let bot_id = Snowflake(bot_id).0;
+    let (id, event_key) = path.into_inner();
+    let bot_id = Snowflake::try_from(id)?.into_inner();
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -257,7 +257,7 @@ async fn delete_event(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

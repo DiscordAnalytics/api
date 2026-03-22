@@ -32,7 +32,7 @@ async fn get_articles(
         "Fetching all articles",
     );
 
-    let articles = if let Some(ctx) = &auth.0
+    let articles = if let Some(ctx) = auth.as_ref()
         && ctx.is_admin()
     {
         repos.blog_articles.find_all().await?
@@ -74,7 +74,7 @@ async fn create_article(
         "Creating a new article",
     );
 
-    let user_id = auth.0.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+    let user_id = auth.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
 
     let author = repos
         .users

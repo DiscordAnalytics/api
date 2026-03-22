@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, post},
@@ -6,14 +6,14 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
         models::Achievement,
     },
     openapi::schemas::MessageResponse,
     repository::Repositories,
-    utils::logger::LogCode,
+    utils::{discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -24,9 +24,9 @@ use crate::{
 async fn reset_achievements(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -43,7 +43,7 @@ async fn reset_achievements(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

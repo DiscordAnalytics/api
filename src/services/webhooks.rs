@@ -236,7 +236,6 @@ impl WebhooksService {
         if let Err(e) = discord_service
             .send_dm(
                 &owner.user_id,
-                None,
                 Some(DiscordNotification::create(NotificationType::TestWebhook {
                     bot_username: bot.username.to_owned(),
                     bot_id: bot.bot_id.to_owned(),

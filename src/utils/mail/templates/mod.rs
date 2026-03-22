@@ -8,7 +8,11 @@ pub type TemplateVars = HashMap<String, String>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Template {
+    BotConfigurationDeletion,
+    BotConfigurationWarning,
     BotDeletedByAdmin,
+    BotInactiveDeletion,
+    BotInactiveWarning,
     BotSuspended,
     BotTokenRegen,
     TeamInvite,
@@ -20,7 +24,11 @@ pub enum Template {
 impl Template {
     pub fn mjml(&self) -> &'static str {
         match self {
+            Template::BotConfigurationDeletion => include_str!("bot_configuration_deletion.mjml"),
+            Template::BotConfigurationWarning => include_str!("bot_configuration_warning.mjml"),
             Template::BotDeletedByAdmin => include_str!("bot_deleted_by_admin.mjml"),
+            Template::BotInactiveDeletion => include_str!("bot_inactive_deletion.mjml"),
+            Template::BotInactiveWarning => include_str!("bot_inactive_warning.mjml"),
             Template::BotSuspended => include_str!("bot_suspended.mjml"),
             Template::BotTokenRegen => include_str!("bot_token_regen.mjml"),
             Template::TeamInvite => include_str!("team_invite.mjml"),
@@ -32,7 +40,13 @@ impl Template {
 
     pub fn default_subject(&self) -> &'static str {
         match self {
+            Template::BotConfigurationDeletion => {
+                "Your bot has been deleted due to not being configured"
+            }
+            Template::BotConfigurationWarning => "Your bot is not yet configured",
             Template::BotDeletedByAdmin => "Your bot has been deleted by an administrator",
+            Template::BotInactiveDeletion => "Your bot has been deleted due to inactivity",
+            Template::BotInactiveWarning => "Your bot is inactive",
             Template::BotSuspended => "Your bot has been suspended",
             Template::BotTokenRegen => "Your bot token has been regenerated",
             Template::TeamInvite => "You've been invited to join a team",
@@ -88,7 +102,11 @@ mod tests {
     #[test]
     fn test_render_all_templates() {
         let templates = [
+            Template::BotConfigurationDeletion,
+            Template::BotConfigurationWarning,
             Template::BotDeletedByAdmin,
+            Template::BotInactiveDeletion,
+            Template::BotInactiveWarning,
             Template::BotSuspended,
             Template::BotTokenRegen,
             Template::TeamInvite,

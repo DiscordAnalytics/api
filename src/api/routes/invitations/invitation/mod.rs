@@ -1,14 +1,16 @@
 use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
-    web::{ServiceConfig, get},
+    web::{ServiceConfig, get, post},
 };
 use tracing::info;
 
 use crate::{
+    api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::InvitationResponse,
-    repository::Repositories,
+    openapi::schemas::{InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse},
+    repository::{BotUpdate, Repositories},
+    services::Services,
     utils::logger::LogCode,
 };
 
@@ -103,6 +105,136 @@ async fn get_invitation(
     }))
 }
 
+#[api_operation(
+    summary = "Accept or reject an invitation",
+    description = "Accept or reject a team invitation using its ID",
+    tag = "Invitations"
+)]
+async fn answer_invitation(
+    auth: Authenticated,
+    services: Data<Services>,
+    repos: Data<Repositories>,
+    id: Path<String>,
+    body: Json<InvitationAcceptBody>,
+) -> ApiResult<Json<InvitationAcceptResponse>> {
+    let invitation_id = &id.into_inner();
+
+    info!(
+        code = %LogCode::Request,
+        invitation_id = %invitation_id,
+        "Processing invitation acceptance/rejection",
+    );
+
+    let invitation = repos
+        .team_invitations
+        .find_by_id(invitation_id)
+        .await?
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Request,
+                invitation_id = %invitation_id,
+                "Invitation not found",
+            );
+            ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
+        })?;
+
+    repos
+        .bots
+        .find_by_id(&invitation.bot_id)
+        .await?
+        .ok_or_else(|| {
+            info!(
+                code = %LogCode::Request,
+                bot_id = %invitation.bot_id,
+                "Bot not found for",
+            );
+            ApiError::NotFound(format!("Bot with ID {} not found", invitation.bot_id))
+        })?;
+
+    let ctx = &auth;
+
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            invitation_id = %invitation_id,
+            "Admin user processing invitation",
+        );
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if invitation.user_id != user_id {
+            info!(
+                code = %LogCode::Forbidden,
+                invitation_id = %invitation_id,
+                user_id = %user_id,
+                "User does not have access to process invitation",
+            );
+            return Err(ApiError::Forbidden);
+        }
+        info!(
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            user_id = %user_id,
+            "User processing invitation",
+        );
+    } else if !ctx.is_user() {
+        info!(
+            code = %LogCode::Forbidden,
+            invitation_id = %invitation_id,
+            "Unauthorized context attempting to process invitation",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    if invitation.accepted {
+        info!(
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation already accepted, cannot process",
+        );
+        return Err(ApiError::InvitationAlreadyAccepted);
+    }
+
+    if invitation.is_expired() {
+        info!(
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation expired, cannot process",
+        );
+        return Err(ApiError::InvitationExpired);
+    }
+
+    if body.accept {
+        repos
+            .team_invitations
+            .accept_invitation(invitation_id)
+            .await?;
+
+        let update = BotUpdate::new().with_team_member(&invitation.user_id);
+        repos.bots.update(&invitation.bot_id, update).await?;
+
+        info!(
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation accepted successfully",
+        );
+    } else {
+        services
+            .invitations
+            .reject_invitation(invitation_id, &invitation.bot_id, &invitation.user_id)
+            .await?;
+        info!(
+            code = %LogCode::Request,
+            invitation_id = %invitation_id,
+            "Invitation rejected successfully",
+        );
+    }
+
+    Ok(Json(InvitationAcceptResponse {
+        accepted: body.accept,
+    }))
+}
+
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.route("/{invitation_id}", get().to(get_invitation));
+    cfg.route("/{invitation_id}", get().to(get_invitation))
+        .route("/{invitation_id}", post().to(answer_invitation));
 }

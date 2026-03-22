@@ -1,7 +1,8 @@
+use chrono::{Duration, Utc};
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Bson, Document, doc},
+    bson::{Bson, DateTime, Document, doc},
     error::Result,
     options::{FindOneAndUpdateOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
@@ -48,7 +49,7 @@ impl BotUpdate {
     }
 
     pub fn with_team_member(mut self, user_id: &str) -> Self {
-        self.merge_set(doc! { "team": user_id });
+        self.merge_add_to_set(doc! { "team": user_id });
         self
     }
 
@@ -64,6 +65,11 @@ impl BotUpdate {
 
     pub fn with_version(mut self, version: String) -> Self {
         self.merge_set(doc! { "version": version });
+        self
+    }
+
+    pub fn with_warn_level(mut self, warn_level: i32) -> Self {
+        self.merge_set(doc! { "warnLevel": warn_level });
         self
     }
 
@@ -93,6 +99,17 @@ impl BotUpdate {
             .or_insert_with(|| Bson::Document(doc! {}));
 
         if let Bson::Document(existing) = set_doc {
+            existing.extend(doc);
+        }
+    }
+
+    fn merge_add_to_set(&mut self, doc: Document) {
+        let add_to_set_doc = self
+            .updates
+            .entry("$addToSet")
+            .or_insert_with(|| Bson::Document(doc! {}));
+
+        if let Bson::Document(existing) = add_to_set_doc {
             existing.extend(doc);
         }
     }
@@ -130,6 +147,27 @@ impl BotsRepository {
 
     pub async fn count_bots(&self) -> Result<u64> {
         self.collection.count_documents(doc! {}).await
+    }
+
+    pub async fn find_not_configured(&self) -> Result<Vec<Bot>> {
+        let cursor = self.collection.find(doc! { "framework": null }).await?;
+        cursor.try_collect().await
+    }
+
+    pub async fn find_inactive(&self) -> Result<Vec<Bot>> {
+        let difference = Utc::now() - Duration::weeks(1);
+        let one_week_ago = DateTime::from_millis(difference.timestamp_millis());
+
+        let cursor = self
+            .collection
+            .find(doc! {
+              "$or": [
+                { "lastPush": null },
+                { "lastPush": { "$lt": one_week_ago } }
+              ]
+            })
+            .await?;
+        cursor.try_collect().await
     }
 
     pub async fn find_by_id(&self, bot_id: &str) -> Result<Option<Bot>> {

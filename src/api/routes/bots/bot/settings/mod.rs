@@ -1,4 +1,4 @@
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, patch},
@@ -6,11 +6,11 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{BotSettingsPayload, MessageResponse},
     repository::{BotUpdate, Repositories},
-    utils::logger::LogCode,
+    utils::{discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -22,9 +22,9 @@ async fn update_settings(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotSettingsPayload>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -41,7 +41,7 @@ async fn update_settings(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

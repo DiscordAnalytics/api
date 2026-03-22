@@ -1,6 +1,6 @@
 mod reset;
 
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
@@ -8,7 +8,7 @@ use apistos::{
 use tracing::{info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
         models::Achievement,
@@ -19,7 +19,7 @@ use crate::{
     },
     repository::{AchievementUpdate, Repositories},
     services::Services,
-    utils::logger::LogCode,
+    utils::{discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
@@ -31,9 +31,9 @@ async fn get_bot_achievements(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<Vec<AchievementResponse>>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -50,7 +50,7 @@ async fn get_bot_achievements(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -118,10 +118,10 @@ async fn get_bot_achievements(
 async fn create_achievement(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
     payload: Json<AchievementCreationPayload>,
 ) -> ApiResult<Json<AchievementResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -138,7 +138,7 @@ async fn create_achievement(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -199,10 +199,11 @@ async fn create_achievement(
             ))
         })?;
 
-        if let Some(_) = repos
+        if repos
             .achievements
             .find_existing_by_bot(&bot_id, &from)
             .await?
+            .is_some()
         {
             warn!(
                 code = %LogCode::Request,
@@ -273,10 +274,10 @@ async fn create_achievement(
 async fn update_achievement(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
     payload: Json<AchievementUpdatePayload>,
 ) -> ApiResult<Json<AchievementResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -295,7 +296,7 @@ async fn update_achievement(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -362,16 +363,17 @@ async fn update_achievement(
 
     let payload = payload.into_inner();
 
-    if let Some(shared) = payload.shared {
-        if shared && !existing.shared {
-            warn!(
-                code = %LogCode::Forbidden,
-                bot_id = %bot_id,
-                achievement_id = %payload.id,
-                "Attempt to update shared achievement to non-shared",
-            );
-            return Err(ApiError::Forbidden);
-        }
+    if let Some(shared) = payload.shared
+        && shared
+        && !existing.shared
+    {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            achievement_id = %payload.id,
+            "Attempt to update shared achievement to non-shared",
+        );
+        return Err(ApiError::Forbidden);
     }
 
     let mut updates = AchievementUpdate::new();
@@ -412,10 +414,10 @@ async fn update_achievement(
 async fn delete_achievement(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
     query: Json<DeleteAchievementQuery>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -433,7 +435,7 @@ async fn delete_achievement(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

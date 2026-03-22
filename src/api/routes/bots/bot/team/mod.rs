@@ -1,4 +1,6 @@
-use actix_web::web::{Data, Json};
+use std::collections::{HashMap, HashSet};
+
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, post, resource, scope},
@@ -6,16 +8,16 @@ use apistos::{
 use tracing::{error, info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
         models::TeamInvitation,
     },
     openapi::schemas::{MessageResponse, NewInvitationResponse, TeamRequestBody, TeamResponse},
-    repository::{BotUpdate, Repositories},
+    repository::Repositories,
     services::Services,
     utils::{
-        discord::{DiscordNotification, NotificationType},
+        discord::{DiscordNotification, NotificationType, Snowflake},
         logger::LogCode,
     },
 };
@@ -28,9 +30,9 @@ use crate::{
 async fn get_team(
     auth: Authenticated,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<Vec<TeamResponse>>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -38,7 +40,7 @@ async fn get_team(
         "Fetching team for bot"
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
@@ -91,34 +93,33 @@ async fn get_team(
         return Err(ApiError::Forbidden);
     }
 
-    let mut team = Vec::new();
+    let invitations = repos.team_invitations.find_by_bot(&bot_id).await?;
 
-    for user_id in bot.team {
-        let mut response = TeamResponse {
-            avatar: None,
-            invitation_id: None,
-            pending_invitation: false,
-            registered: false,
+    let mut user_ids: HashSet<String> = invitations.iter().map(|i| i.user_id.clone()).collect();
+
+    user_ids.extend(bot.team.iter().cloned());
+
+    let users_map = repos.users.find_many_by_ids(&user_ids).await?;
+
+    let invitations_map: HashMap<String, TeamInvitation> = invitations
+        .into_iter()
+        .map(|i| (i.user_id.clone(), i))
+        .collect();
+
+    let mut team = Vec::with_capacity(user_ids.len());
+
+    for user_id in user_ids {
+        let user = users_map.get(&user_id);
+        let invitation = invitations_map.get(&user_id);
+
+        team.push(TeamResponse {
+            avatar: user.and_then(|u| u.avatar.clone()),
+            invitation_id: invitation.map(|i| i.invitation_id.clone()),
+            pending_invitation: invitation.map(|i| !i.accepted).unwrap_or(false),
+            registered: user.is_some(),
             user_id: user_id.clone(),
-            username: None,
-        };
-
-        if let Some(user) = repos.users.find_by_id(&user_id).await? {
-            response.avatar = user.avatar;
-            response.username = Some(user.username);
-            response.registered = true;
-        }
-
-        if let Some(invitation) = repos
-            .team_invitations
-            .find_by_bot_and_user(&bot_id, &user_id)
-            .await?
-        {
-            response.invitation_id = Some(invitation.invitation_id);
-            response.pending_invitation = !invitation.accepted;
-        }
-
-        team.push(response);
+            username: user.map(|u| u.username.clone()),
+        });
     }
 
     info!(
@@ -141,9 +142,9 @@ async fn add_to_team(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<NewInvitationResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -171,7 +172,7 @@ async fn add_to_team(
         return Err(ApiError::BotSuspended);
     }
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -209,6 +210,21 @@ async fn add_to_team(
         return Err(ApiError::Forbidden);
     }
 
+    let discord_user = services.discord.get_bot(&body.user_id).await?;
+    if let Some(is_bot) = discord_user.bot
+        && is_bot
+    {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            user_id = %body.user_id,
+            "Cannot add a bot to a bot team",
+        );
+        return Err(ApiError::BadRequest(
+            "Cannot add a bot to a bot team".to_string(),
+        ));
+    }
+
     if services
         .auth
         .user_has_bot_access(&body.user_id, &bot_id)
@@ -225,9 +241,6 @@ async fn add_to_team(
             body.user_id
         )));
     }
-
-    let update = BotUpdate::new().with_team_member(&body.user_id);
-    repos.bots.update(&bot_id, update).await?;
 
     let invitation = TeamInvitation::new(&bot_id, &body.user_id);
     repos.team_invitations.insert(&invitation).await?;
@@ -263,7 +276,6 @@ async fn add_to_team(
                 .discord
                 .send_dm(
                     &user.user_id,
-                    None,
                     Some(DiscordNotification::create(NotificationType::TeamInvite {
                         bot_username: bot.username.clone(),
                         owner_username: owner.username.clone(),
@@ -335,9 +347,9 @@ async fn delete_from_team(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -355,7 +367,7 @@ async fn delete_from_team(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(

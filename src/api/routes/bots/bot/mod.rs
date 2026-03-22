@@ -6,7 +6,7 @@ mod suspend;
 mod team;
 mod token;
 
-use actix_web::web::{Data, Json};
+use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
@@ -15,7 +15,7 @@ use mongodb::bson::DateTime;
 use tracing::{error, info, warn};
 
 use crate::{
-    api::middleware::{Authenticated, Snowflake},
+    api::middleware::Authenticated,
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
@@ -27,7 +27,7 @@ use crate::{
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::{
-        discord::{DiscordNotification, NotificationType},
+        discord::{DiscordNotification, NotificationType, Snowflake},
         logger::LogCode,
     },
 };
@@ -41,9 +41,9 @@ async fn get_bot(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -60,7 +60,9 @@ async fn get_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
+
+    let mut ignore_webhooks = false;
 
     if ctx.is_admin() {
         info!(
@@ -86,6 +88,9 @@ async fn get_bot(
             );
             return Err(ApiError::Forbidden);
         }
+        if !bot.is_owner(user_id) {
+            ignore_webhooks = true;
+        }
     } else {
         warn!(
             code = %LogCode::Forbidden,
@@ -101,7 +106,11 @@ async fn get_bot(
         "Bot details fetched successfully",
     );
 
-    Ok(Json(BotResponse::try_from(bot)?))
+    let mut res = BotResponse::try_from(bot)?;
+    if ignore_webhooks {
+        res.webhooks_config = None;
+    }
+    Ok(Json(res))
 }
 
 #[api_operation(
@@ -114,9 +123,9 @@ async fn post_bot(
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<BotCreationBody>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -124,7 +133,7 @@ async fn post_bot(
         "Attempting to create bot",
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if !ctx.is_admin() && !ctx.is_user() {
         warn!(
@@ -225,9 +234,9 @@ async fn patch_bot(
     auth: Authenticated,
     repos: Data<Repositories>,
     body: Json<BotUpdateBody>,
-    id: Snowflake,
+    id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -235,7 +244,7 @@ async fn patch_bot(
         "Attempting to update bot",
     );
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if !(ctx.is_admin() || ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
         warn!(
@@ -342,10 +351,10 @@ async fn delete_bot(
     auth: Authenticated,
     services: Data<Services>,
     repos: Data<Repositories>,
-    id: Snowflake,
+    id: Path<String>,
     payload: Option<Json<BotDeletionPayload>>,
 ) -> ApiResult<Json<MessageResponse>> {
-    let bot_id = id.0;
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
@@ -363,7 +372,7 @@ async fn delete_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    let ctx = &auth.0;
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -437,7 +446,6 @@ async fn delete_bot(
                 .discord
                 .send_dm(
                     &owner.user_id,
-                    None,
                     Some(DiscordNotification::create(
                         NotificationType::BotDeletedByAdmin {
                             bot_username: bot.username.clone(),

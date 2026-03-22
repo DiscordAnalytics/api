@@ -1,7 +1,9 @@
+use std::ops::Deref;
+
 use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest,
     dev::Payload,
-    error::{ErrorBadRequest, ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
+    error::{ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
     web::Data,
 };
 use apistos::{ApiComponent, ApiSecurity};
@@ -14,7 +16,6 @@ use schemars::JsonSchema;
 use crate::{
     domain::{auth::AuthContext, error::ApiError},
     services::Services,
-    utils::discord::is_valid_snowflake,
 };
 
 #[derive(Clone, JsonSchema, ApiSecurity)]
@@ -23,6 +24,14 @@ use crate::{
     api_key_in = "header"
 ))))]
 pub struct Authenticated(pub AuthContext);
+
+impl Deref for Authenticated {
+    type Target = AuthContext;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl FromRequest for Authenticated {
     type Error = Error;
@@ -66,6 +75,14 @@ impl FromRequest for Authenticated {
 ))))]
 pub struct OptionalAuth(pub Option<AuthContext>);
 
+impl Deref for OptionalAuth {
+    type Target = Option<AuthContext>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl FromRequest for OptionalAuth {
     type Error = Error;
     type Future = Ready<Result<Self, Self::Error>>;
@@ -82,6 +99,14 @@ impl FromRequest for OptionalAuth {
     api_key_in = "header"
 ))))]
 pub struct RequireAdmin(pub AuthContext);
+
+impl Deref for RequireAdmin {
+    type Target = AuthContext;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl FromRequest for RequireAdmin {
     type Error = Error;
@@ -116,26 +141,13 @@ impl FromRequest for RequireAdmin {
 }
 
 #[derive(Clone, JsonSchema, ApiComponent)]
-pub struct Snowflake(pub String);
+pub struct RawBody(pub Vec<u8>);
 
-impl FromRequest for Snowflake {
-    type Error = Error;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let id = req.match_info().get("id");
-        if let Some(id) = id
-            && is_valid_snowflake(id)
-        {
-            ready(Ok(Snowflake(id.to_string())))
-        } else {
-            ready(Err(ErrorBadRequest(ApiError::InvalidId)))
-        }
+impl RawBody {
+    pub fn into_inner(self) -> Vec<u8> {
+        self.0
     }
 }
-
-#[derive(Clone, JsonSchema, ApiComponent)]
-pub struct RawBody(pub Vec<u8>);
 
 impl FromRequest for RawBody {
     type Error = Error;

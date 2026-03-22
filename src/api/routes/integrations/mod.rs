@@ -29,7 +29,7 @@ async fn vote_integration(
 ) -> ApiResult<Json<IntegrationResult>> {
     let provider = path.into_inner();
 
-    let body_value = match from_slice::<Value>(&raw_body.0) {
+    let body_value = match from_slice::<Value>(&raw_body.into_inner()) {
         Ok(v) => v,
         Err(e) => {
             return Err(ApiError::InvalidInput(format!(

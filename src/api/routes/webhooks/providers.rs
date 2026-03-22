@@ -119,6 +119,7 @@ pub async fn handle_provider(
         "discordplace" => handle_discordplace(body, bot, authorization).await,
         "discordscom" => handle_discordscom(body, bot, authorization).await,
         "topgg" => handle_topgg(body, body_bytes, bot, headers).await,
+        "test" => Ok(ProviderResponse::TestWebhook),
         _ => {
             info!(
                 code = %LogCode::Webhook,

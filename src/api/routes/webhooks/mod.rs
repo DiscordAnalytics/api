@@ -36,6 +36,7 @@ fn extract_bot_id_from_payload(provider: &str, body: &Value) -> Option<String> {
             .map(String::from),
         "dblist" | "discordlist" => body.get("bot_id")?.as_str().map(String::from),
         "discordscom" | "botlistme" => body.get("bot")?.as_str().map(String::from),
+        "test" => body.get("botId")?.as_str().map(String::from),
         _ => None,
     }
 }

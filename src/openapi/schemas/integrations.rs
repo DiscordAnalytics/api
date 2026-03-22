@@ -3,6 +3,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+pub struct IntegrationPayload {
+    pub bot_id: String,
+    pub user_id: String,
+    pub webhook_secret: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct TopGGIntegrationPayload {
     pub data: TopGGIntegrationData,
     #[serde(rename = "type")]

@@ -210,6 +210,16 @@ async fn add_to_team(
         return Err(ApiError::Forbidden);
     }
 
+    if bot.team.len() as i32 == bot.teammates_limit {
+        warn!(
+            code = %LogCode::Conflict,
+            bot_id = %bot_id,
+            user_id = %body.user_id,
+            "Team limit reached",
+        );
+        return Err(ApiError::LimitExceeded("Team limit reached".to_string()));
+    }
+
     let discord_user = services.discord.get_bot(&body.user_id).await?;
     if let Some(is_bot) = discord_user.bot
         && is_bot

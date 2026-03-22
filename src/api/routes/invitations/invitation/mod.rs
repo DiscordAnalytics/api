@@ -3,7 +3,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, post},
 };
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,
@@ -138,7 +138,7 @@ async fn answer_invitation(
             ApiError::NotFound(format!("Invitation with ID {} not found", invitation_id))
         })?;
 
-    repos
+    let bot = repos
         .bots
         .find_by_id(&invitation.bot_id)
         .await?
@@ -201,6 +201,16 @@ async fn answer_invitation(
             "Invitation expired, cannot process",
         );
         return Err(ApiError::InvitationExpired);
+    }
+
+    if bot.team.len() as i32 == bot.teammates_limit {
+        warn!(
+            code = %LogCode::Conflict,
+            bot_id = %bot.bot_id,
+            user_id = %invitation.user_id,
+            "Team limit reached",
+        );
+        return Err(ApiError::LimitExceeded("Team limit reached".to_string()));
     }
 
     if body.accept {

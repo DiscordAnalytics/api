@@ -1,6 +1,6 @@
 use mongodb::{Client, Database, bson::doc, error::Result};
 
-use crate::{app_env, utils::constants::DB_NAME};
+use crate::app_env;
 
 #[derive(Clone)]
 pub struct DbConnection {
@@ -10,7 +10,7 @@ pub struct DbConnection {
 impl DbConnection {
     pub async fn init() -> Result<Self> {
         let client = Client::with_uri_str(&app_env!().database_url).await?;
-        let db = client.database(DB_NAME);
+        let db = client.database(&app_env!().database_name);
         Ok(Self { db })
     }
 

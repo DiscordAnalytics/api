@@ -5,12 +5,17 @@ use mongodb::bson::DateTime;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::utils::constants::{
+    MAX_CUSTOM_EVENTS_PER_BOT, MAX_GOALS_PER_BOT, MAX_TEAMMATES_PER_BOT,
+};
+
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Bot {
     pub advanced_stats: bool,
     pub avatar: Option<String>,
     pub bot_id: String,
+    pub custom_events_limit: i32,
     pub framework: Option<String>,
     pub goals_limit: i32,
     pub language: Option<String>,
@@ -18,6 +23,7 @@ pub struct Bot {
     pub owner_id: String,
     pub suspended: bool,
     pub team: Vec<String>,
+    pub teammates_limit: i32,
     pub(crate) token: String,
     pub username: String,
     pub version: Option<String>,
@@ -38,13 +44,15 @@ impl Bot {
             advanced_stats: false,
             avatar: avatar.map(|s| s.to_string()),
             bot_id: bot_id.to_string(),
+            custom_events_limit: MAX_CUSTOM_EVENTS_PER_BOT,
             framework: None,
-            goals_limit: 30,
+            goals_limit: MAX_GOALS_PER_BOT,
             language: None,
             last_push: None,
             owner_id: owner_id.to_string(),
             suspended: false,
             team: Vec::new(),
+            teammates_limit: MAX_TEAMMATES_PER_BOT,
             token,
             username: username.to_string(),
             version: None,

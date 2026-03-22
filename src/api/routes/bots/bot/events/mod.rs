@@ -171,6 +171,17 @@ async fn create_event(
         return Err(ApiError::Forbidden);
     }
 
+    if repos.custom_events.find_by_bot_id(&bot_id).await?.len() as i32 == bot.custom_events_limit {
+        warn!(
+            code = %LogCode::Conflict,
+            bot_id = %bot_id,
+            "Custom event limit reached",
+        );
+        return Err(ApiError::LimitExceeded(
+            "Custom event limit reached for this bot".to_string(),
+        ));
+    }
+
     if repos
         .custom_events
         .find_by_bot_id_and_event_key(&bot_id, &event.event_key)

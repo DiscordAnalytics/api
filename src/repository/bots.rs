@@ -79,12 +79,10 @@ impl BotUpdate {
         config: WebhookConfig,
         webhook_url: Option<&str>,
     ) -> Self {
-        self.merge_set(
-            doc! { format!("webhooksConfig.webhooks.{}", provider): doc! {
-                "connectionId": config.connection_id,
-                "webhookSecret": config.webhook_secret,
-            }},
-        );
+        self.merge_set(doc! { format!("webhooksConfig.{}", provider): doc! {
+            "connectionId": config.connection_id,
+            "webhookSecret": config.webhook_secret,
+        }});
 
         if let Some(url) = webhook_url {
             self.merge_set(doc! { "webhooksConfig.webhookUrl": url });

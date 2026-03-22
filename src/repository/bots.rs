@@ -1,13 +1,8 @@
-#[cfg(not(debug_assertions))]
-use {
-    chrono::{Duration, Utc},
-    mongodb::bson::DateTime,
-};
-
+use chrono::{Duration, Utc};
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Bson, Document, doc},
+    bson::{Bson, DateTime, Document, doc},
     error::Result,
     options::{FindOneAndUpdateOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
@@ -73,7 +68,6 @@ impl BotUpdate {
         self
     }
 
-    #[cfg(not(debug_assertions))]
     pub fn with_warn_level(mut self, warn_level: i32) -> Self {
         self.merge_set(doc! { "warnLevel": warn_level });
         self
@@ -155,13 +149,11 @@ impl BotsRepository {
         self.collection.count_documents(doc! {}).await
     }
 
-    #[cfg(not(debug_assertions))]
     pub async fn find_not_configured(&self) -> Result<Vec<Bot>> {
         let cursor = self.collection.find(doc! { "framework": null }).await?;
         cursor.try_collect().await
     }
 
-    #[cfg(not(debug_assertions))]
     pub async fn find_inactive(&self) -> Result<Vec<Bot>> {
         let difference = Utc::now() - Duration::weeks(1);
         let one_week_ago = DateTime::from_millis(difference.timestamp_millis());

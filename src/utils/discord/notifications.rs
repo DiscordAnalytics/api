@@ -1,12 +1,10 @@
 use crate::{app_env, utils::discord::DiscordEmbed};
 
 pub enum NotificationType {
-    #[cfg(not(debug_assertions))]
     BotConfigurationDeletion {
         bot_username: String,
         bot_id: String,
     },
-    #[cfg(not(debug_assertions))]
     BotConfigurationWarning {
         bot_username: String,
         bot_id: String,
@@ -15,6 +13,14 @@ pub enum NotificationType {
         bot_username: String,
         bot_id: String,
         reason: String,
+    },
+    BotInactiveDeletion {
+        bot_username: String,
+        bot_id: String,
+    },
+    BotInactiveWarning {
+        bot_username: String,
+        bot_id: String,
     },
     BotSuspended {
         bot_username: String,
@@ -50,7 +56,6 @@ pub enum NotificationType {
 impl NotificationType {
     pub fn to_embed(&self) -> DiscordEmbed {
         match self {
-            #[cfg(not(debug_assertions))]
             NotificationType::BotConfigurationDeletion {
                 bot_username,
                 bot_id,
@@ -65,7 +70,6 @@ impl NotificationType {
                 .field("Bot", format!("{} ({})", bot_username, bot_id), false)
                 .footer("Discord Analytics"),
 
-            #[cfg(not(debug_assertions))]
             NotificationType::BotConfigurationWarning {
               bot_username,
               bot_id
@@ -91,12 +95,41 @@ impl NotificationType {
                 .description(format!(
                     "Your bot **{}** has been deleted by an administrator.\n\n\
                     **Reason:** {}\n\n\
-                    If you believe this was a mistake or would like more information, please contact support.",
+                    If you believe this was a mistake or would like more information, please contact [support](https://discordanalytics.xyz/support).",
                     bot_username, reason
                 ))
                 .color(0xE74C3C) // Red
                 .field("Bot", format!("{} ({})", bot_username, bot_id), false)
                 .footer("Discord Analytics"),
+
+            NotificationType::BotInactiveDeletion {
+                bot_username,
+                bot_id,
+            } => DiscordEmbed::new()
+                .title("Bot Inactive Deletion")
+                .description(format!(
+                    "Your bot **{}** has been deleted due to inactivity.\n\n\
+                    If you believe this was a mistake or would like more information, please contact [support](https://discordanalytics.xyz/support).",
+                    bot_username
+                ))
+                .color(0xE74C3C) // Red
+                .field("Bot", format!("{} ({})", bot_username, bot_id), false)
+                .footer("Discord Analytics"),
+
+            NotificationType::BotInactiveWarning {
+                bot_username,
+                bot_id,
+            } => DiscordEmbed::new()
+                .title("Bot Inactive Warning")
+                .description(format!(
+                    "Your bot **{}** is inactive and will be deleted next month.\n\n\
+                    If you believe this was a mistake or would like more information, please contact [support](https://discordanalytics.xyz/support).",
+                    bot_username
+                ))
+                .color(0xF1C40F) // Yellow
+                .field("Bot", format!("{} ({})", bot_username, bot_id), false)
+                .footer("Discord Analytics"),
+
 
             NotificationType::BotSuspended {
                 bot_username,
@@ -177,7 +210,7 @@ impl NotificationType {
                 .description(format!(
                     "Your account **{}** has been deleted by an administrator.\n\n\
                     All of your bots and data have been permanently removed. \n\n\
-                    If you believe this was a mistake or would like more information, please contact support.",
+                    If you believe this was a mistake or would like more information, please contact [support](https://discordanalytics.xyz/support).",
                     username
                 ))
                 .color(0xE74C3C) // Red

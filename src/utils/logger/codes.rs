@@ -19,7 +19,6 @@ pub enum LogCode {
     /// Admin actions
     AdminAction,
     /// Bot expiration warnings
-    #[cfg(not(debug_assertions))]
     BotExpiration,
     /// User-related events
     User,
@@ -48,7 +47,6 @@ impl LogCode {
             LogCode::Forbidden => "FORBID",
             LogCode::InvalidToken => "INV_TOKEN",
             LogCode::AdminAction => "ADMIN",
-            #[cfg(not(debug_assertions))]
             LogCode::BotExpiration => "BOT_EXP",
             LogCode::User => "USER",
             LogCode::Conflict => "CONFLICT",

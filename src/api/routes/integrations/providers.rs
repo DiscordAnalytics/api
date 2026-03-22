@@ -117,7 +117,6 @@ async fn handle_integration(
             connection_id: None,
             webhook_secret: payload.webhook_secret,
         },
-        None,
     );
 
     repos.bots.update(bot_id, update).await?;
@@ -256,7 +255,6 @@ async fn handle_topgg_integration(
             connection_id: Some(payload.data.connection_id),
             webhook_secret: payload.data.webhook_secret,
         },
-        None,
     );
 
     repos.bots.update(&project.platform_id, update).await?;

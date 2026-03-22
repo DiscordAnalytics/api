@@ -82,10 +82,6 @@ impl UsersRepository {
         cursor.try_collect().await
     }
 
-    pub async fn count_users(&self) -> Result<u64> {
-        self.collection.count_documents(doc! {}).await
-    }
-
     pub async fn find_by_id(&self, user_id: &str) -> Result<Option<User>> {
         self.collection.find_one(doc! { "userId": user_id }).await
     }

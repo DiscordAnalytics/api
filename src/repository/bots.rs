@@ -145,10 +145,6 @@ impl BotsRepository {
         cursor.try_collect().await
     }
 
-    pub async fn count_bots(&self) -> Result<u64> {
-        self.collection.count_documents(doc! {}).await
-    }
-
     pub async fn find_not_configured(&self) -> Result<Vec<Bot>> {
         let cursor = self.collection.find(doc! { "framework": null }).await?;
         cursor.try_collect().await

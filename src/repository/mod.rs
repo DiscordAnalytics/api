@@ -4,7 +4,6 @@ mod bot_stats;
 mod bots;
 mod connection;
 mod custom_events;
-mod global_stats;
 #[cfg(feature = "reports")]
 mod r2;
 mod sessions;
@@ -20,7 +19,6 @@ pub use blog_articles::BlogArticleUpdate;
 pub use bot_stats::BotStatsUpdate;
 pub use bots::BotUpdate;
 pub use custom_events::CustomEventUpdate;
-pub use global_stats::GlobalStatsUpdate;
 #[cfg(feature = "reports")]
 pub use stats_reports::StatsReportUpdate;
 pub use users::UserUpdate;
@@ -33,7 +31,6 @@ pub struct Repositories {
     pub bot_stats: bot_stats::BotStatsRepository,
     pub custom_events: custom_events::CustomEventsRepository,
     database: connection::DbConnection,
-    pub global_stats: global_stats::GlobalStatsRepository,
     pub sessions: sessions::SessionsRepository,
     #[cfg(feature = "reports")]
     pub r2: r2::R2Repository,
@@ -56,7 +53,6 @@ impl Repositories {
             bot_stats: bot_stats::BotStatsRepository::new(db).await?,
             custom_events: custom_events::CustomEventsRepository::new(db).await?,
             database: connection.clone(),
-            global_stats: global_stats::GlobalStatsRepository::new(db).await?,
             sessions: sessions::SessionsRepository::new(db).await?,
             #[cfg(feature = "reports")]
             r2: r2::R2Repository::new()?,

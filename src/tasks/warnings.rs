@@ -173,105 +173,106 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
     let six_months_ago = DateTime::from_millis(six_months_ago.timestamp_millis());
 
     for bot in inactive {
-        let owner = match repos.users.find_by_id(&bot.owner_id).await {
-            Ok(Some(user)) => user,
-            _ => continue,
-        };
-
-        let watched_since = bot.watched_since;
-        let warn_level = bot.warn_level;
-
-        if watched_since < five_months_ago && warn_level != 2 {
-            if let Err(e) = services
-                .discord
-                .send_dm(
-                    &owner.user_id,
-                    Some(DiscordNotification::create(
-                        NotificationType::BotInactiveWarning {
-                            bot_username: bot.username.clone(),
-                            bot_id: bot.bot_id.clone(),
-                        },
-                    )),
-                )
-                .await
-            {
-                error!(
-                    code = %LogCode::BotExpiration,
-                    owner_id = %owner.user_id,
-                    bot_id = %bot.bot_id,
-                    error = %e,
-                    "Failed to warn owner for bot inactivity",
-                );
+        if let Some(last_push) = bot.last_push {
+            let owner = match repos.users.find_by_id(&bot.owner_id).await {
+                Ok(Some(user)) => user,
+                _ => continue,
             };
 
-            #[cfg(feature = "mails")]
-            if let Err(e) = services.mail.send_bot_inactive_warning(&owner, &bot) {
-                error!(
-                    code = %LogCode::Mail,
-                    bot_id = %bot.bot_id,
-                    user_id = %owner.user_id,
-                    error = %e,
-                    "Failed to send bot inactivity warning email to user",
-                );
-            }
+            let warn_level = bot.warn_level;
 
-            let update = BotUpdate::new().with_warn_level(2);
-
-            match repos.bots.update(&bot.bot_id, update).await {
-                Ok(Some(_)) => info!(
-                    code = %LogCode::BotExpiration,
-                    bot_id = %bot.bot_id,
-                    "Bot has been warned for being inactive",
-                ),
-                _ => error!(
-                    code = %LogCode::BotExpiration,
-                    bot_id = %bot.bot_id,
-                    "Failed to warn bot for being inactive",
-                ),
-            }
-        } else if watched_since < six_months_ago && warn_level == 2 {
-            if let Err(e) = services
-                .discord
-                .send_dm(
-                    &owner.user_id,
-                    Some(DiscordNotification::create(
-                        NotificationType::BotInactiveDeletion {
-                            bot_username: bot.username.clone(),
-                            bot_id: bot.bot_id.clone(),
-                        },
-                    )),
-                )
-                .await
-            {
-                error!(
-                    code = %LogCode::BotExpiration,
-                    error = %e,
-                    "Failed to send inactive bot deletion DM"
-                );
-            }
-
-            #[cfg(feature = "mails")]
-            if let Err(e) = services.mail.send_bot_inactive_deletion(&owner, &bot) {
-                error!(
-                    code = %LogCode::BotExpiration,
-                    error = %e,
-                    "Failed to send inactive bot deletion email"
-                );
-            }
-
-            match services.bots.delete_bot(&bot.bot_id).await {
-                Ok(_) => info!(
-                    code = %LogCode::BotExpiration,
-                    bot_id = %bot.bot_id,
-                    "Deleted inactive bot"
-                ),
-                Err(e) => {
+            if last_push < five_months_ago && warn_level != 2 {
+                if let Err(e) = services
+                    .discord
+                    .send_dm(
+                        &owner.user_id,
+                        Some(DiscordNotification::create(
+                            NotificationType::BotInactiveWarning {
+                                bot_username: bot.username.clone(),
+                                bot_id: bot.bot_id.clone(),
+                            },
+                        )),
+                    )
+                    .await
+                {
                     error!(
                         code = %LogCode::BotExpiration,
+                        owner_id = %owner.user_id,
                         bot_id = %bot.bot_id,
                         error = %e,
-                        "Failed to delete inactive bot"
+                        "Failed to warn owner for bot inactivity",
                     );
+                };
+
+                #[cfg(feature = "mails")]
+                if let Err(e) = services.mail.send_bot_inactive_warning(&owner, &bot) {
+                    error!(
+                        code = %LogCode::Mail,
+                        bot_id = %bot.bot_id,
+                        user_id = %owner.user_id,
+                        error = %e,
+                        "Failed to send bot inactivity warning email to user",
+                    );
+                }
+
+                let update = BotUpdate::new().with_warn_level(2);
+
+                match repos.bots.update(&bot.bot_id, update).await {
+                    Ok(Some(_)) => info!(
+                        code = %LogCode::BotExpiration,
+                        bot_id = %bot.bot_id,
+                        "Bot has been warned for being inactive",
+                    ),
+                    _ => error!(
+                        code = %LogCode::BotExpiration,
+                        bot_id = %bot.bot_id,
+                        "Failed to warn bot for being inactive",
+                    ),
+                }
+            } else if last_push < six_months_ago && warn_level == 2 {
+                if let Err(e) = services
+                    .discord
+                    .send_dm(
+                        &owner.user_id,
+                        Some(DiscordNotification::create(
+                            NotificationType::BotInactiveDeletion {
+                                bot_username: bot.username.clone(),
+                                bot_id: bot.bot_id.clone(),
+                            },
+                        )),
+                    )
+                    .await
+                {
+                    error!(
+                        code = %LogCode::BotExpiration,
+                        error = %e,
+                        "Failed to send inactive bot deletion DM"
+                    );
+                }
+
+                #[cfg(feature = "mails")]
+                if let Err(e) = services.mail.send_bot_inactive_deletion(&owner, &bot) {
+                    error!(
+                        code = %LogCode::BotExpiration,
+                        error = %e,
+                        "Failed to send inactive bot deletion email"
+                    );
+                }
+
+                match services.bots.delete_bot(&bot.bot_id).await {
+                    Ok(_) => info!(
+                        code = %LogCode::BotExpiration,
+                        bot_id = %bot.bot_id,
+                        "Deleted inactive bot"
+                    ),
+                    Err(e) => {
+                        error!(
+                            code = %LogCode::BotExpiration,
+                            bot_id = %bot.bot_id,
+                            error = %e,
+                            "Failed to delete inactive bot"
+                        );
+                    }
                 }
             }
         }

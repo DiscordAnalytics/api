@@ -3,6 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct IntegrationPayload {
     pub bot_id: String,
     pub user_id: String,

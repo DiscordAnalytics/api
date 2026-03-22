@@ -70,7 +70,7 @@ async fn handle_integration(
         let token = generate_bot_token(bot_id).map_err(|e| {
             warn!(
                 code = %LogCode::Webhook,
-                provider = %provider
+                provider = %provider,
                 bot_id = %bot_id,
                 error = %e,
                 "Failed to generate bot token for new integration"
@@ -105,7 +105,7 @@ async fn handle_integration(
                 provider = "topgg",
                 bot_id = %bot_id,
                 error = %e,
-                "Failed to insert new bot from TopGG integration into database"
+                "Failed to insert new bot from integration into database"
             );
             ApiError::InternalError("Failed to create bot".to_string())
         })?;
@@ -124,7 +124,7 @@ async fn handle_integration(
 
     info!(
         code = %LogCode::Webhook,
-        provider = "topgg",
+        provider = %provider,
         bot_id = %bot_id,
         "Successfully processed integration event"
     );

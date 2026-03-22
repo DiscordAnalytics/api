@@ -199,10 +199,11 @@ async fn create_achievement(
             ))
         })?;
 
-        if let Some(_) = repos
+        if repos
             .achievements
             .find_existing_by_bot(&bot_id, &from)
             .await?
+            .is_some()
         {
             warn!(
                 code = %LogCode::Request,
@@ -362,16 +363,17 @@ async fn update_achievement(
 
     let payload = payload.into_inner();
 
-    if let Some(shared) = payload.shared {
-        if shared && !existing.shared {
-            warn!(
-                code = %LogCode::Forbidden,
-                bot_id = %bot_id,
-                achievement_id = %payload.id,
-                "Attempt to update shared achievement to non-shared",
-            );
-            return Err(ApiError::Forbidden);
-        }
+    if let Some(shared) = payload.shared
+        && shared
+        && !existing.shared
+    {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            achievement_id = %payload.id,
+            "Attempt to update shared achievement to non-shared",
+        );
+        return Err(ApiError::Forbidden);
     }
 
     let mut updates = AchievementUpdate::new();

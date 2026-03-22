@@ -34,7 +34,7 @@ async fn list_sessions(
         "Listing sessions",
     );
 
-    let sessions = repos.sessions.find_by_user_id(&user_id).await?;
+    let sessions = repos.sessions.find_by_user_id(user_id).await?;
 
     let session_responses = sessions
         .into_iter()
@@ -69,7 +69,7 @@ async fn revoke_all_sessions(
         "Revoking all sessions",
     );
 
-    let sessions = repos.sessions.find_by_user_id(&user_id).await?;
+    let sessions = repos.sessions.find_by_user_id(user_id).await?;
     for session in sessions {
         if session.session_id != *current_session_id {
             repos.sessions.revoke(&session.session_id).await?;

@@ -247,6 +247,20 @@ impl BotsRepository {
             .await
     }
 
+    pub async fn remove_integration(&self, provider: &str, connection_id: &str) -> Result<()> {
+        let provider_key = format!("webhooksConfig.{}", provider);
+        let key = format!("{}.connectionId", provider_key);
+
+        self.collection
+            .update_one(
+                doc! { key.as_str(): connection_id },
+                doc! { "$unset": { provider_key.as_str(): "" } },
+            )
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn delete(&self, bot_id: &str) -> Result<DeleteResult> {
         self.collection.delete_one(doc! { "botId": bot_id }).await
     }

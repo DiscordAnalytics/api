@@ -152,7 +152,14 @@ async fn handle_topgg_integration(
         }
     };
 
-    if payload.type_ == "integration.delete" {
+    if payload.type_ == "integration.delete"
+        && let Some(connection_id) = payload.data.connection_id
+    {
+        repos
+            .bots
+            .remove_integration("topgg", &connection_id)
+            .await?;
+
         return Ok(IntegrationResponse::Ignored);
     }
 
@@ -252,7 +259,7 @@ async fn handle_topgg_integration(
     let update = BotUpdate::new().with_webhook_config(
         "topgg",
         WebhookConfig {
-            connection_id: Some(payload.data.connection_id),
+            connection_id: payload.data.connection_id,
             webhook_secret: payload.data.webhook_secret,
         },
     );

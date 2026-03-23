@@ -83,10 +83,8 @@ impl BotUpdate {
         self
     }
 
-    pub fn with_webhook_url(mut self, webhook_url: Option<&str>) -> Self {
-        if let Some(url) = webhook_url {
-            self.merge_set(doc! { "webhooksConfig.webhookUrl": url });
-        }
+    pub fn with_webhook_url(mut self, webhook_url: Option<String>) -> Self {
+        self.merge_set(doc! { "webhooksConfig.webhookUrl": webhook_url });
         self
     }
 

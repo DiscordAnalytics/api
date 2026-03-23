@@ -23,9 +23,11 @@ impl BotUpdate {
         Self::default()
     }
 
-    pub fn with_advanced_stats(mut self, advanced_stats: bool) -> Self {
-        self.merge_set(doc! { "advancedStats": advanced_stats });
-        self
+    pub fn with_advanced_stats(mut self, advanced_stats: Option<bool>) -> Self {
+        if let Some(advanced_stats) = advanced_stats {
+	    self.merge_set(doc! { "advancedStats": advanced_stats });
+        }
+	self
     }
 
     pub fn with_avatar(mut self, avatar: String) -> Self {

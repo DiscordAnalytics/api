@@ -86,6 +86,6 @@ pub struct BotTokenResponse {
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BotSettingsPayload {
-    pub advanced_stats: bool,
+    pub advanced_stats: Option<bool>,
     pub webhook_url: Option<String>,
 }

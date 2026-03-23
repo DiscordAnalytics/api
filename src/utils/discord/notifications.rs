@@ -177,7 +177,7 @@ impl NotificationType {
                 .field(
                     "Accept Invitation",
                     format!(
-                        "[Click here]({}/invitation/{})",
+                        "[Click here]({}/invitations/{})",
                         app_env!().client_url,
                         invitation_id
                     ),

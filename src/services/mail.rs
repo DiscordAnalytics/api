@@ -198,7 +198,7 @@ impl MailService {
             .var(
                 "accept_link",
                 format!(
-                    "{}/invitation/{}",
+                    "{}/invitations/{}",
                     app_env!().client_url,
                     invitation_id.into()
                 ),

@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use actix_web::web::{Data, Json, Path};
 use apistos::{
     api_operation,
@@ -9,10 +7,7 @@ use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,
-    domain::{
-        error::{ApiError, ApiResult},
-        models::{Bot, User},
-    },
+    domain::error::{ApiError, ApiResult},
     openapi::schemas::InvitationResponse,
     repository::Repositories,
     utils::{discord::Snowflake, logger::LogCode},
@@ -62,8 +57,8 @@ async fn get_user_invitations(
 
     let user_invitations = repos.team_invitations.find_by_user(&user_id).await?;
 
-    let bot_ids: HashSet<String> = user_invitations.iter().map(|i| i.bot_id.clone()).collect();
-    let user_ids: HashSet<String> = user_invitations.iter().map(|i| i.user_id.clone()).collect();
+    let bot_ids = user_invitations.iter().map(|i| i.bot_id.clone()).collect();
+    let user_ids = user_invitations.iter().map(|i| i.user_id.clone()).collect();
 
     let bots = repos.bots.find_many_by_ids(&bot_ids).await?;
     let users = repos.users.find_many_by_ids(&user_ids).await?;

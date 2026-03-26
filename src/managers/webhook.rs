@@ -43,6 +43,7 @@ impl VotesWebhooksManager {
     pub fn queue_webhook(&mut self, webhook: Webhook) {
         let key = Self::build_key(&webhook);
         self.waitlist.insert(key, webhook);
+        println!("{:?}", self.waitlist);
     }
 
     fn is_discord_webhook(url: &str) -> bool {

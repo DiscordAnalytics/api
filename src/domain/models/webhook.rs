@@ -60,7 +60,7 @@ pub struct WebhookSendData<'a> {
     pub content: Option<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Webhook {
     pub webhook_url: String,
     pub webhook_secret: String,

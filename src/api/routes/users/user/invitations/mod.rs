@@ -63,25 +63,25 @@ async fn get_user_invitations(
     let bots = repos.bots.find_many_by_ids(&bot_ids).await?;
     let users = repos.users.find_many_by_ids(&user_ids).await?;
 
-    let mut invitations = Vec::with_capacity(user_invitations.len());
+    let invitations = user_invitations
+        .into_iter()
+        .map(|invitation| -> ApiResult<_> {
+            let bot = bots.get(&invitation.bot_id).ok_or_else(|| {
+                ApiError::NotFound(format!("Bot not found: {}", invitation.bot_id))
+            })?;
+            let user = users.get(&invitation.user_id).ok_or_else(|| {
+                ApiError::NotFound(format!("User not found: {}", invitation.user_id))
+            })?;
 
-    for invitation in user_invitations {
-        let bot = bots
-            .get(&invitation.bot_id)
-            .ok_or_else(|| ApiError::NotFound(format!("Bot not found: {}", invitation.bot_id)))?;
-
-        let user = users
-            .get(&invitation.user_id)
-            .ok_or_else(|| ApiError::NotFound(format!("User not found: {}", invitation.user_id)))?;
-
-        invitations.push(InvitationResponse {
-            invitation: invitation.try_into()?,
-            bot_username: bot.username.clone(),
-            bot_avatar: bot.avatar.clone(),
-            owner_username: user.username.clone(),
-            owner_avatar: user.avatar.clone(),
+            Ok(InvitationResponse {
+                invitation: invitation.try_into()?,
+                bot_username: bot.username.clone(),
+                bot_avatar: bot.avatar.clone(),
+                owner_username: user.username.clone(),
+                owner_avatar: user.avatar.clone(),
+            })
         })
-    }
+        .collect::<Result<Vec<_>, _>>()?;
 
     info!(
         code = %LogCode::Request,

@@ -43,7 +43,6 @@ impl VotesWebhooksManager {
     pub fn queue_webhook(&mut self, webhook: Webhook) {
         let key = Self::build_key(&webhook);
         self.waitlist.insert(key, webhook);
-        println!("{:?}", self.waitlist);
     }
 
     fn is_discord_webhook(url: &str) -> bool {
@@ -57,10 +56,9 @@ impl VotesWebhooksManager {
 
     fn build_payload(webhook: &Webhook) -> Result<(WebhookSendData<'_>, HeaderMap)> {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            "Authorization",
-            HeaderValue::from_str(&webhook.webhook_secret)?,
-        );
+        if let Some(secret) = &webhook.webhook_secret {
+            headers.insert("Authorization", HeaderValue::from_str(secret)?);
+        }
 
         let provider_str = webhook.data.provider.to_str();
 

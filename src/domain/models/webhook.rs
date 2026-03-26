@@ -63,7 +63,7 @@ pub struct WebhookSendData<'a> {
 #[derive(Clone, Debug)]
 pub struct Webhook {
     pub webhook_url: String,
-    pub webhook_secret: String,
+    pub webhook_secret: Option<String>,
     pub data: WebhookData,
     pub try_count: u8,
 }

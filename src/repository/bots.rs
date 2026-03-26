@@ -229,10 +229,6 @@ impl BotsRepository {
     }
 
     pub async fn set_suspension_for_owner(&self, owner_id: &str, suspended: bool) -> Result<()> {
-        let options = FindOneAndUpdateOptions::builder()
-            .return_document(ReturnDocument::After)
-            .build();
-
         let cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
 
         let bots: Vec<Bot> = cursor.try_collect().await?;
@@ -243,7 +239,6 @@ impl BotsRepository {
                     doc! { "botId": &bot.bot_id },
                     doc! { "$set": { "suspended": suspended } },
                 )
-                .with_options(options.clone())
                 .await?;
         }
 

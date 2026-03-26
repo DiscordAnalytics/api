@@ -45,6 +45,11 @@ impl TeamInvitationsRepository {
         cursor.try_collect().await
     }
 
+    pub async fn find_by_user(&self, user_id: &str) -> Result<Vec<TeamInvitation>> {
+        let cursor = self.collection.find(doc! { "userId": user_id }).await?;
+        cursor.try_collect().await
+    }
+
     pub async fn insert(&self, team_invitation: &TeamInvitation) -> Result<InsertOneResult> {
         self.collection.insert_one(team_invitation).await
     }

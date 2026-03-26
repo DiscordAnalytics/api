@@ -1,4 +1,5 @@
 mod bots;
+mod invitations;
 mod suspend;
 
 use actix_web::web::{Data, Json, Path};
@@ -243,6 +244,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
                     .route(delete().to(delete_user)),
             )
             .configure(bots::configure)
+            .configure(invitations::configure)
             .configure(suspend::configure),
     );
 }

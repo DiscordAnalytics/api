@@ -9,27 +9,27 @@ use tracing::{info, warn};
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{BotResponse, UserBotsResponse},
+    openapi::schemas::TeamInvitationResponse,
     repository::Repositories,
     utils::{discord::Snowflake, logger::LogCode},
 };
 
 #[api_operation(
-    summary = "Get user's bots",
-    description = "Fetch a list of bots owned by the authenticated user",
+    summary = "Get user's invitations",
+    description = "Fetch a list of invitations destined for the authenticated user",
     tag = "Users"
 )]
-async fn get_user_bots(
+async fn get_user_invitations(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<UserBotsResponse>> {
+) -> ApiResult<Json<Vec<TeamInvitationResponse>>> {
     let user_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
         code = %LogCode::Request,
         user_id = %user_id,
-        "Received request to fetch user's bots"
+        "Received request to fetch user's invitations"
     );
 
     let ctx = &auth;
@@ -38,56 +38,41 @@ async fn get_user_bots(
         info!(
             code = %LogCode::AdminAction,
             user_id = %user_id,
-            "Admin access granted for user bots"
+            "Admin access granted for user invitations"
         );
     } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
-            "User attempted to access another user's bots"
+            "User attempted to access another user's invitations"
         );
         return Err(ApiError::Forbidden);
     } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
-            "Unauthenticated access attempt to user bots"
+            "Unauthenticated access attempt to user invitations"
         );
         return Err(ApiError::Forbidden);
     }
 
-    let user_bots = repos.bots.find_by_user_id(&user_id).await?;
+    let user_invitations = repos.team_invitations.find_by_user(&user_id).await?;
 
-    let owned_bots = user_bots
-        .iter()
-        .filter(|b| b.owner_id == user_id)
-        .cloned()
-        .map(BotResponse::try_from)
-        .collect::<Result<Vec<_>, _>>()?;
-    let team_bots = user_bots
+    let invitations_response = user_invitations
         .into_iter()
-        .filter(|b| b.team.contains(&user_id))
-        .map(|b| -> Result<BotResponse> {
-            let mut res = BotResponse::try_from(b)?;
-            res.webhooks_config = None;
-            Ok(res)
-        })
+        .map(TeamInvitationResponse::try_from)
         .collect::<Result<Vec<_>, _>>()?;
 
     info!(
         code = %LogCode::Request,
         user_id = %user_id,
-        owned_bots_count = owned_bots.len(),
-        team_bots_count = team_bots.len(),
-        "Fetched user's bots"
+        invitations = invitations_response.len(),
+        "Fetched user's invitations"
     );
 
-    Ok(Json(UserBotsResponse {
-        owned_bots,
-        team_bots,
-    }))
+    Ok(Json(invitations_response))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.route("/bots", get().to(get_user_bots));
+    cfg.route("/invitations", get().to(get_user_invitations));
 }

@@ -147,18 +147,15 @@ impl BotsRepository {
         &self,
         bot_ids: &HashSet<String>,
     ) -> Result<HashMap<String, Bot>> {
-        let mut cursor = self
+        let cursor = self
             .collection
             .find(doc! { "botId": { "$in": bot_ids } })
             .await?;
-
-        let mut map = HashMap::with_capacity(bot_ids.len());
-
-        while let Some(bot) = cursor.try_next().await? {
-            map.insert(bot.bot_id.clone(), bot);
-        }
-
-        Ok(map)
+        let bots = cursor.try_collect::<Vec<_>>().await?;
+        Ok(bots
+            .into_iter()
+            .map(|bot| (bot.bot_id.clone(), bot))
+            .collect())
     }
 
     pub async fn find_not_configured(&self) -> Result<Vec<Bot>> {

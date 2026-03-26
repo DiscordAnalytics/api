@@ -90,17 +90,15 @@ impl UsersRepository {
         &self,
         user_ids: &HashSet<String>,
     ) -> Result<HashMap<String, User>> {
-        let mut cursor = self
+        let cursor = self
             .collection
             .find(doc! { "userId": { "$in": user_ids } })
             .await?;
-
-        let mut map = HashMap::with_capacity(user_ids.len());
-
-        while let Some(user) = cursor.try_next().await? {
-            map.insert(user.user_id.clone(), user);
-        }
-        Ok(map)
+        let users = cursor.try_collect::<Vec<_>>().await?;
+        Ok(users
+            .into_iter()
+            .map(|user| (user.user_id.clone(), user))
+            .collect())
     }
 
     pub async fn insert(&self, user: &User) -> Result<InsertOneResult> {

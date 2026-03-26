@@ -1,5 +1,6 @@
+use std::collections::HashSet;
+
 use actix_web::web::{Data, Json, Path};
-use anyhow::Result;
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
@@ -8,8 +9,11 @@ use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,
-    domain::error::{ApiError, ApiResult},
-    openapi::schemas::TeamInvitationResponse,
+    domain::{
+        error::{ApiError, ApiResult},
+        models::{Bot, User},
+    },
+    openapi::schemas::InvitationResponse,
     repository::Repositories,
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -23,7 +27,7 @@ async fn get_user_invitations(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<Vec<TeamInvitationResponse>>> {
+) -> ApiResult<Json<Vec<InvitationResponse>>> {
     let user_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
@@ -58,19 +62,40 @@ async fn get_user_invitations(
 
     let user_invitations = repos.team_invitations.find_by_user(&user_id).await?;
 
-    let invitations_response = user_invitations
-        .into_iter()
-        .map(TeamInvitationResponse::try_from)
-        .collect::<Result<Vec<_>, _>>()?;
+    let bot_ids: HashSet<String> = user_invitations.iter().map(|i| i.bot_id.clone()).collect();
+    let user_ids: HashSet<String> = user_invitations.iter().map(|i| i.user_id.clone()).collect();
+
+    let bots = repos.bots.find_many_by_ids(&bot_ids).await?;
+    let users = repos.users.find_many_by_ids(&user_ids).await?;
+
+    let mut invitations = Vec::with_capacity(user_invitations.len());
+
+    for invitation in user_invitations {
+        let bot = bots
+            .get(&invitation.bot_id)
+            .ok_or_else(|| ApiError::NotFound(format!("Bot not found: {}", invitation.bot_id)))?;
+
+        let user = users
+            .get(&invitation.user_id)
+            .ok_or_else(|| ApiError::NotFound(format!("User not found: {}", invitation.user_id)))?;
+
+        invitations.push(InvitationResponse {
+            invitation: invitation.try_into()?,
+            bot_username: bot.username.clone(),
+            bot_avatar: bot.avatar.clone(),
+            owner_username: user.username.clone(),
+            owner_avatar: user.avatar.clone(),
+        })
+    }
 
     info!(
         code = %LogCode::Request,
         user_id = %user_id,
-        invitations = invitations_response.len(),
+        invitations = invitations.len(),
         "Fetched user's invitations"
     );
 
-    Ok(Json(invitations_response))
+    Ok(Json(invitations))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {

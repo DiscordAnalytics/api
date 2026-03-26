@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use chrono::{Duration, Utc};
 use futures::stream::TryStreamExt as _;
 use mongodb::{
@@ -25,9 +27,9 @@ impl BotUpdate {
 
     pub fn with_advanced_stats(mut self, advanced_stats: Option<bool>) -> Self {
         if let Some(advanced_stats) = advanced_stats {
-	    self.merge_set(doc! { "advancedStats": advanced_stats });
+            self.merge_set(doc! { "advancedStats": advanced_stats });
         }
-	self
+        self
     }
 
     pub fn with_avatar(mut self, avatar: String) -> Self {
@@ -139,6 +141,24 @@ impl BotsRepository {
     pub async fn find_all(&self) -> Result<Vec<Bot>> {
         let cursor = self.collection.find(doc! {}).await?;
         cursor.try_collect().await
+    }
+
+    pub async fn find_many_by_ids(
+        &self,
+        bot_ids: &HashSet<String>,
+    ) -> Result<HashMap<String, Bot>> {
+        let mut cursor = self
+            .collection
+            .find(doc! { "botId": { "$in": bot_ids } })
+            .await?;
+
+        let mut map = HashMap::with_capacity(bot_ids.len());
+
+        while let Some(bot) = cursor.try_next().await? {
+            map.insert(bot.bot_id.clone(), bot);
+        }
+
+        Ok(map)
     }
 
     pub async fn find_not_configured(&self) -> Result<Vec<Bot>> {

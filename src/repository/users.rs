@@ -92,7 +92,7 @@ impl UsersRepository {
     ) -> Result<HashMap<String, User>> {
         let mut cursor = self
             .collection
-            .find(doc! { "userId": { "$in": user_ids.iter().cloned().collect::<Vec<_>>() } })
+            .find(doc! { "userId": { "$in": user_ids } })
             .await?;
 
         let mut map = HashMap::with_capacity(user_ids.len());

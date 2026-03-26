@@ -98,8 +98,6 @@ async fn vote_webhook(
         ApiError::NotFound("Bot not found".to_string())
     })?;
 
-    let owner = repos.users.find_by_id(&bot.owner_id).await?;
-
     let response = handle_provider(
         &provider,
         body_value.clone(),
@@ -154,7 +152,7 @@ async fn vote_webhook(
                 .trigger_webhook_notification(&bot, "0", &provider, body_value, &webhook_manager)
                 .await;
 
-            if let Some(owner) = owner {
+            if let Some(owner) = repos.users.find_by_id(&bot.owner_id).await? {
                 let provider_info = get_provider_info(&provider).ok_or_else(|| {
                     warn!(
                         code = %LogCode::Webhook,

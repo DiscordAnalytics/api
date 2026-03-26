@@ -110,18 +110,18 @@ async fn vote_webhook(
 
     match response {
         ProviderResponse::Vote(vote_result) => {
-            services
-                .webhooks
-                .record_vote(
-                    &bot_id,
-                    &vote_result.voter_id,
-                    &provider,
-                    vote_result.vote_count,
-                )
-                .await?;
-
             if provider != "test" {
-                let _ = services
+                services
+                    .webhooks
+                    .record_vote(
+                        &bot_id,
+                        &vote_result.voter_id,
+                        &provider,
+                        vote_result.vote_count,
+                    )
+                    .await?;
+
+                services
                     .webhooks
                     .trigger_webhook_notification(
                         &bot,
@@ -130,7 +130,7 @@ async fn vote_webhook(
                         body_value,
                         &webhook_manager,
                     )
-                    .await;
+                    .await?;
             }
 
             info!(
@@ -147,10 +147,10 @@ async fn vote_webhook(
             }))
         }
         ProviderResponse::TestWebhook => {
-            let _ = services
+            services
                 .webhooks
                 .trigger_webhook_notification(&bot, "0", &provider, body_value, &webhook_manager)
-                .await;
+                .await?;
 
             if let Some(owner) = repos.users.find_by_id(&bot.owner_id).await? {
                 let provider_info = get_provider_info(&provider).ok_or_else(|| {
@@ -161,7 +161,8 @@ async fn vote_webhook(
                     );
                     ApiError::WebhookError("Unknown provider".to_string())
                 })?;
-                let _ = services
+
+                services
                     .webhooks
                     .send_test_webhook_email(
                         &bot,
@@ -169,7 +170,7 @@ async fn vote_webhook(
                         &provider_info.name,
                         &provider_info.support_url,
                     )
-                    .await;
+                    .await?;
 
                 info!(
                     code = %LogCode::Webhook,

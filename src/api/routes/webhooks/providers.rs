@@ -96,6 +96,7 @@ pub fn get_provider_info(provider: &str) -> Option<ProviderInfo> {
             ),
         ),
         ("topgg", ("top.gg", "https://support.top.gg")),
+        ("test", ("Test", "https://discordanalytics.xyz/support")),
     ]);
 
     infos.get(provider).map(|(name, support_url)| ProviderInfo {

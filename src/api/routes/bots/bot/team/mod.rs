@@ -106,21 +106,22 @@ async fn get_team(
         .map(|i| (i.user_id.clone(), i))
         .collect();
 
-    let mut team = Vec::with_capacity(user_ids.len());
+    let team = user_ids
+        .into_iter()
+        .map(|user_id| {
+            let user = users_map.get(&user_id);
+            let invitation = invitations_map.get(&user_id);
 
-    for user_id in user_ids {
-        let user = users_map.get(&user_id);
-        let invitation = invitations_map.get(&user_id);
-
-        team.push(TeamResponse {
-            avatar: user.and_then(|u| u.avatar.clone()),
-            invitation_id: invitation.map(|i| i.invitation_id.clone()),
-            pending_invitation: invitation.map(|i| !i.accepted).unwrap_or(false),
-            registered: user.is_some(),
-            user_id: user_id.clone(),
-            username: user.map(|u| u.username.clone()),
-        });
-    }
+            TeamResponse {
+                avatar: user.and_then(|u| u.avatar.clone()),
+                invitation_id: invitation.map(|i| i.invitation_id.clone()),
+                pending_invitation: invitation.map(|i| !i.accepted).unwrap_or(false),
+                registered: user.is_some(),
+                user_id: user_id.clone(),
+                username: user.map(|u| u.username.clone()),
+            }
+        })
+        .collect::<Vec<_>>();
 
     info!(
         code = %LogCode::Request,

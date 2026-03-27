@@ -23,12 +23,4 @@ impl AuthService {
             None => Ok(false),
         }
     }
-
-    pub async fn user_owns_bot(&self, user_id: &str, bot_id: &str) -> Result<bool> {
-        let bot = self.repos.bots.find_by_id(bot_id).await?;
-        match bot {
-            Some(bot) => Ok(bot.is_owner(user_id)),
-            None => Ok(false),
-        }
-    }
 }

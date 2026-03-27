@@ -8,7 +8,7 @@ use tracing::{info, warn};
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::MessageResponse,
+    openapi::schemas::{MessageResponse, StatsReportResponse},
     repository::Repositories,
     services::Services,
     utils::{discord::Snowflake, logger::LogCode},
@@ -21,10 +21,9 @@ use crate::{
 )]
 async fn get_reports(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<MessageResponse>> {
+) -> ApiResult<Json<Vec<StatsReportResponse>>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
@@ -54,7 +53,7 @@ async fn get_reports(
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
-            "Bot attempting to access reports of another bot",
+            "Bot attempting to access reports subscriptions of another bot",
         );
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
@@ -64,7 +63,7 @@ async fn get_reports(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
                 user_id = %user_id,
-                "User does not have access to bot reports",
+                "User does not have access to bot reports subscriptions",
             );
             return Err(ApiError::Forbidden);
         }
@@ -72,12 +71,25 @@ async fn get_reports(
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
-            "Access denied for bot reports",
+            "Access denied for bot reports subscriptions",
         );
         return Err(ApiError::Forbidden);
     }
 
-    unimplemented!()
+    let reports = repos.stats_reports.find_by_bot(&bot_id).await?;
+
+    let reports_responses = reports
+        .into_iter()
+        .map(StatsReportResponse::try_from)
+        .collect::<Result<Vec<_>, _>>()?;
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Fetched reports subscriptions for bot",
+    );
+
+    Ok(Json(reports_responses))
 }
 
 #[api_operation(

@@ -11,6 +11,17 @@ pub struct StatsReport {
     pub user_id: String,
 }
 
+impl StatsReport {
+    pub fn new(bot_id: &str, user_id: &str, frequency: StatsReportFrequency) -> Self {
+        Self {
+            id: ObjectId::new(),
+            bot_id: bot_id.to_string(),
+            frequency: frequency.into(),
+            user_id: user_id.to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StatsReportFrequency {
     Weekly,

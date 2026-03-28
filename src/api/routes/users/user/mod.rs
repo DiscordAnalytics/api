@@ -79,9 +79,9 @@ async fn get_user(
         "Fetched details for user"
     );
 
-    Ok(Json(UserResponse::try_from(user).and_then(|mut u| {
+    Ok(Json(UserResponse::try_from(user).map(|mut u| {
         u.admin = services.auth.is_admin(&user_id);
-        Ok(u)
+        u
     })?))
 }
 
@@ -127,10 +127,10 @@ async fn update_user(
         "User details updated"
     );
 
-    Ok(Json(UserResponse::try_from(updated_user).and_then(
+    Ok(Json(UserResponse::try_from(updated_user).map(
         |mut u| {
             u.admin = services.auth.is_admin(&user_id);
-            Ok(u)
+            u
         },
     )?))
 }

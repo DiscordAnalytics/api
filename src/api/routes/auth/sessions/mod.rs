@@ -40,9 +40,9 @@ async fn list_sessions(
     let session_responses = sessions
         .into_iter()
         .map(|s| {
-            SessionResponse::try_from(s).and_then(|mut r| {
+            SessionResponse::try_from(s).map(|mut r| {
                 r.current = r.session_id == *session_id;
-                Ok(r)
+                r
             })
         })
         .collect::<Result<Vec<_>, _>>()?;

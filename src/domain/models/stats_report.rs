@@ -21,6 +21,7 @@ impl StatsReport {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "lowercase")]
 pub enum StatsReportFrequency {
     Weekly,
     Monthly,

@@ -31,6 +31,7 @@ impl UsersService {
         for bot in self.repos.bots.find_by_owner_id(user_id).await? {
             bots_service.delete_bot(&bot.bot_id).await?;
         }
+        self.repos.bots.remove_user_from_teams(user_id).await?;
         #[cfg(feature = "reports")]
         self.repos.stats_reports.delete_by_user_id(user_id).await?;
         self.repos

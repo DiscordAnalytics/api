@@ -97,7 +97,7 @@ async fn subscribe(
     repos: Data<Repositories>,
     payload: Json<StatsReportSubPayload>,
     id: Path<String>,
-) -> ApiResult<Json<MessageResponse>> {
+) -> ApiResult<Json<StatsReportResponse>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
@@ -176,9 +176,7 @@ async fn subscribe(
         "Report subscription created",
     );
 
-    Ok(Json(MessageResponse {
-        message: "Report subscription created".to_string(),
-    }))
+    Ok(Json(StatsReportResponse::try_from(subscription)?))
 }
 
 #[api_operation(

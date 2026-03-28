@@ -23,6 +23,7 @@ pub struct TokenResponse {
 pub struct SessionResponse {
     pub active: bool,
     pub created_at: String,
+    pub current: bool,
     pub device_info: Option<String>,
     pub ip_address: Option<String>,
     pub last_used_at: String,
@@ -37,6 +38,7 @@ impl TryFrom<Session> for SessionResponse {
         Ok(Self {
             active: session.active,
             created_at: session.created_at.try_to_rfc3339_string()?,
+            current: false,
             device_info: session.device_info,
             ip_address: session.ip_address,
             last_used_at: session.last_used_at.try_to_rfc3339_string()?,

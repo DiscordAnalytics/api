@@ -100,6 +100,10 @@ async fn subscribe(
 ) -> ApiResult<Json<StatsReportResponse>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
+    let body = payload.into_inner();
+    let user_id = body.user_id;
+    let frequency = body.frequency;
+
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
@@ -124,8 +128,8 @@ async fn subscribe(
             "Admin access granted for subscribing to bot reports",
         );
     } else if ctx.is_user() {
-        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !bot.has_access(user_id) {
+        let authenticated_user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if authenticated_user_id != user_id || !bot.has_access(authenticated_user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -142,10 +146,6 @@ async fn subscribe(
         );
         return Err(ApiError::Forbidden);
     }
-
-    let body = payload.into_inner();
-    let user_id = body.user_id;
-    let frequency = body.frequency;
 
     if repos
         .stats_reports
@@ -192,6 +192,10 @@ async fn unsubscribe(
 ) -> ApiResult<Json<MessageResponse>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
+    let body = payload.into_inner();
+    let user_id = body.user_id;
+    let frequency = body.frequency;
+
     info!(
         code = %LogCode::Request,
         bot_id = %bot_id,
@@ -216,8 +220,8 @@ async fn unsubscribe(
             "Admin access granted for unsubscribing to bot reports",
         );
     } else if ctx.is_user() {
-        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !bot.has_access(user_id) {
+        let authenticated_user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if authenticated_user_id != user_id || !bot.has_access(authenticated_user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -234,10 +238,6 @@ async fn unsubscribe(
         );
         return Err(ApiError::Forbidden);
     }
-
-    let body = payload.into_inner();
-    let user_id = body.user_id;
-    let frequency = body.frequency;
 
     if repos
         .stats_reports

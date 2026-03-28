@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct StatsReport {
     pub bot_id: String,
-    pub frequency: String,
+    pub frequency: StatsReportFrequency,
     pub user_id: String,
 }
 
@@ -14,7 +14,7 @@ impl StatsReport {
     pub fn new(bot_id: &str, user_id: &str, frequency: StatsReportFrequency) -> Self {
         Self {
             bot_id: bot_id.to_string(),
-            frequency: frequency.into(),
+            frequency,
             user_id: user_id.to_string(),
         }
     }
@@ -33,11 +33,5 @@ impl StatsReportFrequency {
             StatsReportFrequency::Weekly => "weekly",
             StatsReportFrequency::Monthly => "monthly",
         }
-    }
-}
-
-impl From<StatsReportFrequency> for String {
-    fn from(frequency: StatsReportFrequency) -> Self {
-        frequency.as_str().to_string()
     }
 }

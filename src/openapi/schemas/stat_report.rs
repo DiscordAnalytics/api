@@ -8,7 +8,7 @@ use crate::domain::models::{StatsReport, StatsReportFrequency};
 #[serde(rename_all = "camelCase")]
 pub struct StatsReportResponse {
     pub bot_id: String,
-    pub frequency: String,
+    pub frequency: StatsReportFrequency,
     pub user_id: String,
 }
 

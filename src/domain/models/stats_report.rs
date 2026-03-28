@@ -1,11 +1,10 @@
-use mongodb::bson::oid::ObjectId;
+use apistos::ApiComponent;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatsReport {
-    #[serde(rename = "_id")]
-    pub id: ObjectId,
     pub bot_id: String,
     pub frequency: String,
     pub user_id: String,
@@ -14,7 +13,6 @@ pub struct StatsReport {
 impl StatsReport {
     pub fn new(bot_id: &str, user_id: &str, frequency: StatsReportFrequency) -> Self {
         Self {
-            id: ObjectId::new(),
             bot_id: bot_id.to_string(),
             frequency: frequency.into(),
             user_id: user_id.to_string(),
@@ -22,7 +20,7 @@ impl StatsReport {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]
 pub enum StatsReportFrequency {
     Weekly,
     Monthly,

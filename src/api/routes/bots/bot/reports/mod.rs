@@ -7,10 +7,12 @@ use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,
-    domain::error::{ApiError, ApiResult},
-    openapi::schemas::{MessageResponse, StatsReportResponse},
+    domain::{
+        error::{ApiError, ApiResult},
+        models::StatsReport,
+    },
+    openapi::schemas::{MessageResponse, StatsReportResponse, StatsReportSubPayload},
     repository::Repositories,
-    services::Services,
     utils::{discord::Snowflake, logger::LogCode},
 };
 
@@ -19,7 +21,7 @@ use crate::{
     description = "Get all subscribed reports for a bot",
     tag = "Reports"
 )]
-async fn get_reports(
+async fn get_subscriptions(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Path<String>,
@@ -49,13 +51,6 @@ async fn get_reports(
             bot_id = %bot_id,
             "Admin access granted for bot reports subscriptions",
         );
-    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to access reports subscriptions of another bot",
-        );
-        return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {
@@ -67,7 +62,7 @@ async fn get_reports(
             );
             return Err(ApiError::Forbidden);
         }
-    } else {
+    } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -97,8 +92,93 @@ async fn get_reports(
     description = "Subscribe to a report for a bot",
     tag = "Reports"
 )]
-async fn subscribe_report(auth: Authenticated) -> ApiResult<Json<MessageResponse>> {
-    unimplemented!()
+async fn subscribe(
+    auth: Authenticated,
+    repos: Data<Repositories>,
+    payload: Json<StatsReportSubPayload>,
+    id: Path<String>,
+) -> ApiResult<Json<MessageResponse>> {
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Subscribing to reports for bot",
+    );
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with id {} not found", bot_id))
+    })?;
+
+    let ctx = &auth;
+
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            "Admin access granted for subscribing to bot reports",
+        );
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !bot.has_access(user_id) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %user_id,
+                "User does not have access to subscribe to bot reports",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else if !ctx.is_user() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied to subscribe to bot reports",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    let body = payload.into_inner();
+    let user_id = body.user_id;
+    let frequency = body.frequency;
+
+    if repos
+        .stats_reports
+        .find_by_bot_and_user(&bot_id, &user_id, frequency.as_str())
+        .await?
+        .is_some()
+    {
+        warn!(
+            code = %LogCode::Conflict,
+            bot_id = %bot_id,
+            user_id = %user_id,
+            frequency = %frequency.as_str(),
+            "Report subscription already exists",
+        );
+        return Err(ApiError::Conflict(
+            "Report subscription already exists".to_string(),
+        ));
+    }
+
+    let subscription = StatsReport::new(&bot_id, &user_id, frequency);
+    repos.stats_reports.insert(&subscription).await?;
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        user_id = %user_id,
+        frequency = %frequency.as_str(),
+        "Report subscription created",
+    );
+
+    Ok(Json(MessageResponse {
+        message: "Report subscription created".to_string(),
+    }))
 }
 
 #[api_operation(
@@ -106,17 +186,104 @@ async fn subscribe_report(auth: Authenticated) -> ApiResult<Json<MessageResponse
     description = "Unsubscribe from a report for a bot",
     tag = "Reports"
 )]
-async fn unsubscribe_report(auth: Authenticated) -> ApiResult<Json<MessageResponse>> {
-    unimplemented!()
+async fn unsubscribe(
+    auth: Authenticated,
+    repos: Data<Repositories>,
+    payload: Json<StatsReportSubPayload>,
+    id: Path<String>,
+) -> ApiResult<Json<MessageResponse>> {
+    let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        "Deleting report subscription",
+    );
+
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found",
+        );
+        ApiError::NotFound(format!("Bot with id {} not found", bot_id))
+    })?;
+
+    let ctx = &auth;
+
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            "Admin access granted for unsubscribing to bot reports",
+        );
+    } else if ctx.is_user() {
+        let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
+        if !bot.has_access(user_id) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %user_id,
+                "User does not have access to unsubscribe from bot reports",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else if !ctx.is_user() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied to unsubscribe from bot reports",
+        );
+        return Err(ApiError::Forbidden);
+    }
+
+    let body = payload.into_inner();
+    let user_id = body.user_id;
+    let frequency = body.frequency;
+
+    if repos
+        .stats_reports
+        .find_by_bot_and_user(&bot_id, &user_id, frequency.as_str())
+        .await?
+        .is_none()
+    {
+        warn!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            user_id = %user_id,
+            frequency = %frequency.as_str(),
+            "Report subscription not found",
+        );
+        return Err(ApiError::NotFound(
+            "Report subscription not found".to_string(),
+        ));
+    }
+
+    repos
+        .stats_reports
+        .delete_by_bot_and_user(&bot_id, &user_id, frequency.as_str())
+        .await?;
+
+    info!(
+        code = %LogCode::Request,
+        bot_id = %bot_id,
+        user_id = %user_id,
+        frequency = %frequency.as_str(),
+        "Unsubscribed from bot report",
+    );
+
+    Ok(Json(MessageResponse {
+        message: "Unsubscribed from bot report".to_string(),
+    }))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
         scope("/reports").service(
             resource("")
-                .route(get().to(get_reports))
-                .route(post().to(subscribe_report))
-                .route(delete().to(unsubscribe_report)),
+                .route(get().to(get_subscriptions))
+                .route(post().to(subscribe))
+                .route(delete().to(unsubscribe)),
         ),
     );
 }

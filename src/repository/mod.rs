@@ -19,8 +19,6 @@ pub use blog_articles::BlogArticleUpdate;
 pub use bot_stats::BotStatsUpdate;
 pub use bots::BotUpdate;
 pub use custom_events::CustomEventUpdate;
-#[cfg(feature = "reports")]
-pub use stats_reports::StatsReportUpdate;
 pub use users::UserUpdate;
 
 #[derive(Clone)]

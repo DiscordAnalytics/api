@@ -33,7 +33,7 @@ impl UsersService {
         }
         self.repos.bots.remove_user_from_teams(user_id).await?;
         #[cfg(feature = "reports")]
-        self.repos.stats_reports.delete_by_user_id(user_id).await?;
+        self.repos.stats_reports.delete_by_user(user_id).await?;
         self.repos
             .team_invitations
             .delete_by_user_id(user_id)

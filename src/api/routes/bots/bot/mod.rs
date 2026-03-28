@@ -1,5 +1,6 @@
 mod achievements;
 mod events;
+#[cfg(feature = "reports")]
 mod reports;
 mod settings;
 mod stats;
@@ -494,7 +495,16 @@ pub fn configure(cfg: &mut ServiceConfig) {
             )
             .configure(achievements::configure)
             .configure(events::configure)
-            .configure(reports::configure)
+            .configure(
+                #[cfg(feature = "reports")]
+                {
+                    reports::configure
+                },
+                #[cfg(not(feature = "reports"))]
+                {
+                    |_cfg| {}
+                },
+            )
             .configure(settings::configure)
             .configure(stats::configure)
             .configure(suspend::configure)

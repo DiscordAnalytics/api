@@ -2,12 +2,11 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::models::StatsReport;
+use crate::domain::models::{StatsReport, StatsReportFrequency};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StatsReportResponse {
-    pub id: String,
     pub bot_id: String,
     pub frequency: String,
     pub user_id: String,
@@ -18,10 +17,16 @@ impl TryFrom<StatsReport> for StatsReportResponse {
 
     fn try_from(value: StatsReport) -> Result<Self, Self::Error> {
         Ok(Self {
-            id: value.id.to_string(),
             bot_id: value.bot_id,
             frequency: value.frequency,
             user_id: value.user_id,
         })
     }
+}
+
+#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct StatsReportSubPayload {
+    pub user_id: String,
+    pub frequency: StatsReportFrequency,
 }

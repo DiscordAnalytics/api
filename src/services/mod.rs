@@ -24,7 +24,7 @@ pub struct Services {
 impl Services {
     pub fn new(repos: Repositories) -> Self {
         Self {
-            auth: auth::AuthService::new(repos.clone()),
+            auth: auth::AuthService::new(),
             bots: bots::BotsService::new(repos.clone()),
             discord: discord::DiscordService::new(),
             invitations: invitations::InvitationsService::new(repos.clone()),

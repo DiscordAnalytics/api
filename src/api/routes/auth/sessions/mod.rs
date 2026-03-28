@@ -69,12 +69,10 @@ async fn revoke_all_sessions(
         "Revoking all sessions",
     );
 
-    let sessions = repos.sessions.find_by_user_id(user_id).await?;
-    for session in sessions {
-        if session.session_id != *current_session_id {
-            repos.sessions.revoke(&session.session_id).await?;
-        }
-    }
+    repos
+        .sessions
+        .revoke_many_for_user(user_id, current_session_id)
+        .await?;
 
     info!(
         code = %LogCode::Request,

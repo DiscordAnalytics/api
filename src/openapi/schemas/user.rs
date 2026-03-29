@@ -37,6 +37,7 @@ impl TryFrom<User> for UserResponse {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct UserUpdateRequest {
     pub bots_limit: i32,
 }

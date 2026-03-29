@@ -29,18 +29,8 @@ impl StatsReportsRepository {
         })
     }
 
-    pub async fn find_all(&self) -> Result<Vec<StatsReport>> {
-        let cursor = self.collection.find(doc! {}).await?;
-        cursor.try_collect().await
-    }
-
     pub async fn find_by_bot(&self, bot_id: &str) -> Result<Vec<StatsReport>> {
         let cursor = self.collection.find(doc! { "botId": bot_id }).await?;
-        cursor.try_collect().await
-    }
-
-    pub async fn find_by_user(&self, user_id: &str) -> Result<Vec<StatsReport>> {
-        let cursor = self.collection.find(doc! { "userId": user_id }).await?;
         cursor.try_collect().await
     }
 
@@ -53,6 +43,14 @@ impl StatsReportsRepository {
         self.collection
             .find_one(doc! { "botId": bot_id, "userId": user_id, "frequency": frequency })
             .await
+    }
+
+    pub async fn find_by_frequency(&self, frequency: &str) -> Result<Vec<StatsReport>> {
+        let cursor = self
+            .collection
+            .find(doc! { "frequency": frequency })
+            .await?;
+        cursor.try_collect().await
     }
 
     pub async fn insert(&self, stats_report: &StatsReport) -> Result<InsertOneResult> {

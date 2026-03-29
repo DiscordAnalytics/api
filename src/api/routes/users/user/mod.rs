@@ -28,7 +28,6 @@ use crate::{
 )]
 async fn get_user(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Path<String>,
 ) -> ApiResult<Json<UserResponse>> {
@@ -79,10 +78,7 @@ async fn get_user(
         "Fetched details for user"
     );
 
-    Ok(Json(UserResponse::try_from(user).map(|mut u| {
-        u.admin = services.auth.is_admin(&user_id);
-        u
-    })?))
+    Ok(Json(UserResponse::try_from(user)?))
 }
 
 #[api_operation(
@@ -93,7 +89,6 @@ async fn get_user(
 )]
 async fn update_user(
     _admin: RequireAdmin,
-    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<UserUpdateRequest>,
     id: Path<String>,
@@ -127,12 +122,7 @@ async fn update_user(
         "User details updated"
     );
 
-    Ok(Json(UserResponse::try_from(updated_user).map(
-        |mut u| {
-            u.admin = services.auth.is_admin(&user_id);
-            u
-        },
-    )?))
+    Ok(Json(UserResponse::try_from(updated_user)?))
 }
 
 #[api_operation(

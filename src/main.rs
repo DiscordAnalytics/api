@@ -25,7 +25,7 @@ use crate::{
     openapi::build_spec,
     repository::Repositories,
     services::Services,
-    tasks::{invitations_task, sessions_task, warnings_task},
+    tasks::{invitations_task, reports_task, sessions_task, warnings_task},
     utils::logger::{LogCode, Logger},
 };
 
@@ -67,8 +67,13 @@ async fn main() -> Result<()> {
     );
 
     invitations_task(repos.clone());
+    reports_task(repos.clone(), services.clone());
     sessions_task(repos.clone());
     warnings_task(repos.clone(), services.clone());
+    info!(
+        code = %LogCode::Server,
+        "Tasks initialized",
+    );
 
     let votes_webhooks_manager = Data::new(Arc::new(Mutex::new(VotesWebhooksManager::new())));
     info!(

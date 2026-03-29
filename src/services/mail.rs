@@ -1,5 +1,5 @@
 use anyhow::Result;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 use crate::{
     app_env,
@@ -30,6 +30,15 @@ impl MailService {
         template: Template,
         vars: impl Into<TemplateVars>,
     ) -> Result<MailResult> {
+        if cfg!(debug_assertions) {
+            debug!(
+                code = %LogCode::Mail,
+                user_id = %user.user_id,
+                "Skipping email send in debug mode"
+            );
+            return Ok(MailResult::success());
+        }
+
         if let Some(mail) = &user.mail {
             let recipient = Recipient::new(mail).with_name(&user.username);
             let subject = template.default_subject();

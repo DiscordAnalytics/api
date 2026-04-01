@@ -78,7 +78,7 @@ reqwest = { version = "0.13.2", default-features = false, features = [
   "rustls",
 ] }
 ring = { version = "0.17.14", default-features = false }
-s3 = { version = "0.1.22", optional = true, features = ["providers"] }
+s3 = { version = "0.1.24", optional = true, features = ["providers"] }
 schemars = { package = "apistos-schemars", version = "0.8.22", default-features = false }
 serde = { version = "1.0.228", default-features = false }
 serde_json = { version = "1.0.149", default-features = false }

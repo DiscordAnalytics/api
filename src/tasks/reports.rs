@@ -191,7 +191,7 @@ async fn handle_reports(
 
         let days_count = (to - from).num_days();
         let (previous_interactions, previous_guilds, previous_users) =
-            compute_stats(previous_stats, mongo_to, days_count as usize);
+            compute_stats(previous_stats, mongo_from, days_count as usize);
         let (current_interactions, current_guilds, current_users) =
             compute_stats(current_stats, mongo_to, days_count as usize);
 

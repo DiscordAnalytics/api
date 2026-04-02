@@ -1,4 +1,4 @@
-<mjml><mj-head><mj-preview>{{frequency}} report for {{bot_username}}</mj-preview></mj-head>
+<mjml><mj-head><mj-preview>{{bot_username}}'s stats reports for this {{frequency}}</mj-preview></mj-head>
   <mj-body><mj-section><mj-column>
 
         <mj-image width="100px" src="https://r2.discordanalytics.xyz/images/long_logo_light.png"></mj-image>

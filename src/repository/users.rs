@@ -82,10 +82,6 @@ impl UsersRepository {
         cursor.try_collect().await
     }
 
-    pub async fn count_users(&self) -> Result<u64> {
-        self.collection.count_documents(doc! {}).await
-    }
-
     pub async fn find_by_id(&self, user_id: &str) -> Result<Option<User>> {
         self.collection.find_one(doc! { "userId": user_id }).await
     }
@@ -94,17 +90,15 @@ impl UsersRepository {
         &self,
         user_ids: &HashSet<String>,
     ) -> Result<HashMap<String, User>> {
-        let mut cursor = self
+        let cursor = self
             .collection
-            .find(doc! { "userId": { "$in": user_ids.iter().cloned().collect::<Vec<_>>() } })
+            .find(doc! { "userId": { "$in": user_ids } })
             .await?;
-
-        let mut map = HashMap::with_capacity(user_ids.len());
-
-        while let Some(user) = cursor.try_next().await? {
-            map.insert(user.user_id.clone(), user);
-        }
-        Ok(map)
+        let users = cursor.try_collect::<Vec<_>>().await?;
+        Ok(users
+            .into_iter()
+            .map(|user| (user.user_id.clone(), user))
+            .collect())
     }
 
     pub async fn insert(&self, user: &User) -> Result<InsertOneResult> {

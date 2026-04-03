@@ -35,6 +35,7 @@ impl R2Repository {
         self.client
             .objects()
             .list_v2(&self.bucket_name)
+            .max_keys(1)
             .send()
             .await?;
         Ok(())

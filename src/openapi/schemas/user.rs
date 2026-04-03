@@ -2,11 +2,15 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{domain::models::User, openapi::schemas::BotResponse};
+use crate::{
+    domain::{auth::is_admin, models::User},
+    openapi::schemas::BotResponse,
+};
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResponse {
+    pub admin: bool,
     pub avatar: Option<String>,
     pub avatar_decoration: Option<String>,
     pub bots_limit: i32,
@@ -22,6 +26,7 @@ impl TryFrom<User> for UserResponse {
 
     fn try_from(user: User) -> Result<Self, Self::Error> {
         Ok(Self {
+            admin: is_admin(&user.user_id),
             avatar: user.avatar,
             avatar_decoration: user.avatar_decoration,
             bots_limit: user.bots_limit,
@@ -35,6 +40,7 @@ impl TryFrom<User> for UserResponse {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct UserUpdateRequest {
     pub bots_limit: i32,
 }

@@ -33,7 +33,7 @@ async fn get_all_users(
     let user_responses = users
         .into_iter()
         .map(UserResponse::try_from)
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>>>()?;
 
     info!(
         code = %LogCode::Request,

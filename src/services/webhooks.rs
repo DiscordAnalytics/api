@@ -177,8 +177,21 @@ impl WebhooksService {
             }
         };
 
+        let mut webhook = Webhook {
+            webhook_url,
+            data: WebhookData {
+                bot_id: bot.bot_id.clone(),
+                date: Utc::now(),
+                provider: Provider::parse_str(provider),
+                raw_data: Some(raw_data),
+                voter_id: voter_id.to_string(),
+            },
+            try_count: 0,
+            webhook_secret: None,
+        };
+
         if let Some(webhook_config) = bot.webhooks_config.webhooks.get(provider) {
-            let webhook_secret = match &webhook_config.webhook_secret {
+            webhook.webhook_secret = Some(match &webhook_config.webhook_secret {
                 Some(secret) if !secret.is_empty() => secret.clone(),
                 _ => {
                     info!(
@@ -189,37 +202,33 @@ impl WebhooksService {
                     );
                     return Ok(());
                 }
-            };
-            let webhook = Webhook {
-                webhook_url,
-                data: WebhookData {
-                    bot_id: bot.bot_id.clone(),
-                    date: Utc::now(),
-                    provider: Provider::parse_str(provider),
-                    raw_data: Some(raw_data),
-                    voter_id: voter_id.to_string(),
-                },
-                try_count: 0,
-                webhook_secret,
-            };
-
-            let mut manager = webhook_manager.lock().await;
-            manager.queue_webhook(webhook.clone());
-            drop(manager);
-
-            let manager_clone = webhook_manager.clone();
-            tokio::spawn(async move {
-                VotesWebhooksManager::send(manager_clone, webhook).await;
             });
-
-            info!(
-                code = %LogCode::Webhook,
-                bot_id = %bot.bot_id,
-                voter_id = %voter_id,
-                provider = %provider,
-                "Webhook queued and triggered"
-            );
         }
+
+        info!(
+            code = %LogCode::Webhook,
+            bot_id = %bot.bot_id,
+            voter_id = %voter_id,
+            provider = %provider,
+            "Queuing webhook"
+        );
+
+        let mut manager = webhook_manager.lock().await;
+        manager.queue_webhook(webhook.clone());
+        drop(manager);
+
+        let manager_clone = webhook_manager.clone();
+        tokio::spawn(async move {
+            VotesWebhooksManager::send(manager_clone, webhook).await;
+        });
+
+        info!(
+            code = %LogCode::Webhook,
+            bot_id = %bot.bot_id,
+            voter_id = %voter_id,
+            provider = %provider,
+            "Webhook queued and triggered"
+        );
 
         Ok(())
     }

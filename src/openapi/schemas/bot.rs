@@ -10,6 +10,7 @@ pub struct BotResponse {
     pub advanced_stats: bool,
     pub avatar: Option<String>,
     pub bot_id: String,
+    pub custom_events_limit: i32,
     pub framework: Option<String>,
     pub goals_limit: i32,
     pub language: Option<String>,
@@ -17,6 +18,7 @@ pub struct BotResponse {
     pub owner_id: String,
     pub suspended: bool,
     pub team: Vec<String>,
+    pub teammates_limit: i32,
     pub username: String,
     pub version: Option<String>,
     pub watched_since: String,
@@ -31,6 +33,7 @@ impl TryFrom<Bot> for BotResponse {
             advanced_stats: bot.advanced_stats,
             avatar: bot.avatar,
             bot_id: bot.bot_id,
+            custom_events_limit: bot.custom_events_limit,
             framework: bot.framework,
             goals_limit: bot.goals_limit,
             language: bot.language,
@@ -41,6 +44,7 @@ impl TryFrom<Bot> for BotResponse {
             owner_id: bot.owner_id,
             suspended: bot.suspended,
             team: bot.team,
+            teammates_limit: bot.teammates_limit,
             username: bot.username,
             version: bot.version,
             watched_since: bot.watched_since.try_to_rfc3339_string()?,
@@ -82,5 +86,6 @@ pub struct BotTokenResponse {
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BotSettingsPayload {
-    pub advanced_stats: bool,
+    pub advanced_stats: Option<bool>,
+    pub webhook_url: Option<String>,
 }

@@ -96,6 +96,7 @@ pub fn get_provider_info(provider: &str) -> Option<ProviderInfo> {
             ),
         ),
         ("topgg", ("top.gg", "https://support.top.gg")),
+        ("test", ("Test", "https://discordanalytics.xyz/support")),
     ]);
 
     infos.get(provider).map(|(name, support_url)| ProviderInfo {
@@ -119,6 +120,7 @@ pub async fn handle_provider(
         "discordplace" => handle_discordplace(body, bot, authorization).await,
         "discordscom" => handle_discordscom(body, bot, authorization).await,
         "topgg" => handle_topgg(body, body_bytes, bot, headers).await,
+        "test" => Ok(ProviderResponse::TestWebhook),
         _ => {
             info!(
                 code = %LogCode::Webhook,

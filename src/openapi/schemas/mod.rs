@@ -8,7 +8,8 @@ mod health;
 mod integrations;
 mod invitation;
 mod session;
-mod stat;
+#[cfg(feature = "reports")]
+mod stat_report;
 mod team;
 mod user;
 mod vote;
@@ -36,12 +37,13 @@ pub use bot_stat::{
 };
 pub use custom_event::{CustomEventBody, CustomEventResponse, CustomEventUpdatePayload};
 pub use health::HealthResponse;
-pub use integrations::TopGGIntegrationPayload;
+pub use integrations::{IntegrationPayload, TopGGIntegrationPayload};
 pub use invitation::{
     InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, TeamInvitationResponse,
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
-pub use stat::{StatResponse, StatsQuery};
+#[cfg(feature = "reports")]
+pub use stat_report::{StatsReportResponse, StatsReportSubPayload};
 pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};
 pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateRequest};
 pub use vote::VoteResponse;

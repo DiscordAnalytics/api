@@ -3,8 +3,7 @@ use std::ops::Deref;
 use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest,
     dev::Payload,
-    error::{ErrorForbidden, ErrorInternalServerError, ErrorUnauthorized},
-    web::Data,
+    error::{ErrorForbidden, ErrorUnauthorized},
 };
 use apistos::{ApiComponent, ApiSecurity};
 use futures::{
@@ -13,9 +12,9 @@ use futures::{
 };
 use schemars::JsonSchema;
 
-use crate::{
-    domain::{auth::AuthContext, error::ApiError},
-    services::Services,
+use crate::domain::{
+    auth::{AuthContext, is_admin},
+    error::ApiError,
 };
 
 #[derive(Clone, JsonSchema, ApiSecurity)]
@@ -43,17 +42,8 @@ impl FromRequest for Authenticated {
                 let ctx = context.clone();
 
                 if ctx.is_admin() {
-                    let services = match req.app_data::<Data<Services>>() {
-                        Some(services) => services,
-                        None => {
-                            return ready(Err(ErrorInternalServerError(ApiError::InternalError(
-                                "Services not available".to_string(),
-                            ))));
-                        }
-                    };
-
                     if let Some(user_id) = ctx.user_id.as_deref() {
-                        if !services.auth.is_admin(user_id) {
+                        if !is_admin(user_id) {
                             return ready(Err(ErrorForbidden(ApiError::Forbidden)));
                         }
                     } else {
@@ -118,17 +108,8 @@ impl FromRequest for RequireAdmin {
             None => return ready(Err(ErrorUnauthorized(ApiError::Unauthorized))),
         };
 
-        let services = match req.app_data::<Data<Services>>() {
-            Some(services) => services,
-            None => {
-                return ready(Err(ErrorInternalServerError(ApiError::InternalError(
-                    "Services not available".to_string(),
-                ))));
-            }
-        };
-
         let is_admin = match ctx.user_id.as_deref() {
-            Some(user_id) => ctx.is_admin() && services.auth.is_admin(user_id),
+            Some(user_id) => ctx.is_admin() && is_admin(user_id),
             None => false,
         };
 

@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use serde_json::Value;
 
-#[derive(Clone, Serialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, PartialEq)]
 pub enum Provider {
     TopGG,
     DiscordList,
@@ -39,7 +39,7 @@ impl Provider {
     }
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebhookData {
     pub bot_id: String,
@@ -60,10 +60,10 @@ pub struct WebhookSendData<'a> {
     pub content: Option<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Webhook {
     pub webhook_url: String,
-    pub webhook_secret: String,
+    pub webhook_secret: Option<String>,
     pub data: WebhookData,
     pub try_count: u8,
 }

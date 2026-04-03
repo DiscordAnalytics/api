@@ -18,10 +18,10 @@ use crate::{
     app_env,
     domain::{
         auth::{generate_access_token, generate_refresh_token, hash_refresh_token},
-        models::{GlobalStats, Session, User},
+        models::{Session, User},
     },
     openapi::schemas::AuthCallbackQuery,
-    repository::{GlobalStatsUpdate, Repositories, UserUpdate},
+    repository::{Repositories, UserUpdate},
     services::Services,
     utils::{
         constants::{ACCESS_TOKEN_LIFETIME, MAX_BOTS_PER_USER},
@@ -196,46 +196,6 @@ async fn oauth_callback(
                     app_env!().client_url
                 ))
                 .temporary();
-            }
-
-            let current_date = DateTime::now();
-            let start_of_hour = DateTime::from_millis(
-                current_date.timestamp_millis() - (current_date.timestamp_millis() % 3600000),
-            );
-
-            match repos.global_stats.find_one(&start_of_hour).await {
-                Ok(Some(stats)) => {
-                    let updated_stats =
-                        GlobalStatsUpdate::new().with_user_count(stats.user_count + 1);
-                    if let Err(e) = repos
-                        .global_stats
-                        .update(&start_of_hour, updated_stats)
-                        .await
-                    {
-                        error!(
-                            code = %LogCode::Auth,
-                            error = %e,
-                            "Failed to update global stats for new user registration"
-                        );
-                    }
-                }
-                _ => {
-                    let total_bots = repos.bots.count_bots().await.unwrap_or(0) as i32;
-                    let total_users = repos.users.count_users().await.unwrap_or(0) as i32;
-                    let new_stats = GlobalStats {
-                        bot_count: total_bots,
-                        date: start_of_hour,
-                        registered_bots: 0,
-                        user_count: total_users,
-                    };
-                    if let Err(e) = repos.global_stats.insert(&new_stats).await {
-                        error!(
-                            code = %LogCode::Auth,
-                            error = %e,
-                            "Failed to create global stats for new user registration"
-                        );
-                    }
-                }
             }
 
             info!(

@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use chrono::{Duration, Utc};
 use futures::stream::TryStreamExt as _;
 use mongodb::{
@@ -23,8 +25,10 @@ impl BotUpdate {
         Self::default()
     }
 
-    pub fn with_advanced_stats(mut self, advanced_stats: bool) -> Self {
-        self.merge_set(doc! { "advancedStats": advanced_stats });
+    pub fn with_advanced_stats(mut self, advanced_stats: Option<bool>) -> Self {
+        if let Some(advanced_stats) = advanced_stats {
+            self.merge_set(doc! { "advancedStats": advanced_stats });
+        }
         self
     }
 
@@ -73,22 +77,16 @@ impl BotUpdate {
         self
     }
 
-    pub fn with_webhook_config(
-        mut self,
-        provider: &str,
-        config: WebhookConfig,
-        webhook_url: Option<&str>,
-    ) -> Self {
-        self.merge_set(
-            doc! { format!("webhooksConfig.webhooks.{}", provider): doc! {
-                "connectionId": config.connection_id,
-                "webhookSecret": config.webhook_secret,
-            }},
-        );
+    pub fn with_webhook_config(mut self, provider: &str, config: WebhookConfig) -> Self {
+        self.merge_set(doc! { format!("webhooksConfig.{}", provider): doc! {
+            "connectionId": config.connection_id,
+            "webhookSecret": config.webhook_secret,
+        }});
+        self
+    }
 
-        if let Some(url) = webhook_url {
-            self.merge_set(doc! { "webhooksConfig.webhookUrl": url });
-        }
+    pub fn with_webhook_url(mut self, webhook_url: Option<String>) -> Self {
+        self.merge_set(doc! { "webhooksConfig.webhookUrl": webhook_url });
         self
     }
 
@@ -145,8 +143,19 @@ impl BotsRepository {
         cursor.try_collect().await
     }
 
-    pub async fn count_bots(&self) -> Result<u64> {
-        self.collection.count_documents(doc! {}).await
+    pub async fn find_many_by_ids(
+        &self,
+        bot_ids: &HashSet<String>,
+    ) -> Result<HashMap<String, Bot>> {
+        let cursor = self
+            .collection
+            .find(doc! { "botId": { "$in": bot_ids } })
+            .await?;
+        let bots = cursor.try_collect::<Vec<_>>().await?;
+        Ok(bots
+            .into_iter()
+            .map(|bot| (bot.bot_id.clone(), bot))
+            .collect())
     }
 
     pub async fn find_not_configured(&self) -> Result<Vec<Bot>> {
@@ -220,10 +229,6 @@ impl BotsRepository {
     }
 
     pub async fn set_suspension_for_owner(&self, owner_id: &str, suspended: bool) -> Result<()> {
-        let options = FindOneAndUpdateOptions::builder()
-            .return_document(ReturnDocument::After)
-            .build();
-
         let cursor = self.collection.find(doc! { "ownerId": owner_id }).await?;
 
         let bots: Vec<Bot> = cursor.try_collect().await?;
@@ -234,7 +239,6 @@ impl BotsRepository {
                     doc! { "botId": &bot.bot_id },
                     doc! { "$set": { "suspended": suspended } },
                 )
-                .with_options(options.clone())
                 .await?;
         }
 
@@ -253,6 +257,28 @@ impl BotsRepository {
             )
             .with_options(options)
             .await
+    }
+
+    pub async fn remove_user_from_teams(&self, user_id: &str) -> Result<()> {
+        self.collection
+            .update_many(doc! {}, doc! { "$pull": { "team": user_id } })
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn remove_integration(&self, provider: &str, connection_id: &str) -> Result<()> {
+        let provider_key = format!("webhooksConfig.{}", provider);
+        let key = format!("{}.connectionId", provider_key);
+
+        self.collection
+            .update_one(
+                doc! { key.as_str(): connection_id },
+                doc! { "$unset": { provider_key.as_str(): "" } },
+            )
+            .await?;
+
+        Ok(())
     }
 
     pub async fn delete(&self, bot_id: &str) -> Result<DeleteResult> {

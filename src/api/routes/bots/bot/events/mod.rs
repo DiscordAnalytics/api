@@ -15,7 +15,6 @@ use crate::{
     },
     openapi::schemas::{CustomEventBody, CustomEventResponse},
     repository::Repositories,
-    services::Services,
     utils::{discord::Snowflake, logger::LogCode},
 };
 
@@ -26,7 +25,6 @@ use crate::{
 )]
 async fn get_all_events(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Path<String>,
 ) -> ApiResult<Json<Vec<CustomEventResponse>>> {
@@ -73,7 +71,7 @@ async fn get_all_events(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -111,7 +109,6 @@ async fn get_all_events(
 )]
 async fn create_event(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     event: Json<CustomEventBody>,
     id: Path<String>,
@@ -153,7 +150,7 @@ async fn create_event(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -169,6 +166,17 @@ async fn create_event(
             "Unauthenticated request attempting to create custom event",
         );
         return Err(ApiError::Forbidden);
+    }
+
+    if repos.custom_events.find_by_bot_id(&bot_id).await?.len() as i32 == bot.custom_events_limit {
+        warn!(
+            code = %LogCode::Conflict,
+            bot_id = %bot_id,
+            "Custom event limit reached",
+        );
+        return Err(ApiError::LimitExceeded(
+            "Custom event limit reached for this bot".to_string(),
+        ));
     }
 
     if repos

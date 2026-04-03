@@ -106,21 +106,22 @@ async fn get_team(
         .map(|i| (i.user_id.clone(), i))
         .collect();
 
-    let mut team = Vec::with_capacity(user_ids.len());
+    let team = user_ids
+        .into_iter()
+        .map(|user_id| {
+            let user = users_map.get(&user_id);
+            let invitation = invitations_map.get(&user_id);
 
-    for user_id in user_ids {
-        let user = users_map.get(&user_id);
-        let invitation = invitations_map.get(&user_id);
-
-        team.push(TeamResponse {
-            avatar: user.and_then(|u| u.avatar.clone()),
-            invitation_id: invitation.map(|i| i.invitation_id.clone()),
-            pending_invitation: invitation.map(|i| !i.accepted).unwrap_or(false),
-            registered: user.is_some(),
-            user_id: user_id.clone(),
-            username: user.map(|u| u.username.clone()),
-        });
-    }
+            TeamResponse {
+                avatar: user.and_then(|u| u.avatar.clone()),
+                invitation_id: invitation.map(|i| i.invitation_id.clone()),
+                pending_invitation: invitation.map(|i| !i.accepted).unwrap_or(false),
+                registered: user.is_some(),
+                user_id: user_id.clone(),
+                username: user.map(|u| u.username.clone()),
+            }
+        })
+        .collect::<Vec<_>>();
 
     info!(
         code = %LogCode::Request,
@@ -210,6 +211,16 @@ async fn add_to_team(
         return Err(ApiError::Forbidden);
     }
 
+    if bot.team.len() as i32 == bot.teammates_limit {
+        warn!(
+            code = %LogCode::Conflict,
+            bot_id = %bot_id,
+            user_id = %body.user_id,
+            "Team limit reached",
+        );
+        return Err(ApiError::LimitExceeded("Team limit reached".to_string()));
+    }
+
     let discord_user = services.discord.get_bot(&body.user_id).await?;
     if let Some(is_bot) = discord_user.bot
         && is_bot
@@ -225,11 +236,7 @@ async fn add_to_team(
         ));
     }
 
-    if services
-        .auth
-        .user_has_bot_access(&body.user_id, &bot_id)
-        .await?
-    {
+    if bot.has_access(&body.user_id) {
         warn!(
             code = %LogCode::Conflict,
             bot_id = %bot_id,
@@ -344,7 +351,6 @@ async fn add_to_team(
 )]
 async fn delete_from_team(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
     id: Path<String>,
@@ -405,11 +411,7 @@ async fn delete_from_team(
         return Err(ApiError::Forbidden);
     }
 
-    if !services
-        .auth
-        .user_has_bot_access(&body.user_id, &bot_id)
-        .await?
-    {
+    if !bot.has_access(&body.user_id) {
         warn!(
             code = %LogCode::Conflict,
             bot_id = %bot_id,

@@ -13,6 +13,7 @@ pub struct EnvConfig {
 
     // Database
     pub database_url: String,
+    pub database_name: String,
 
     // Tokens
     pub discord_token: String,
@@ -83,6 +84,7 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         .collect();
 
     let database_url = get_var("DATABASE_URL")?;
+    let database_name = get_var("DATABASE_NAME")?;
 
     let discord_token = get_var("DISCORD_TOKEN")?;
     let jwt_secret = get_var("JWT_SECRET")?;
@@ -126,6 +128,7 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         client_url,
         admins,
         database_url,
+        database_name,
         discord_token,
         jwt_secret,
         enable_registrations,

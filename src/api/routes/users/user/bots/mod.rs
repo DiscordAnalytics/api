@@ -44,14 +44,14 @@ async fn get_user_bots(
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
-            "User attempted to access another user's details"
+            "User attempted to access another user's bots"
         );
         return Err(ApiError::Forbidden);
     } else if !ctx.is_user() {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
-            "Unauthenticated access attempt to user details"
+            "Unauthenticated access attempt to user bots"
         );
         return Err(ApiError::Forbidden);
     }
@@ -63,16 +63,16 @@ async fn get_user_bots(
         .filter(|b| b.owner_id == user_id)
         .cloned()
         .map(BotResponse::try_from)
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>>>()?;
     let team_bots = user_bots
         .into_iter()
         .filter(|b| b.team.contains(&user_id))
-        .map(|b| -> Result<BotResponse> {
+        .map(|b| {
             let mut res = BotResponse::try_from(b)?;
             res.webhooks_config = None;
             Ok(res)
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<ApiResult<Vec<_>>>()?;
 
     info!(
         code = %LogCode::Request,

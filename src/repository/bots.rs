@@ -259,6 +259,14 @@ impl BotsRepository {
             .await
     }
 
+    pub async fn remove_user_from_teams(&self, user_id: &str) -> Result<()> {
+        self.collection
+            .update_many(doc! {}, doc! { "$pull": { "team": user_id } })
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn remove_integration(&self, provider: &str, connection_id: &str) -> Result<()> {
         let provider_key = format!("webhooksConfig.{}", provider);
         let key = format!("{}.connectionId", provider_key);

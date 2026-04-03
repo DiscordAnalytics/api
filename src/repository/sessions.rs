@@ -69,6 +69,19 @@ impl SessionsRepository {
             .await
     }
 
+    pub async fn revoke_many_for_user(
+        &self,
+        user_id: &str,
+        ignored_session_id: &str,
+    ) -> Result<UpdateResult> {
+        self.collection
+            .update_many(
+                doc! { "userId": user_id, "sessionId": { "$ne": ignored_session_id } },
+                doc! { "$set": { "active": false } },
+            )
+            .await
+    }
+
     pub async fn revoke_all_for_user(&self, user_id: &str) -> Result<UpdateResult> {
         self.collection
             .update_many(

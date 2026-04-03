@@ -89,9 +89,7 @@ async fn update_settings(
 
     let mut update = BotUpdate::new().with_advanced_stats(body.advanced_stats);
     if let Some(url) = body.webhook_url {
-        update = update.with_webhook_url(
-            if url.is_empty() { None } else { Some(url) }
-        );
+        update = update.with_webhook_url(if url.is_empty() { None } else { Some(url) });
     }
     repos.bots.update(&bot_id, update).await?.ok_or_else(|| {
         info!(

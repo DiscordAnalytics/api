@@ -1,9 +1,9 @@
 use anyhow::Result;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 use crate::{
     app_env,
-    domain::models::{Bot, User},
+    domain::models::{Bot, StatsReportFrequency, User},
     utils::{
         logger::LogCode,
         mail::{
@@ -30,6 +30,15 @@ impl MailService {
         template: Template,
         vars: impl Into<TemplateVars>,
     ) -> Result<MailResult> {
+        if cfg!(debug_assertions) {
+            debug!(
+                code = %LogCode::Mail,
+                user_id = %user.user_id,
+                "Skipping email send in debug mode"
+            );
+            return Ok(MailResult::success());
+        }
+
         if let Some(mail) = &user.mail {
             let recipient = Recipient::new(mail).with_name(&user.username);
             let subject = template.default_subject();
@@ -173,6 +182,44 @@ impl MailService {
             .var("bot_id", &bot.bot_id)
             .build();
         self.send(owner, Template::BotTokenRegen, vars)
+    }
+
+    pub fn send_stats_reports(
+        &self,
+        user: &User,
+        bot: &Bot,
+        frequency: &StatsReportFrequency,
+        interactions_path: &str,
+        guilds_path: &str,
+        users_path: &str,
+    ) -> Result<MailResult> {
+        info!(
+            code = %LogCode::Mail,
+            bot_id = %bot.bot_id,
+            user_id = %user.user_id,
+            "Sending stats reports email to user {} for bot {}",
+            user.username, bot.username
+        );
+
+        let frequency = match frequency {
+            StatsReportFrequency::Weekly => "week",
+            StatsReportFrequency::Monthly => "month",
+        };
+        let r2_base_url = &app_env!().r2_public_bucket_endpoint;
+        let interactions_url = format!("{}/{}", r2_base_url, interactions_path);
+        let guilds_url = format!("{}/{}", r2_base_url, guilds_path);
+        let users_url = format!("{}/{}", r2_base_url, users_path);
+
+        let vars = TemplateBuilder::new()
+            .var("user_username", &user.username)
+            .var("bot_username", &bot.username)
+            .var("bot_id", &bot.bot_id)
+            .var("frequency", frequency)
+            .var("interactions_url", interactions_url)
+            .var("guilds_url", guilds_url)
+            .var("users_url", users_url)
+            .build();
+        self.send(user, Template::StatsReports, vars)
     }
 
     pub fn send_team_invite(

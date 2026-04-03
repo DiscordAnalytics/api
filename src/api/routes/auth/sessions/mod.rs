@@ -27,6 +27,7 @@ async fn list_sessions(
     repos: Data<Repositories>,
 ) -> ApiResult<Json<Vec<SessionResponse>>> {
     let user_id = auth.user_id.as_ref().ok_or(ApiError::Unauthorized)?;
+    let session_id = auth.session_id.as_ref().ok_or(ApiError::Unauthorized)?;
 
     info!(
         code = %LogCode::Request,
@@ -38,7 +39,12 @@ async fn list_sessions(
 
     let session_responses = sessions
         .into_iter()
-        .map(SessionResponse::try_from)
+        .map(|s| {
+            SessionResponse::try_from(s).map(|mut r| {
+                r.current = r.session_id == *session_id;
+                r
+            })
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     info!(
@@ -69,12 +75,10 @@ async fn revoke_all_sessions(
         "Revoking all sessions",
     );
 
-    let sessions = repos.sessions.find_by_user_id(user_id).await?;
-    for session in sessions {
-        if session.session_id != *current_session_id {
-            repos.sessions.revoke(&session.session_id).await?;
-        }
-    }
+    repos
+        .sessions
+        .revoke_many_for_user(user_id, current_session_id)
+        .await?;
 
     info!(
         code = %LogCode::Request,

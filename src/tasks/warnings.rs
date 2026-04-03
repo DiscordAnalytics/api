@@ -1,7 +1,9 @@
-use actix_web::rt;
 use chrono::{Duration as ChronoDuration, Utc};
 use mongodb::bson::DateTime;
-use tokio::time::{Duration, interval};
+use tokio::{
+    spawn,
+    time::{Duration, interval},
+};
 use tracing::{error, info};
 
 use crate::{
@@ -14,7 +16,7 @@ use crate::{
 };
 
 pub fn warnings_task(repos: Repositories, services: Services) {
-    rt::spawn(async move {
+    spawn(async move {
         let mut interval = interval(Duration::from_secs(24 * 60 * 60));
 
         loop {
@@ -35,7 +37,7 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
         Ok(bots) => bots,
         Err(e) => {
             error!(
-                code = %LogCode::Server,
+                code = %LogCode::System,
                 error = %e,
                 "Failed to find not configured bots"
             );
@@ -159,7 +161,7 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
         Ok(bots) => bots,
         Err(e) => {
             error!(
-                code = %LogCode::Server,
+                code = %LogCode::System,
                 error = %e,
                 "Failed to find inactive bots"
             );

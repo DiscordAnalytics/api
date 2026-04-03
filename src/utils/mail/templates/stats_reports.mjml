@@ -1,0 +1,29 @@
+<mjml><mj-head><mj-preview>{{bot_username}}'s stats reports for this {{frequency}}</mj-preview></mj-head>
+  <mj-body><mj-section><mj-column>
+
+        <mj-image width="100px" src="https://r2.discordanalytics.xyz/images/long_logo_light.png"></mj-image>
+
+        <mj-divider border-color="#5865F2"></mj-divider>
+
+        <mj-text font-family="helvetica" font-size="16px">{{frequency}} report for {{bot_username}}</mj-text>
+
+        <mj-text font-family="helvetica">Comparison of this {{frequency}}'s and last {{frequency}}'s interactions</mj-text>
+
+        <mj-image src="{{interactions_url}}"></mj-image>
+
+        <mj-text font-family="helvetica">Comparison of this {{frequency}}'s and last {{frequency}}'s guilds</mj-text>
+
+        <mj-image src="{{guilds_url}}"></mj-image>
+
+        <mj-text font-family="helvetica">Comparison of this {{frequency}}'s and last {{frequency}}'s users</mj-text>
+
+        <mj-image src="{{users_url}}"></mj-image>
+
+        <mj-button background-color="#5865F2" href="https://discordanalytics.xyz/dash/bots/{{bot_id}}">Go to dashboard</mj-button>
+
+        <mj-text font-family="helvetica">Thank you for trusting us,<br />The Discord Analytics team.</mj-text>
+
+        <mj-text font-family="helvetica" align="center" font-size="8px">You can unsubscribe from these emails by disabling reports in your bot's settings.</mj-text>
+
+      </mj-column></mj-section></mj-body>
+</mjml>

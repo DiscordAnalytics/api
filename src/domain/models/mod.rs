@@ -4,6 +4,7 @@ mod bot;
 mod bot_stats;
 mod custom_event;
 mod session;
+#[cfg(feature = "reports")]
 mod stats_report;
 mod team_invitation;
 mod user;
@@ -16,7 +17,8 @@ pub use bot::{Bot, WebhookConfig, WebhooksConfig};
 pub use bot_stats::{BotStats, Guild, GuildMembers, Interaction, Locale, UserType};
 pub use custom_event::CustomEvent;
 pub use session::Session;
-pub use stats_report::StatsReport;
+#[cfg(feature = "reports")]
+pub use stats_report::{StatsReport, StatsReportFrequency};
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;

@@ -10,7 +10,6 @@ use crate::{
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{CustomEventResponse, CustomEventUpdatePayload, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
-    services::Services,
     utils::{discord::Snowflake, logger::LogCode},
 };
 
@@ -21,7 +20,6 @@ use crate::{
 )]
 async fn get_event(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     path: Path<(String, String)>,
 ) -> ApiResult<Json<CustomEventResponse>> {
@@ -65,7 +63,7 @@ async fn get_event(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 user_id = %user_id,
@@ -112,7 +110,6 @@ async fn get_event(
 )]
 async fn update_event(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<CustomEventUpdatePayload>,
     path: Path<(String, String)>,
@@ -157,7 +154,7 @@ async fn update_event(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 user_id = %user_id,
@@ -232,7 +229,6 @@ async fn update_event(
 )]
 async fn delete_event(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     path: Path<(String, String)>,
 ) -> ApiResult<Json<MessageResponse>> {
@@ -276,7 +272,7 @@ async fn delete_event(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 user_id = %user_id,

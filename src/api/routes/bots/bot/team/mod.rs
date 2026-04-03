@@ -236,11 +236,7 @@ async fn add_to_team(
         ));
     }
 
-    if services
-        .auth
-        .user_has_bot_access(&body.user_id, &bot_id)
-        .await?
-    {
+    if bot.has_access(&body.user_id) {
         warn!(
             code = %LogCode::Conflict,
             bot_id = %bot_id,
@@ -355,7 +351,6 @@ async fn add_to_team(
 )]
 async fn delete_from_team(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<TeamRequestBody>,
     id: Path<String>,
@@ -416,11 +411,7 @@ async fn delete_from_team(
         return Err(ApiError::Forbidden);
     }
 
-    if !services
-        .auth
-        .user_has_bot_access(&body.user_id, &bot_id)
-        .await?
-    {
+    if !bot.has_access(&body.user_id) {
         warn!(
             code = %LogCode::Conflict,
             bot_id = %bot_id,

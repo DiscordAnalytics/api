@@ -8,6 +8,8 @@ mod health;
 mod integrations;
 mod invitation;
 mod session;
+#[cfg(feature = "reports")]
+mod stat_report;
 mod team;
 mod user;
 mod vote;
@@ -40,6 +42,8 @@ pub use invitation::{
     InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, TeamInvitationResponse,
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
+#[cfg(feature = "reports")]
+pub use stat_report::{StatsReportResponse, StatsReportSubPayload};
 pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};
 pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateRequest};
 pub use vote::VoteResponse;

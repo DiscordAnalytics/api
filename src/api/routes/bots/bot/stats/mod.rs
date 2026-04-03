@@ -20,7 +20,6 @@ use crate::{
         NormalizedStatsBody, VoteResponse,
     },
     repository::{BotStatsUpdate, Repositories},
-    services::Services,
     utils::{constants::MAX_DATE_RANGE, discord::Snowflake, logger::LogCode},
 };
 
@@ -31,7 +30,6 @@ use crate::{
 )]
 async fn get_stats(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     query: Query<BotStatsQuery>,
     id: Path<String>,
@@ -130,7 +128,7 @@ async fn get_stats(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,

@@ -34,6 +34,10 @@ pub enum LogCode {
     Webhook,
     /// Websocket events
     Websocket,
+    /// Tasks events
+    Task,
+    /// Reports events
+    Report,
 }
 
 impl LogCode {
@@ -55,6 +59,8 @@ impl LogCode {
             LogCode::Mail => "MAIL",
             LogCode::Webhook => "WH",
             LogCode::Websocket => "WS",
+            LogCode::Task => "TASK",
+            LogCode::Report => "REPORT",
         }
     }
 }

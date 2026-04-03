@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use reqwest::Client;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 use crate::{
     app_env,
@@ -178,6 +178,14 @@ impl DiscordService {
     }
 
     pub async fn send_dm(&self, user_id: &str, embeds: Option<Vec<DiscordEmbed>>) -> Result<()> {
+        if cfg!(debug_assertions) {
+            debug!(
+                code = %LogCode::Mail,
+                "Skipping DM send in debug mode"
+            );
+            return Ok(());
+        }
+
         let bot_token = &app_env!().discord_token;
 
         let dm_channel = self.create_dm_channel(user_id, bot_token).await?;

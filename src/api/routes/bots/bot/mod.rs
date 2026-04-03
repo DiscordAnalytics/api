@@ -1,5 +1,7 @@
 mod achievements;
 mod events;
+#[cfg(feature = "reports")]
+mod reports;
 mod settings;
 mod stats;
 mod suspend;
@@ -39,7 +41,6 @@ use crate::{
 )]
 async fn get_bot(
     auth: Authenticated,
-    services: Data<Services>,
     repos: Data<Repositories>,
     id: Path<String>,
 ) -> ApiResult<Json<BotResponse>> {
@@ -79,7 +80,7 @@ async fn get_bot(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_has_bot_access(user_id, &bot_id).await? {
+        if !bot.has_access(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -362,7 +363,6 @@ async fn delete_bot(
         "Attempting to delete bot",
     );
 
-    #[cfg_attr(not(feature = "mails"), allow(unused_variables))]
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
@@ -389,7 +389,7 @@ async fn delete_bot(
         return Err(ApiError::Forbidden);
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
-        if !services.auth.user_owns_bot(user_id, &bot_id).await? {
+        if !bot.is_owner(user_id) {
             warn!(
                 code = %LogCode::Forbidden,
                 bot_id = %bot_id,
@@ -406,15 +406,6 @@ async fn delete_bot(
         );
         return Err(ApiError::Forbidden);
     }
-
-    repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
-        info!(
-            code = %LogCode::Request,
-            bot_id = %bot_id,
-            "Bot not found for deletion",
-        );
-        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
-    })?;
 
     services.bots.delete_bot(&bot_id).await?;
 
@@ -504,6 +495,16 @@ pub fn configure(cfg: &mut ServiceConfig) {
             )
             .configure(achievements::configure)
             .configure(events::configure)
+            .configure(
+                #[cfg(feature = "reports")]
+                {
+                    reports::configure
+                },
+                #[cfg(not(feature = "reports"))]
+                {
+                    |_cfg| {}
+                },
+            )
             .configure(settings::configure)
             .configure(stats::configure)
             .configure(suspend::configure)

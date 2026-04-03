@@ -52,17 +52,14 @@ pub fn reports_task(repos: Repositories, services: Services) {
     spawn(async move {
         loop {
             let now = Local::now();
-            let sleep_until = match time_to_sleep_until(now) {
-                Ok(dur) => dur,
-                Err(e) => {
-                    error!(
-                        code = %LogCode::System,
-                        error = ?e,
-                        "Sleep calculation failed",
-                    );
-                    StdDuration::from_secs(60)
-                }
-            };
+            let sleep_until = time_to_sleep_until(now).unwrap_or_else(|e| {
+                error!(
+                    code = %LogCode::System,
+                    error = ?e,
+                    "Sleep calculation failed",
+                );
+                StdDuration::from_secs(60)
+            });
 
             sleep(sleep_until).await;
 
@@ -233,40 +230,39 @@ async fn handle_reports(
             }
         };
 
-        match repos
+        repos
             .r2
             .put_png(&interactions_chart.0, &interactions_chart.1)
             .await
-        {
-            Ok(()) => {}
-            Err(e) => {
+            .unwrap_or_else(|e| {
                 error!(
                     code = %LogCode::Report,
                     error = ?e,
                     "Failed to upload interactions chart"
                 );
-            }
-        }
-        match repos.r2.put_png(&guilds_chart.0, &guilds_chart.1).await {
-            Ok(()) => {}
-            Err(e) => {
+            });
+        repos
+            .r2
+            .put_png(&guilds_chart.0, &guilds_chart.1)
+            .await
+            .unwrap_or_else(|e| {
                 error!(
                     code = %LogCode::Report,
                     error = ?e,
                     "Failed to upload guilds chart"
                 );
-            }
-        }
-        match repos.r2.put_png(&users_chart.0, &users_chart.1).await {
-            Ok(()) => {}
-            Err(e) => {
+            });
+        repos
+            .r2
+            .put_png(&users_chart.0, &users_chart.1)
+            .await
+            .unwrap_or_else(|e| {
                 error!(
                     code = %LogCode::Report,
                     error = ?e,
                     "Failed to upload users chart"
                 );
-            }
-        }
+            });
 
         let user = match users.get(&subscription.user_id) {
             Some(user) => user,

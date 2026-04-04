@@ -91,8 +91,8 @@ async fn main() -> Result<()> {
     );
 
     let governor_config = GovernorConfigBuilder::default()
-        .milliseconds_per_request(100)
-        .burst_size(10)
+        .milliseconds_per_request(app_env!().ms_per_request)
+        .burst_size(app_env!().burst_limit)
         .use_headers()
         .finish()
         .ok_or_else(|| anyhow::anyhow!("Failed to create GovernorConfig"))?;

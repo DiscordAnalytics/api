@@ -1,4 +1,4 @@
-use std::{env, net::Ipv4Addr, sync::OnceLock};
+use std::{env, fmt::Display, net::Ipv4Addr, sync::OnceLock};
 
 use anyhow::{Error, Result};
 use dotenvy::dotenv;
@@ -23,6 +23,10 @@ pub struct EnvConfig {
     // Linked Roles
     pub client_secret: String,
     pub client_id: String,
+
+    // Rate Limiting
+    pub ms_per_request: u64,
+    pub burst_limit: u32,
 
     // OpenTelemetry
     #[cfg(feature = "otel")]
@@ -62,6 +66,28 @@ fn get_var(key: &str) -> Result<String> {
         .map_err(|e| Error::new(e).context(format!("Environment variable {} not set", key)))
 }
 
+fn parse_env_var<T>(key: &str, default: T, min: T, max: T) -> T
+where
+    T: std::str::FromStr + PartialOrd + Ord + Copy + Display,
+{
+    get_var(key)
+        .ok()
+        .and_then(|val_str| val_str.parse::<T>().ok())
+        .map(|val| {
+            let clamped = val.max(min).min(max);
+            if clamped != val {
+                eprintln!(
+                    "Warning: {key} value {val} out of bounds ({min}-{max}), clamped to {clamped}",
+                );
+            }
+            clamped
+        })
+        .unwrap_or_else(|| {
+            eprintln!("Warning: {key} value not set, using default {default}");
+            default
+        })
+}
+
 pub fn init_env() -> Result<&'static EnvConfig> {
     dotenv().ok();
 
@@ -94,6 +120,9 @@ pub fn init_env() -> Result<&'static EnvConfig> {
 
     let client_secret = get_var("CLIENT_SECRET")?;
     let client_id = get_var("CLIENT_ID")?;
+
+    let ms_per_request = parse_env_var("MS_PER_REQUEST", 100, 1, 1000);
+    let burst_limit = parse_env_var("BURST_LIMIT", 10, 1, 100);
 
     #[cfg(feature = "otel")]
     let otlp_endpoint = get_var("OTLP_ENDPOINT")?;
@@ -134,6 +163,8 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         enable_registrations,
         client_secret,
         client_id,
+        ms_per_request,
+        burst_limit,
         #[cfg(feature = "otel")]
         otlp_endpoint,
         #[cfg(feature = "otel")]

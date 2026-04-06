@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 pub struct BotStats {
     pub added_guilds: i32,
     pub bot_id: String,
-    pub custom_events: Option<HashMap<String, i32>>,
+    pub custom_events: HashMap<String, i32>,
     pub date: DateTime,
     pub guilds: Option<Vec<Guild>>,
     pub guild_count: i32,

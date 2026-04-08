@@ -20,7 +20,7 @@ pub struct BotStatsResponse {
 #[serde(rename_all = "camelCase")]
 pub struct BotStatsContent {
     pub added_guilds: i32,
-    pub custom_events: Option<HashMap<String, i32>>,
+    pub custom_events: HashMap<String, i32>,
     pub date: String,
     pub guilds: Option<Vec<Guild>>,
     pub guild_count: i32,
@@ -90,7 +90,7 @@ pub struct BotStatsBodyOld {
 #[serde(rename_all = "camelCase")]
 pub struct BotStatsBodyNew {
     pub added_guilds: i32,
-    pub custom_events: Option<HashMap<String, i32>>,
+    pub custom_events: HashMap<String, i32>,
     pub guilds: Option<Vec<Guild>>,
     pub guild_count: i32,
     pub guild_locales: Vec<Locale>,
@@ -107,7 +107,7 @@ pub struct BotStatsBodyNew {
 pub struct NormalizedStatsBody {
     pub added_guilds: i32,
     pub bot_id: String,
-    pub custom_events: Option<HashMap<String, i32>>,
+    pub custom_events: HashMap<String, i32>,
     pub date: DateTime,
     pub guilds: Option<Vec<Guild>>,
     pub guild_count: i32,
@@ -126,7 +126,7 @@ impl NormalizedStatsBody {
         Self {
             added_guilds: old.added_guilds,
             bot_id: bot_id.to_string(),
-            custom_events: old.custom_events,
+            custom_events: old.custom_events.unwrap_or_default(),
             date: *date,
             guilds: old.guilds_stats,
             guild_count: old.guilds,

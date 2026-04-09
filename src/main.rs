@@ -18,6 +18,8 @@ use tokio::{spawn, sync::Mutex, try_join};
 use tracing::{Level, info};
 use tracing_actix_web::TracingLogger;
 
+#[cfg(feature = "reports")]
+use crate::tasks::reports_task;
 use crate::{
     api::{middleware::AuthMiddleware, routes},
     config::env::init_env,
@@ -25,7 +27,7 @@ use crate::{
     openapi::build_spec,
     repository::Repositories,
     services::Services,
-    tasks::{invitations_task, reports_task, sessions_task, warnings_task},
+    tasks::{invitations_task, sessions_task, warnings_task},
     utils::logger::{LogCode, Logger},
 };
 
@@ -67,6 +69,7 @@ async fn main() -> Result<()> {
     );
 
     invitations_task(repos.clone());
+    #[cfg(feature = "reports")]
     reports_task(repos.clone(), services.clone());
     sessions_task(repos.clone());
     warnings_task(repos.clone(), services.clone());

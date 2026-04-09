@@ -25,11 +25,12 @@ path = "src/main.rs"
 
 [dependencies]
 actix-cors = { version = "0.7.1", default-features = false }
+actix-governor = { version = "0.10.0", default-features = false }
 actix-web = { version = "4.13.0", default-features = false }
 actix-ws = { version = "0.4.0", default-features = false }
 anyhow = { version = "1.0.102", default-features = false }
 apistos = { version = "0.6.0", default-features = false }
-charts-rs = { version = "0.3.28", default-features = false, features = [
+charts-rs = { version = "0.4.0", default-features = false, features = [
   "image-encoder",
 ] }
 chrono = { version = "0.4.44", default-features = false, features = [
@@ -45,7 +46,7 @@ jsonwebtoken = { version = "10.3.0", default-features = false, features = [
   "hmac",
   "sha2",
 ] }
-lettre = { version = "0.11.20", optional = true, default-features = false, features = [
+lettre = { version = "0.11.21", optional = true, default-features = false, features = [
   "builder",
   "hostname",
   "smtp-transport",
@@ -82,7 +83,7 @@ s3 = { version = "0.1.24", optional = true, features = ["providers"] }
 schemars = { package = "apistos-schemars", version = "0.8.22", default-features = false }
 serde = { version = "1.0.228", default-features = false }
 serde_json = { version = "1.0.149", default-features = false }
-tokio = "1.50.0"
+tokio = "1.51.0"
 tracing = { version = "0.1.44", default-features = false }
 tracing-actix-web = { version = "0.7.21", default-features = false, features = [
   "emit_event_on_error",

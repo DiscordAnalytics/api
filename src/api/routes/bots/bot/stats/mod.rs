@@ -268,7 +268,7 @@ async fn post_stats(
                 updates = updates.with_added_guilds(body.added_guilds);
             }
 
-            if let Some(custom_events) = body.custom_events {
+            if !body.custom_events.is_empty() {
                 let bot_events = repos
                     .custom_events
                     .find_by_bot_id(&bot_id)
@@ -277,9 +277,9 @@ async fn post_stats(
                     .map(|event| (event.event_key, event.default_value))
                     .collect::<HashMap<_, _>>();
 
-                let existing_events = existing_stats.custom_events.unwrap_or_default();
+                let existing_events = existing_stats.custom_events;
 
-                for (event_key, count) in custom_events {
+                for (event_key, count) in body.custom_events {
                     if let Some(default_value) = bot_events.get(&event_key) {
                         let new_count = if existing_events.contains_key(&event_key) {
                             count

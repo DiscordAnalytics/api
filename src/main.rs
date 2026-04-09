@@ -11,9 +11,10 @@ mod utils;
 use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
+use actix_governor::{Governor, GovernorConfigBuilder};
 use actix_web::{App, HttpServer, http, web::Data};
 use anyhow::Result;
-use apistos::app::OpenApiWrapper;
+use apistos::{app::OpenApiWrapper, web::scope};
 use tokio::{spawn, sync::Mutex, try_join};
 use tracing::{Level, info};
 use tracing_actix_web::TracingLogger;
@@ -92,6 +93,13 @@ async fn main() -> Result<()> {
         "ChatServer initialized",
     );
 
+    let governor_config = GovernorConfigBuilder::default()
+        .milliseconds_per_request(app_env!().ms_per_request)
+        .burst_size(app_env!().burst_limit)
+        .use_headers()
+        .finish()
+        .ok_or_else(|| anyhow::anyhow!("Failed to create GovernorConfig"))?;
+
     let http_server = HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin(&app_env!().client_url)
@@ -115,7 +123,11 @@ async fn main() -> Result<()> {
             .wrap(TracingLogger::default())
             .wrap(cors)
             .wrap(AuthMiddleware)
-            .configure(routes::configure)
+            .service(
+                scope("")
+                    .wrap(Governor::new(&governor_config))
+                    .configure(routes::configure),
+            )
             .build("/openapi.json")
     })
     .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?

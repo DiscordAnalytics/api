@@ -37,8 +37,22 @@ impl BotUpdate {
         self
     }
 
+    pub fn with_custom_events_limit(mut self, custom_events_limit: Option<i32>) -> Self {
+        if let Some(custom_events_limit) = custom_events_limit {
+            self.merge_set(doc! { "customEventsLimit": custom_events_limit });
+        }
+        self
+    }
+
     pub fn with_framework(mut self, framework: String) -> Self {
         self.merge_set(doc! { "framework": framework });
+        self
+    }
+
+    pub fn with_goals_limit(mut self, goals_limit: Option<i32>) -> Self {
+        if let Some(goals_limit) = goals_limit {
+            self.merge_set(doc! { "goalsLimit": goals_limit });
+        }
         self
     }
 
@@ -49,6 +63,13 @@ impl BotUpdate {
 
     pub fn with_team(mut self, team: Vec<String>) -> Self {
         self.merge_set(doc! { "team": team });
+        self
+    }
+
+    pub fn with_teammates_limit(mut self, teammates_limit: Option<i32>) -> Self {
+        if let Some(teammates_limit) = teammates_limit {
+            self.merge_set(doc! { "teammatesLimit": teammates_limit });
+        }
         self
     }
 
@@ -86,7 +107,11 @@ impl BotUpdate {
     }
 
     pub fn with_webhook_url(mut self, webhook_url: Option<String>) -> Self {
-        self.merge_set(doc! { "webhooksConfig.webhookUrl": webhook_url });
+        if let Some(url) = webhook_url {
+            self.merge_set(
+                doc! { "webhooksConfig.webhookUrl": if url.is_empty() { None } else { Some(url) } },
+            );
+        }
         self
     }
 

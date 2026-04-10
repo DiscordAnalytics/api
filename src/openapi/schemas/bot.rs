@@ -87,5 +87,8 @@ pub struct BotTokenResponse {
 #[serde(rename_all = "camelCase")]
 pub struct BotSettingsPayload {
     pub advanced_stats: Option<bool>,
+    pub custom_events_limit: Option<i32>,
+    pub goals_limit: Option<i32>,
+    pub teammates_limit: Option<i32>,
     pub webhook_url: Option<String>,
 }

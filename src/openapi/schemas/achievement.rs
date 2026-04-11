@@ -9,6 +9,7 @@ use crate::domain::models::{Achievement, AchievementObjective};
 pub struct AchievementResponse {
     pub id: String,
     pub achieved_on: Option<String>,
+    pub bot_id: Option<String>,
     pub current: Option<i64>,
     pub description: String,
     pub description_i18n: Option<String>,
@@ -22,9 +23,12 @@ pub struct AchievementResponse {
 }
 
 impl AchievementResponse {
-    pub fn from_shared(achievement: Achievement) -> anyhow::Result<Self> {
+    pub fn from_shared(achievement: Achievement, admin: bool) -> anyhow::Result<Self> {
         let mut res = Self::try_from(achievement)?;
         res.achieved_on = None;
+        if !admin {
+            res.bot_id = None;
+        }
         res.current = None;
         Ok(res)
     }
@@ -40,6 +44,7 @@ impl TryFrom<Achievement> for AchievementResponse {
                 .achieved_on
                 .map(|dt| dt.try_to_rfc3339_string())
                 .transpose()?,
+            bot_id: Some(achievement.bot_id),
             current: achievement.current,
             description: achievement.description,
             description_i18n: achievement.description_i18n,

@@ -102,15 +102,6 @@ async fn get_stats(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Access denied for suspended bot team",
-        );
-        return Err(ApiError::BotSuspended);
-    }
-
     let ctx = &auth;
 
     if ctx.is_admin() {
@@ -146,6 +137,14 @@ async fn get_stats(
         return Err(ApiError::Forbidden);
     }
 
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot stats",
+        );
+        return Err(ApiError::BotSuspended);
+    }
     let stats = repos
         .bot_stats
         .find_from_date_range(&bot_id, &from, &to)
@@ -207,15 +206,6 @@ async fn post_stats(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Access denied for suspended bot team",
-        );
-        return Err(ApiError::BotSuspended);
-    }
-
     let ctx = &auth;
 
     if ctx.is_admin() {
@@ -238,6 +228,15 @@ async fn post_stats(
             "Access denied for posting bot stats",
         );
         return Err(ApiError::Forbidden);
+    }
+
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot stats"
+        );
+        return Err(ApiError::BotSuspended);
     }
 
     let current_date = DateTime::now();

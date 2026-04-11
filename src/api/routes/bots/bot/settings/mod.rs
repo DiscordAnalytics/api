@@ -76,7 +76,7 @@ async fn update_settings(
         return Err(ApiError::Forbidden);
     }
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

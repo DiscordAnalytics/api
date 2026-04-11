@@ -35,15 +35,6 @@ async fn get_event(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Access denied for suspended bot",
-        );
-        return Err(ApiError::BotSuspended);
-    }
-
     let ctx = &auth;
 
     if ctx.is_admin() {
@@ -81,6 +72,15 @@ async fn get_event(
             "Unauthenticated access attempt for retrieving custom event",
         );
         return Err(ApiError::Unauthorized);
+    }
+
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot",
+        );
+        return Err(ApiError::BotSuspended);
     }
 
     let event = repos
@@ -126,15 +126,6 @@ async fn update_event(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Access denied for suspended bot team",
-        );
-        return Err(ApiError::BotSuspended);
-    }
-
     let ctx = &auth;
 
     if ctx.is_admin() {
@@ -172,6 +163,15 @@ async fn update_event(
             "Unauthenticated access attempt for updating custom event",
         );
         return Err(ApiError::Unauthorized);
+    }
+
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
     }
 
     repos
@@ -244,15 +244,6 @@ async fn delete_event(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Access denied for suspended bot team",
-        );
-        return Err(ApiError::BotSuspended);
-    }
-
     let ctx = &auth;
 
     if ctx.is_admin() {
@@ -290,6 +281,15 @@ async fn delete_event(
             "Unauthenticated access attempt for deleting custom event",
         );
         return Err(ApiError::Unauthorized);
+    }
+
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
     }
 
     let result = repos

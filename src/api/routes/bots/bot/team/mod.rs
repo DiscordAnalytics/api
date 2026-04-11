@@ -40,8 +40,6 @@ async fn get_team(
         "Fetching team for bot"
     );
 
-    let ctx = &auth;
-
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
         info!(
             code = %LogCode::Request,
@@ -51,14 +49,7 @@ async fn get_team(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Access denied for suspended bot team",
-        );
-        return Err(ApiError::BotSuspended);
-    }
+    let ctx = &auth;
 
     if ctx.is_admin() {
         info!(
@@ -91,6 +82,15 @@ async fn get_team(
             "Access denied for bot team",
         );
         return Err(ApiError::Forbidden);
+    }
+
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            "Access denied for suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
     }
 
     let invitations = repos.team_invitations.find_by_bot(&bot_id).await?;
@@ -163,16 +163,6 @@ async fn add_to_team(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            user_id = %body.user_id,
-            "Access denied to add user to suspended bot team",
-        );
-        return Err(ApiError::BotSuspended);
-    }
-
     let ctx = &auth;
 
     if ctx.is_admin() {
@@ -209,6 +199,16 @@ async fn add_to_team(
             "Access denied to add user to bot team",
         );
         return Err(ApiError::Forbidden);
+    }
+
+    if bot.suspended && !ctx.is_admin() {
+        warn!(
+            code = %LogCode::Forbidden,
+            bot_id = %bot_id,
+            user_id = %body.user_id,
+            "Access denied to add user to suspended bot team",
+        );
+        return Err(ApiError::BotSuspended);
     }
 
     if bot.team.len() as i32 == bot.teammates_limit {

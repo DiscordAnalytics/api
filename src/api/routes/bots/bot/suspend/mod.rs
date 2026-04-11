@@ -24,7 +24,7 @@ use crate::{
     skip
 )]
 async fn suspend_bot(
-    _admin: RequireAdmin,
+    _auth: RequireAdmin,
     services: Data<Services>,
     repos: Data<Repositories>,
     body: Json<BotSuspendRequest>,
@@ -128,7 +128,7 @@ async fn suspend_bot(
     skip
 )]
 async fn unsuspend_bot(
-    _admin: RequireAdmin,
+    _auth: RequireAdmin,
     repos: Data<Repositories>,
     id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {

@@ -266,7 +266,7 @@ async fn patch_bot(
         ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
     })?;
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

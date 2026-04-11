@@ -83,7 +83,7 @@ async fn get_bot_achievements(
         return Err(ApiError::Forbidden);
     }
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -164,7 +164,7 @@ async fn create_achievement(
         return Err(ApiError::Forbidden);
     }
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -325,7 +325,7 @@ async fn update_achievement(
         return Err(ApiError::Forbidden);
     }
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -464,7 +464,7 @@ async fn delete_achievement(
         return Err(ApiError::Forbidden);
     }
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

@@ -154,7 +154,7 @@ async fn refresh_token(
         return Err(ApiError::Forbidden);
     }
 
-    if bot.suspended {
+    if bot.suspended && !ctx.is_admin() {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

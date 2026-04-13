@@ -39,7 +39,7 @@ pub use custom_event::{CustomEventBody, CustomEventResponse, CustomEventUpdatePa
 pub use health::HealthResponse;
 pub use integrations::{IntegrationPayload, TopGGIntegrationPayload};
 pub use invitation::{
-    InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, TeamInvitationResponse,
+    InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, UserInvitationResponse,
 };
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 #[cfg(feature = "reports")]

@@ -727,9 +727,9 @@ dependencies = [
 
 [[package]]
 name = "charts-rs"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d244afb33934779b2dfc6b5e27211df776931f0a63478fe2fb9ed2046cdc968"
+checksum = "fdae37a5ca2c2c17393f167e0ecf7d868e6f8796c04fbb1c0eb9306dd7abe089"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -776,12 +776,6 @@ checksum = "75443c44cd6b379beb8c5b45d85d0773baf31cce901fe7bb252f4eff3008ef7d"
 dependencies = [
  "cc",
 ]
-
-[[package]]
-name = "cmov"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de0758edba32d61d1fd9f4d69491b47604b91ee2f7e6b33de7e54ca4ebe55dc3"
 
 [[package]]
 name = "color_quant"
@@ -981,15 +975,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ctutils"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1005a6d4446f5120ef475ad3d2af2b30c49c2c9c6904258e3bb30219bebed5e4"
-dependencies = [
- "cmov",
-]
-
-[[package]]
 name = "darling"
 version = "0.20.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1159,7 +1144,6 @@ checksum = "4850db49bf08e663084f7fb5c87d202ef91a3907271aff24a94eb97ff039153c"
 dependencies = [
  "block-buffer 0.12.0",
  "crypto-common 0.2.1",
- "ctutils",
 ]
 
 [[package]]
@@ -1262,6 +1246,18 @@ name = "enum-as-inner"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1e6a265c649f3f5979b601d26f1d05ada116434c87741c9493cb56218f76cbc"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "enum-as-inner"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0359ee92f81184d7985519e474bda2a5738476334edd3746c9b1265c067afe70"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1651,6 +1647,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "graviola"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4387e0458389da24c6fe732531e65595c7c4a32b027f98f4789e512e28224465"
+dependencies = [
+ "cfg-if",
+ "getrandom 0.3.4",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1748,7 +1754,7 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "data-encoding",
- "enum-as-inner",
+ "enum-as-inner 0.6.1",
  "futures-channel",
  "futures-io",
  "futures-util",
@@ -1792,15 +1798,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
-]
-
-[[package]]
-name = "hmac"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6303bc9732ae41b04cb554b844a762b4115a61bfaa81e3e83050991eeb56863f"
-dependencies = [
- "digest 0.11.2",
 ]
 
 [[package]]
@@ -1896,9 +1893,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.8.1"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ab2d4f250c3d7b1c9fcdff1cece94ea4e2dfbec68614f7b87cb205f24ca9d11"
+checksum = "6299f016b246a94207e63da54dbe807655bf9e00044f73ded42c3ac5305fbcca"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -1910,7 +1907,6 @@ dependencies = [
  "httparse",
  "itoa",
  "pin-project-lite",
- "pin-utils",
  "smallvec",
  "tokio",
  "want",
@@ -2264,7 +2260,7 @@ dependencies = [
  "aws-lc-rs",
  "base64",
  "getrandom 0.2.17",
- "hmac 0.12.1",
+ "hmac",
  "js-sys",
  "serde",
  "serde_json",
@@ -2600,7 +2596,7 @@ dependencies = [
  "hex",
  "hickory-proto",
  "hickory-resolver",
- "hmac 0.12.1",
+ "hmac",
  "macro_magic",
  "md-5 0.10.6",
  "mongocrypt",
@@ -2653,11 +2649,11 @@ dependencies = [
 
 [[package]]
 name = "mrml"
-version = "5.1.0"
+version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f2d4de127b05e0abf5bfe406ca8c766bb16e9150b040ff1525bccc20ee7c132"
+checksum = "7a117348b480944b0de34666b23cb64c5a63f5de691826bdb8a0657bb43a57ff"
 dependencies = [
- "enum-as-inner",
+ "enum-as-inner 0.7.0",
  "htmlparser",
  "indexmap",
  "itertools",
@@ -2997,12 +2993,6 @@ name = "pin-project-lite"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b3cff922bd51709b605d9ead9aa71031d81447142d828eb4a6eba76fe619f9b"
-
-[[package]]
-name = "pin-utils"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkg-config"
@@ -3526,9 +3516,9 @@ dependencies = [
 
 [[package]]
 name = "reqx"
-version = "0.1.31"
+version = "0.1.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e42a83864dfdb4de76f6a6525c0f0863173366cc9f875fe2ed5af4564755e15"
+checksum = "272db0a7a08dfe31a7f52c3ba110766d4fa4c8fc3a9f6ab501977faf81301ddb"
 dependencies = [
  "brotli",
  "bytes",
@@ -3775,17 +3765,17 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "s3"
-version = "0.1.24"
+version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e245e5287e0e1b0b762aa105ef67e923d5c8f5ba5d1090ee568b0d2c33250274"
+checksum = "abbead71ea8e31af51e90a4c6eca0562b8865652f52529c3d8f9169985c78062"
 dependencies = [
  "base64",
  "bytes",
  "futures-core",
  "futures-io",
  "futures-util",
+ "graviola",
  "hex",
- "hmac 0.13.0",
  "http 1.4.0",
  "http-body-util",
  "httpdate",
@@ -3793,7 +3783,6 @@ dependencies = [
  "quick-xml",
  "reqx",
  "serde",
- "sha2 0.11.0",
  "time",
  "tokio",
  "url",
@@ -4409,9 +4398,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.51.0"
+version = "1.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bd1c4c0fc4a7ab90fc15ef6daaa3ec3b893f004f915f2392557ed23237820cd"
+checksum = "f66bf9585cda4b724d3e78ab34b73fb2bbaba9011b9bfdf69dc836382ea13b8c"
 dependencies = [
  "bytes",
  "libc",

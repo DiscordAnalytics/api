@@ -1,9 +1,11 @@
-use std::{collections::HashMap, vec::IntoIter};
+use std::collections::HashMap;
 
 use apistos::ApiComponent;
 use mongodb::bson::DateTime;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use crate::impl_kv_iter;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,20 +44,15 @@ pub struct GuildMembers {
     pub huge: i32,
 }
 
-impl IntoIterator for GuildMembers {
-    type Item = (String, i32);
-    type IntoIter = IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        vec![
-            ("little".to_string(), self.little),
-            ("medium".to_string(), self.medium),
-            ("big".to_string(), self.big),
-            ("huge".to_string(), self.huge),
-        ]
-        .into_iter()
-    }
-}
+impl_kv_iter!(
+    GuildMembers,
+    [
+        ("little", little),
+        ("medium", medium),
+        ("big", big),
+        ("huge", huge),
+    ]
+);
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -83,18 +80,13 @@ pub struct UserType {
     pub private_message: i32,
 }
 
-impl IntoIterator for UserType {
-    type Item = (String, i32);
-    type IntoIter = IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        vec![
-            ("admin".to_string(), self.admin),
-            ("moderator".to_string(), self.moderator),
-            ("newMember".to_string(), self.new_member),
-            ("other".to_string(), self.other),
-            ("privateMessage".to_string(), self.private_message),
-        ]
-        .into_iter()
-    }
-}
+impl_kv_iter!(
+    UserType,
+    [
+        ("admin", admin),
+        ("moderator", moderator),
+        ("newMember", new_member),
+        ("other", other),
+        ("privateMessage", private_message),
+    ]
+);

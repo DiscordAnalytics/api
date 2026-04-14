@@ -73,7 +73,12 @@ async fn oauth_callback(
         .customize();
     }
 
-    let token_response = match services.discord.exchange_linked_roles_code(code).await {
+    let redirect_uri = format!("{}/auth/linkedroles", app_env!().api_url);
+    let token_response = match services
+        .discord
+        .exchange_code(code, &redirect_uri, "role_connections.write identify")
+        .await
+    {
         Ok(token) => token,
         Err(e) => {
             error!(

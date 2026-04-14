@@ -7,10 +7,9 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{
-    domain::models::BlogArticle, repository::common::UpdateBuilder,
-    utils::constants::BLOG_ARTICLES_COLLECTION,
-};
+use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
+
+use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct BlogArticleUpdate {
@@ -65,17 +64,9 @@ pub struct BlogArticlesRepository {
 
 impl BlogArticlesRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == BLOG_ARTICLES_COLLECTION)
-        {
-            db.create_collection(BLOG_ARTICLES_COLLECTION).await?;
-        }
-
         Ok(Self {
-            collection: db.collection(BLOG_ARTICLES_COLLECTION),
+            collection: ensure_collection(db, BLOG_ARTICLES_COLLECTION, CollectionSpec::Standard)
+                .await?,
         })
     }
 

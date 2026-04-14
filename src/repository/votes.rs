@@ -3,11 +3,13 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, ReturnDocument, TimeseriesGranularity, TimeseriesOptions},
+    options::{FindOneAndUpdateOptions, ReturnDocument, TimeseriesGranularity},
     results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{domain::models::Vote, utils::constants::VOTES_COLLECTION};
+
+use super::common::{CollectionSpec, ensure_collection};
 
 #[derive(Clone)]
 pub struct VotesRepository {
@@ -16,24 +18,17 @@ pub struct VotesRepository {
 
 impl VotesRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == VOTES_COLLECTION)
-        {
-            let ts_opts = TimeseriesOptions::builder()
-                .time_field("date")
-                .meta_field(Some("botId".to_owned()))
-                .granularity(Some(TimeseriesGranularity::Hours))
-                .build();
-            db.create_collection(VOTES_COLLECTION)
-                .timeseries(ts_opts)
-                .await?;
-        }
-
         Ok(Self {
-            collection: db.collection(VOTES_COLLECTION),
+            collection: ensure_collection(
+                db,
+                VOTES_COLLECTION,
+                CollectionSpec::TimeSeries {
+                    time_field: "date",
+                    meta_field: Some("botId".to_owned()),
+                    granularity: Some(TimeseriesGranularity::Hours),
+                },
+            )
+            .await?,
         })
     }
 

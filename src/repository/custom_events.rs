@@ -7,10 +7,9 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{
-    domain::models::CustomEvent, repository::common::UpdateBuilder,
-    utils::constants::CUSTOM_EVENTS_COLLECTION,
-};
+use crate::{domain::models::CustomEvent, utils::constants::CUSTOM_EVENTS_COLLECTION};
+
+use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct CustomEventUpdate {
@@ -35,17 +34,9 @@ pub struct CustomEventsRepository {
 
 impl CustomEventsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == CUSTOM_EVENTS_COLLECTION)
-        {
-            db.create_collection(CUSTOM_EVENTS_COLLECTION).await?;
-        }
-
         Ok(Self {
-            collection: db.collection(CUSTOM_EVENTS_COLLECTION),
+            collection: ensure_collection(db, CUSTOM_EVENTS_COLLECTION, CollectionSpec::Standard)
+                .await?,
         })
     }
 

@@ -8,6 +8,8 @@ use mongodb::{
 
 use crate::{domain::models::Session, utils::constants::SESSIONS_COLLECTION};
 
+use super::common::{CollectionSpec, ensure_collection};
+
 #[derive(Clone)]
 pub struct SessionsRepository {
     collection: Collection<Session>,
@@ -15,17 +17,9 @@ pub struct SessionsRepository {
 
 impl SessionsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == SESSIONS_COLLECTION)
-        {
-            db.create_collection(SESSIONS_COLLECTION).await?;
-        }
-
         Ok(Self {
-            collection: db.collection(SESSIONS_COLLECTION),
+            collection: ensure_collection(db, SESSIONS_COLLECTION, CollectionSpec::Standard)
+                .await?,
         })
     }
 

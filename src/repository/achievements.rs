@@ -9,10 +9,9 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
-use crate::{
-    domain::models::Achievement, repository::common::UpdateBuilder,
-    utils::constants::ACHIEVEMENTS_COLLECTION,
-};
+use crate::{domain::models::Achievement, utils::constants::ACHIEVEMENTS_COLLECTION};
+
+use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct AchievementUpdate {
@@ -62,17 +61,9 @@ pub struct AchievementsRepository {
 
 impl AchievementsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == ACHIEVEMENTS_COLLECTION)
-        {
-            db.create_collection(ACHIEVEMENTS_COLLECTION).await?;
-        }
-
         Ok(Self {
-            collection: db.collection(ACHIEVEMENTS_COLLECTION),
+            collection: ensure_collection(db, ACHIEVEMENTS_COLLECTION, CollectionSpec::Standard)
+                .await?,
         })
     }
 

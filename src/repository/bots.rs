@@ -12,9 +12,10 @@ use mongodb::{
 
 use crate::{
     domain::models::{Bot, WebhookConfig},
-    repository::common::UpdateBuilder,
     utils::constants::BOTS_COLLECTION,
 };
+
+use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct BotUpdate {
@@ -128,17 +129,8 @@ pub struct BotsRepository {
 
 impl BotsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == BOTS_COLLECTION)
-        {
-            db.create_collection(BOTS_COLLECTION).await?;
-        }
-
         Ok(Self {
-            collection: db.collection(BOTS_COLLECTION),
+            collection: ensure_collection(db, BOTS_COLLECTION, CollectionSpec::Standard).await?,
         })
     }
 

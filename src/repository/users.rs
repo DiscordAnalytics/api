@@ -9,9 +9,9 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{
-    domain::models::User, repository::common::UpdateBuilder, utils::constants::USERS_COLLECTION,
-};
+use crate::{domain::models::User, utils::constants::USERS_COLLECTION};
+
+use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct UserUpdate {
@@ -63,17 +63,8 @@ pub struct UsersRepository {
 
 impl UsersRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == USERS_COLLECTION)
-        {
-            db.create_collection(USERS_COLLECTION).await?;
-        }
-
         Ok(Self {
-            collection: db.collection(USERS_COLLECTION),
+            collection: ensure_collection(db, USERS_COLLECTION, CollectionSpec::Standard).await?,
         })
     }
 

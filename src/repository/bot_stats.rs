@@ -3,18 +3,16 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
-    options::{
-        FindOneAndUpdateOptions, FindOptions, ReturnDocument, TimeseriesGranularity,
-        TimeseriesOptions,
-    },
+    options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument, TimeseriesGranularity},
     results::{DeleteResult, InsertOneResult},
 };
 
 use crate::{
     domain::models::{BotStats, Guild, Interaction},
-    repository::common::UpdateBuilder,
     utils::constants::BOT_STATS_COLLECTION,
 };
+
+use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct BotStatsUpdate {
@@ -285,24 +283,17 @@ pub struct BotStatsRepository {
 
 impl BotStatsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        if !db
-            .list_collection_names()
-            .await?
-            .iter()
-            .any(|name| name == BOT_STATS_COLLECTION)
-        {
-            let ts_opts = TimeseriesOptions::builder()
-                .time_field("date")
-                .meta_field(Some("botId".to_owned()))
-                .granularity(Some(TimeseriesGranularity::Hours))
-                .build();
-            db.create_collection(BOT_STATS_COLLECTION)
-                .timeseries(ts_opts)
-                .await?;
-        }
-
         Ok(Self {
-            collection: db.collection(BOT_STATS_COLLECTION),
+            collection: ensure_collection(
+                db,
+                BOT_STATS_COLLECTION,
+                CollectionSpec::TimeSeries {
+                    time_field: "date",
+                    meta_field: Some("botId".to_owned()),
+                    granularity: Some(TimeseriesGranularity::Hours),
+                },
+            )
+            .await?,
         })
     }
 

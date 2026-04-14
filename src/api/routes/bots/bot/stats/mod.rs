@@ -259,7 +259,7 @@ async fn post_stats(
         .await?
     {
         Some(existing_stats) => {
-            let mut updates = BotStatsUpdate::new()
+            let mut updates = BotStatsUpdate::default()
                 .with_guild_count(body.guild_count)
                 .with_user_count(body.user_count);
 

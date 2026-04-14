@@ -59,7 +59,7 @@ async fn suspend_user(
 
     let reason = body.reason.trim();
 
-    let user_update = UserUpdate::new().with_suspended(true);
+    let user_update = UserUpdate::default().with_suspended(true);
 
     repos.users.update(&user_id, user_update).await?;
     repos.sessions.revoke_all_for_user(&user_id).await?;
@@ -148,7 +148,7 @@ async fn unsuspend_user(
         return Err(ApiError::UserUnsuspended);
     }
 
-    let user_update = UserUpdate::new().with_suspended(false);
+    let user_update = UserUpdate::default().with_suspended(false);
 
     repos.users.update(&user_id, user_update).await?;
     repos.bots.set_suspension_for_owner(&user_id, false).await?;

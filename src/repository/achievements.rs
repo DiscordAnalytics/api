@@ -3,67 +3,55 @@ use std::str::FromStr;
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Bson, DateTime, Document, doc, oid::ObjectId},
+    bson::{DateTime, Document, doc, oid::ObjectId},
     error::Result,
     options::{FindOneAndUpdateOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult, UpdateResult},
 };
 
-use crate::{domain::models::Achievement, utils::constants::ACHIEVEMENTS_COLLECTION};
+use crate::{
+    domain::models::Achievement, repository::common::UpdateBuilder,
+    utils::constants::ACHIEVEMENTS_COLLECTION,
+};
 
 #[derive(Clone, Default)]
 pub struct AchievementUpdate {
-    updates: Document,
+    builder: UpdateBuilder,
 }
 
 impl AchievementUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_description(mut self, description: String) -> Self {
-        self.merge_set(doc! { "description": description });
+        self.builder = self.builder.set(doc! { "description": description });
         self
     }
 
     pub fn with_from(mut self, from: Option<String>) -> Self {
-        self.merge_set(doc! { "from": from });
+        self.builder = self.builder.set(doc! { "from": from });
         self
     }
 
     pub fn with_lang(mut self, lang: String) -> Self {
-        self.merge_set(doc! { "lang": lang });
+        self.builder = self.builder.set(doc! { "lang": lang });
         self
     }
 
     pub fn with_shared(mut self, shared: bool) -> Self {
-        self.merge_set(doc! { "shared": shared });
+        self.builder = self.builder.set(doc! { "shared": shared });
         self
     }
 
     pub fn with_title(mut self, title: String) -> Self {
-        self.merge_set(doc! { "title": title });
+        self.builder = self.builder.set(doc! { "title": title });
         self
     }
 
     pub fn with_used_by(mut self, used_by: i64) -> Self {
-        self.merge_set(doc! { "usedBy": used_by });
+        self.builder = self.builder.set(doc! { "usedBy": used_by });
         self
     }
 
-    fn merge_set(&mut self, doc: Document) {
-        let set_doc = self
-            .updates
-            .entry("$set")
-            .or_insert_with(|| Bson::Document(doc! {}));
-
-        if let Bson::Document(existing) = set_doc {
-            existing.extend(doc);
-        }
-    }
-
     pub fn build(self) -> Document {
-        self.updates
+        self.builder.build()
     }
 }
 

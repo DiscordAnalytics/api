@@ -93,7 +93,7 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
                 );
             }
 
-            let update = BotUpdate::new().with_warn_level(1);
+            let update = BotUpdate::default().with_warn_level(1);
 
             match repos.bots.update(&bot.bot_id, update).await {
                 Ok(Some(_)) => info!(
@@ -217,7 +217,7 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
                     );
                 }
 
-                let update = BotUpdate::new().with_warn_level(2);
+                let update = BotUpdate::default().with_warn_level(2);
 
                 match repos.bots.update(&bot.bot_id, update).await {
                     Ok(Some(_)) => info!(

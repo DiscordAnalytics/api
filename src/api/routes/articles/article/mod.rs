@@ -87,7 +87,7 @@ async fn publish_article(
         return Err(ApiError::AlreadyPublished);
     }
 
-    let update = BlogArticleUpdate::new().with_is_draft(false);
+    let update = BlogArticleUpdate::default().with_is_draft(false);
 
     let update_result = repos.blog_articles.update(&article_id, update).await?;
 
@@ -141,7 +141,7 @@ async fn update_article(
 
     let article_request = body.into_inner();
 
-    let mut update = BlogArticleUpdate::new()
+    let mut update = BlogArticleUpdate::default()
         .with_content(&article_request.content)
         .with_description(&article_request.description)
         .with_tags(article_request.tags)

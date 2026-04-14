@@ -127,7 +127,7 @@ async fn oauth_callback(
                 .avatar_decoration_data
                 .as_ref()
                 .and_then(|data| data.asset.clone());
-            let mut user_update = UserUpdate::new()
+            let mut user_update = UserUpdate::default()
                 .with_avatar(discord_user.avatar)
                 .with_username(discord_user.username.clone())
                 .with_avatar_decoration(decoration);

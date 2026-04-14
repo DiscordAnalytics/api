@@ -7,25 +7,24 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{domain::models::CustomEvent, utils::constants::CUSTOM_EVENTS_COLLECTION};
+use crate::{
+    domain::models::CustomEvent, repository::common::UpdateBuilder,
+    utils::constants::CUSTOM_EVENTS_COLLECTION,
+};
 
 #[derive(Clone, Default)]
 pub struct CustomEventUpdate {
-    updates: Document,
+    builder: UpdateBuilder,
 }
 
 impl CustomEventUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_graph_name(mut self, graph_name: &str) -> Self {
-        self.updates.insert("graphName", graph_name);
+        self.builder = self.builder.set(doc! { "graphName": graph_name });
         self
     }
 
     pub fn build(self) -> Document {
-        self.updates
+        self.builder.build()
     }
 }
 

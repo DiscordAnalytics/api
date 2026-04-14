@@ -222,7 +222,7 @@ async fn create_achievement(
             .count_used_by(&from)
             .await?
             .saturating_add(1);
-        let update = AchievementUpdate::new().with_used_by(used_by_count as i64);
+        let update = AchievementUpdate::default().with_used_by(used_by_count as i64);
         repos.achievements.update(&from, update).await?;
     }
     if let Some(title_i18n) = payload.title_i18n {
@@ -374,7 +374,7 @@ async fn update_achievement(
         return Err(ApiError::Forbidden);
     }
 
-    let mut updates = AchievementUpdate::new();
+    let mut updates = AchievementUpdate::default();
     if let Some(description) = payload.description {
         updates = updates.with_description(description);
     }
@@ -504,14 +504,14 @@ async fn delete_achievement(
             .count_used_by(&query.id)
             .await?
             .saturating_sub(1);
-        let update = AchievementUpdate::new().with_used_by(used_by_count as i64);
+        let update = AchievementUpdate::default().with_used_by(used_by_count as i64);
         repos.achievements.update(&from, update).await?;
     }
 
     repos.achievements.delete_by_id(&query.id).await?;
     repos
         .achievements
-        .update_many(&query.id, AchievementUpdate::new().with_from(None))
+        .update_many(&query.id, AchievementUpdate::default().with_from(None))
         .await?;
 
     info!(

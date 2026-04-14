@@ -164,7 +164,7 @@ async fn refresh_token(
     }
 
     let new_token = generate_bot_token(&bot_id)?;
-    let bot_update = BotUpdate::new().with_token(new_token.clone());
+    let bot_update = BotUpdate::default().with_token(new_token.clone());
 
     let update_result = repos
         .bots

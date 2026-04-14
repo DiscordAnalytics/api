@@ -193,7 +193,7 @@ async fn update_event(
 
     let body = body.into_inner();
 
-    let updates = CustomEventUpdate::new().with_graph_name(&body.graph_name);
+    let updates = CustomEventUpdate::default().with_graph_name(&body.graph_name);
 
     let update_result = repos
         .custom_events

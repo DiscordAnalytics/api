@@ -1,7 +1,7 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Bson, DateTime, Document, doc},
+    bson::{DateTime, Document, doc},
     error::Result,
     options::{
         FindOneAndUpdateOptions, FindOptions, ReturnDocument, TimeseriesGranularity,
@@ -12,26 +12,25 @@ use mongodb::{
 
 use crate::{
     domain::models::{BotStats, Guild, Interaction},
+    repository::common::UpdateBuilder,
     utils::constants::BOT_STATS_COLLECTION,
 };
 
 #[derive(Clone, Default)]
 pub struct BotStatsUpdate {
-    updates: Document,
+    builder: UpdateBuilder,
 }
 
 impl BotStatsUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_added_guilds(mut self, added_guilds: i32) -> Self {
-        self.merge_inc(doc! { "addedGuilds": added_guilds });
+        self.builder = self.builder.inc(doc! { "addedGuilds": added_guilds });
         self
     }
 
     pub fn with_custom_event(mut self, event_key: &str, count: i32) -> Self {
-        self.merge_set(doc! { format!("customEvents.{}", event_key): count });
+        self.builder = self
+            .builder
+            .set(doc! { format!("customEvents.{}", event_key): count });
         self
     }
 
@@ -99,24 +98,26 @@ impl BotStatsUpdate {
             }
         };
 
-        self.merge_set(update_doc);
+        self.builder = self.builder.set(update_doc);
 
         self
     }
 
     pub fn with_guild_count(mut self, guild_count: i32) -> Self {
-        self.merge_set(doc! { "guildCount": guild_count });
+        self.builder = self.builder.set(doc! { "guildCount": guild_count });
         self
     }
 
     pub fn with_guild_locales(mut self, locales: &[(&str, i32)]) -> Self {
         let update_doc = Self::build_locale_update("guildLocales", locales);
-        self.merge_set(update_doc);
+        self.builder = self.builder.set(update_doc);
         self
     }
 
     pub fn with_guild_member(mut self, bucket: &str, count: i32) -> Self {
-        self.merge_inc(doc! { format!("guildMembers.{}", bucket): count });
+        self.builder = self
+            .builder
+            .inc(doc! { format!("guildMembers.{}", bucket): count });
         self
     }
 
@@ -182,34 +183,38 @@ impl BotStatsUpdate {
             }
         };
 
-        self.merge_set(update_doc);
+        self.builder = self.builder.set(update_doc);
 
         self
     }
 
     pub fn with_interactions_locales(mut self, locales: &[(&str, i32)]) -> Self {
         let update_doc = Self::build_locale_update("interactionsLocales", locales);
-        self.merge_set(update_doc);
+        self.builder = self.builder.set(update_doc);
         self
     }
 
     pub fn with_removed_guilds(mut self, removed_guilds: i32) -> Self {
-        self.merge_inc(doc! { "removedGuilds": removed_guilds });
+        self.builder = self.builder.inc(doc! { "removedGuilds": removed_guilds });
         self
     }
 
     pub fn with_user_count(mut self, user_count: i32) -> Self {
-        self.merge_set(doc! { "userCount": user_count });
+        self.builder = self.builder.set(doc! { "userCount": user_count });
         self
     }
 
     pub fn with_user_install_count(mut self, user_install_count: i32) -> Self {
-        self.merge_set(doc! { "userInstallCount": user_install_count });
+        self.builder = self
+            .builder
+            .set(doc! { "userInstallCount": user_install_count });
         self
     }
 
     pub fn with_user_type(mut self, user_type: &str, count: i32) -> Self {
-        self.merge_inc(doc! { format!("usersType.{}", user_type): count });
+        self.builder = self
+            .builder
+            .inc(doc! { format!("usersType.{}", user_type): count });
         self
     }
 
@@ -268,30 +273,8 @@ impl BotStatsUpdate {
         }
     }
 
-    fn merge_set(&mut self, doc: Document) {
-        let set_doc = self
-            .updates
-            .entry("$set")
-            .or_insert_with(|| Bson::Document(doc! {}));
-
-        if let Bson::Document(existing) = set_doc {
-            existing.extend(doc);
-        }
-    }
-
-    fn merge_inc(&mut self, doc: Document) {
-        let inc_doc = self
-            .updates
-            .entry("$inc")
-            .or_insert_with(|| Bson::Document(doc! {}));
-
-        if let Bson::Document(existing) = inc_doc {
-            existing.extend(doc);
-        }
-    }
-
     pub fn build(self) -> Document {
-        self.updates
+        self.builder.build()
     }
 }
 

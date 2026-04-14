@@ -9,50 +9,50 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{domain::models::User, utils::constants::USERS_COLLECTION};
+use crate::{
+    domain::models::User, repository::common::UpdateBuilder, utils::constants::USERS_COLLECTION,
+};
 
 #[derive(Clone, Default)]
 pub struct UserUpdate {
-    updates: Document,
+    builder: UpdateBuilder,
 }
 
 impl UserUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_avatar(mut self, avatar: Option<String>) -> Self {
-        self.updates.insert("avatar", avatar);
+        self.builder = self.builder.set(doc! { "avatar": avatar });
         self
     }
 
     pub fn with_avatar_decoration(mut self, avatar_decoration: Option<String>) -> Self {
-        self.updates.insert("avatarDecoration", avatar_decoration);
+        self.builder = self
+            .builder
+            .set(doc! { "avatarDecoration": avatar_decoration });
         self
     }
 
     pub fn with_bots_limit(mut self, bots_limit: i32) -> Self {
-        self.updates.insert("botsLimit", bots_limit);
+        self.builder = self.builder.set(doc! { "botsLimit": bots_limit });
         self
     }
 
     pub fn with_mail(mut self, mail: String) -> Self {
-        self.updates.insert("mail", mail);
+        self.builder = self.builder.set(doc! { "mail": mail });
         self
     }
 
     pub fn with_suspended(mut self, suspended: bool) -> Self {
-        self.updates.insert("suspended", suspended);
+        self.builder = self.builder.set(doc! { "suspended": suspended });
         self
     }
 
     pub fn with_username(mut self, username: String) -> Self {
-        self.updates.insert("username", username);
+        self.builder = self.builder.set(doc! { "username": username });
         self
     }
 
     pub fn build(self) -> Document {
-        self.updates
+        self.builder.build()
     }
 }
 

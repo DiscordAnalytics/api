@@ -7,55 +7,54 @@ use mongodb::{
     results::{DeleteResult, InsertOneResult},
 };
 
-use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
+use crate::{
+    domain::models::BlogArticle, repository::common::UpdateBuilder,
+    utils::constants::BLOG_ARTICLES_COLLECTION,
+};
 
 #[derive(Clone, Default)]
 pub struct BlogArticleUpdate {
-    updates: Document,
+    builder: UpdateBuilder,
 }
 
 impl BlogArticleUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_content(mut self, content: &str) -> Self {
-        self.updates.insert("content", content);
+        self.builder = self.builder.set(doc! { "content": content });
         self
     }
 
     pub fn with_cover(mut self, cover: &str) -> Self {
-        self.updates.insert("cover", cover);
+        self.builder = self.builder.set(doc! { "cover": cover });
         self
     }
 
     pub fn with_description(mut self, description: &str) -> Self {
-        self.updates.insert("description", description);
+        self.builder = self.builder.set(doc! { "description": description });
         self
     }
 
     pub fn with_is_draft(mut self, is_draft: bool) -> Self {
-        self.updates.insert("isDraft", is_draft);
+        self.builder = self.builder.set(doc! { "isDraft": is_draft });
         self
     }
 
     pub fn with_tags(mut self, tags: Vec<String>) -> Self {
-        self.updates.insert("tags", tags);
+        self.builder = self.builder.set(doc! { "tags": tags });
         self
     }
 
     pub fn with_title(mut self, title: &str) -> Self {
-        self.updates.insert("title", title);
+        self.builder = self.builder.set(doc! { "title": title });
         self
     }
 
     pub fn with_updated_at_to_now(mut self) -> Self {
-        self.updates.insert("updatedAt", DateTime::now());
+        self.builder = self.builder.set(doc! { "updatedAt": DateTime::now() });
         self
     }
 
     pub fn build(self) -> Document {
-        self.updates
+        self.builder.build()
     }
 }
 

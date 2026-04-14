@@ -221,7 +221,7 @@ async fn answer_invitation(
             .accept_invitation(invitation_id)
             .await?;
 
-        let update = BotUpdate::new().with_team_member(&invitation.user_id);
+        let update = BotUpdate::default().with_team_member(&invitation.user_id);
         repos.bots.update(&invitation.bot_id, update).await?;
 
         info!(

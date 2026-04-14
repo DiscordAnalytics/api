@@ -59,7 +59,7 @@ async fn suspend_bot(
 
     let reason = body.reason.trim();
 
-    let bot_update = BotUpdate::new().with_suspended(true);
+    let bot_update = BotUpdate::default().with_suspended(true);
 
     repos.bots.update(&bot_id, bot_update).await?;
 
@@ -158,7 +158,7 @@ async fn unsuspend_bot(
         return Err(ApiError::BotUnsuspended);
     }
 
-    let bot_update = BotUpdate::new().with_suspended(false);
+    let bot_update = BotUpdate::default().with_suspended(false);
 
     repos.bots.update(&bot_id, bot_update).await?;
 

@@ -87,7 +87,7 @@ async fn update_settings(
 
     let body = body.into_inner();
 
-    let mut update = BotUpdate::new()
+    let mut update = BotUpdate::default()
         .with_advanced_stats(body.advanced_stats)
         .with_webhook_url(body.webhook_url);
 

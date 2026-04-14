@@ -2,6 +2,7 @@ mod achievements;
 mod blog_articles;
 mod bot_stats;
 mod bots;
+mod common;
 mod connection;
 mod custom_events;
 #[cfg(feature = "reports")]

@@ -111,7 +111,7 @@ async fn handle_integration(
         })?;
     }
 
-    let update = BotUpdate::new().with_webhook_config(
+    let update = BotUpdate::default().with_webhook_config(
         provider,
         WebhookConfig {
             connection_id: None,
@@ -256,7 +256,7 @@ async fn handle_topgg_integration(
         })?;
     }
 
-    let update = BotUpdate::new().with_webhook_config(
+    let update = BotUpdate::default().with_webhook_config(
         "topgg",
         WebhookConfig {
             connection_id: payload.data.connection_id,

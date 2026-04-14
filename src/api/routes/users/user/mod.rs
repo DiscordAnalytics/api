@@ -103,7 +103,7 @@ async fn update_user(
 
     let bots_limit = body.bots_limit;
 
-    let user_update = UserUpdate::new().with_bots_limit(bots_limit);
+    let user_update = UserUpdate::default().with_bots_limit(bots_limit);
 
     let update_result = repos.users.update(&user_id, user_update).await?;
 

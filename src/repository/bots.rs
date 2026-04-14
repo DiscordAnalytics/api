@@ -4,7 +4,7 @@ use chrono::{Duration, Utc};
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
-    bson::{Bson, DateTime, Document, doc},
+    bson::{DateTime, Document, doc},
     error::Result,
     options::{FindOneAndUpdateOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
@@ -12,133 +12,112 @@ use mongodb::{
 
 use crate::{
     domain::models::{Bot, WebhookConfig},
+    repository::common::UpdateBuilder,
     utils::constants::BOTS_COLLECTION,
 };
 
 #[derive(Clone, Default)]
 pub struct BotUpdate {
-    updates: Document,
+    builder: UpdateBuilder,
 }
 
 impl BotUpdate {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_advanced_stats(mut self, advanced_stats: Option<bool>) -> Self {
         if let Some(advanced_stats) = advanced_stats {
-            self.merge_set(doc! { "advancedStats": advanced_stats });
+            self.builder = self.builder.set(doc! { "advancedStats": advanced_stats });
         }
         self
     }
 
     pub fn with_avatar(mut self, avatar: String) -> Self {
-        self.merge_set(doc! { "avatar": avatar });
+        self.builder = self.builder.set(doc! { "avatar": avatar });
         self
     }
 
     pub fn with_custom_events_limit(mut self, custom_events_limit: Option<i32>) -> Self {
         if let Some(custom_events_limit) = custom_events_limit {
-            self.merge_set(doc! { "customEventsLimit": custom_events_limit });
+            self.builder = self
+                .builder
+                .set(doc! { "customEventsLimit": custom_events_limit });
         }
         self
     }
 
     pub fn with_framework(mut self, framework: String) -> Self {
-        self.merge_set(doc! { "framework": framework });
+        self.builder = self.builder.set(doc! { "framework": framework });
         self
     }
 
     pub fn with_goals_limit(mut self, goals_limit: Option<i32>) -> Self {
         if let Some(goals_limit) = goals_limit {
-            self.merge_set(doc! { "goalsLimit": goals_limit });
+            self.builder = self.builder.set(doc! { "goalsLimit": goals_limit });
         }
         self
     }
 
     pub fn with_suspended(mut self, suspended: bool) -> Self {
-        self.merge_set(doc! { "suspended": suspended });
+        self.builder = self.builder.set(doc! { "suspended": suspended });
         self
     }
 
     pub fn with_team(mut self, team: Vec<String>) -> Self {
-        self.merge_set(doc! { "team": team });
+        self.builder = self.builder.set(doc! { "team": team });
         self
     }
 
     pub fn with_teammates_limit(mut self, teammates_limit: Option<i32>) -> Self {
         if let Some(teammates_limit) = teammates_limit {
-            self.merge_set(doc! { "teammatesLimit": teammates_limit });
+            self.builder = self.builder.set(doc! { "teammatesLimit": teammates_limit });
         }
         self
     }
 
     pub fn with_team_member(mut self, user_id: &str) -> Self {
-        self.merge_add_to_set(doc! { "team": user_id });
+        self.builder = self.builder.add_to_set(doc! { "team": user_id });
         self
     }
 
     pub fn with_token(mut self, token: String) -> Self {
-        self.merge_set(doc! { "token": token });
+        self.builder = self.builder.set(doc! { "token": token });
         self
     }
 
     pub fn with_username(mut self, username: String) -> Self {
-        self.merge_set(doc! { "username": username });
+        self.builder = self.builder.set(doc! { "username": username });
         self
     }
 
     pub fn with_version(mut self, version: String) -> Self {
-        self.merge_set(doc! { "version": version });
+        self.builder = self.builder.set(doc! { "version": version });
         self
     }
 
     pub fn with_warn_level(mut self, warn_level: i32) -> Self {
-        self.merge_set(doc! { "warnLevel": warn_level });
+        self.builder = self.builder.set(doc! { "warnLevel": warn_level });
         self
     }
 
     pub fn with_webhook_config(mut self, provider: &str, config: WebhookConfig) -> Self {
-        self.merge_set(doc! { format!("webhooksConfig.{}", provider): doc! {
-            "connectionId": config.connection_id,
-            "webhookSecret": config.webhook_secret,
-        }});
+        self.builder = self
+            .builder
+            .set(doc! { format!("webhooksConfig.{}", provider): doc! {
+                "connectionId": config.connection_id,
+                "webhookSecret": config.webhook_secret,
+            }});
         self
     }
 
     pub fn with_webhook_url(mut self, webhook_url: Option<String>) -> Self {
         if let Some(url) = webhook_url {
-            self.merge_set(
+            self.builder = self.builder.set(
                 doc! { "webhooksConfig.webhookUrl": if url.is_empty() { None } else { Some(url) } },
             );
         }
         self
     }
 
-    fn merge_set(&mut self, doc: Document) {
-        let set_doc = self
-            .updates
-            .entry("$set")
-            .or_insert_with(|| Bson::Document(doc! {}));
-
-        if let Bson::Document(existing) = set_doc {
-            existing.extend(doc);
-        }
-    }
-
-    fn merge_add_to_set(&mut self, doc: Document) {
-        let add_to_set_doc = self
-            .updates
-            .entry("$addToSet")
-            .or_insert_with(|| Bson::Document(doc! {}));
-
-        if let Bson::Document(existing) = add_to_set_doc {
-            existing.extend(doc);
-        }
-    }
-
     pub fn build(self) -> Document {
-        self.updates
+        self.builder.build()
     }
 }
 

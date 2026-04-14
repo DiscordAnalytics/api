@@ -16,8 +16,9 @@ otel = [
   "dep:opentelemetry-otlp",
   "dep:opentelemetry_sdk",
 ]
-reports = ["dep:s3", "mails"]
-full = ["mails", "otel", "reports"]
+rate_limiting = ["dep:actix-limitation", "dep:actix-session"]
+reports = ["dep:charts-rs", "dep:s3", "mails"]
+full = ["mails", "otel", "rate_limiting", "reports"]
 
 [[bin]]
 name = "discord-analytics-api"
@@ -25,12 +26,15 @@ path = "src/main.rs"
 
 [dependencies]
 actix-cors = { version = "0.7.1", default-features = false }
-actix-governor = { version = "0.10.0", default-features = false }
+actix-limitation = { version = "0.5.1", optional = true, default-features = false, features = [
+  "session",
+] }
+actix-session = { version = "0.11.0", optional = true, default-features = false }
 actix-web = { version = "4.13.0", default-features = false }
 actix-ws = { version = "0.4.0", default-features = false }
 anyhow = { version = "1.0.102", default-features = false }
 apistos = { version = "0.6.0", default-features = false }
-charts-rs = { version = "0.4.1", default-features = false, features = [
+charts-rs = { version = "0.4.1", optional = true, default-features = false, features = [
   "image-encoder",
 ] }
 chrono = { version = "0.4.44", default-features = false, features = [

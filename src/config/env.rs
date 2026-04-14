@@ -25,8 +25,12 @@ pub struct EnvConfig {
     pub client_id: String,
 
     // Rate Limiting
+    #[cfg(feature = "rate_limiting")]
+    pub redis_url: String,
+    #[cfg(feature = "rate_limiting")]
     pub ms_per_request: u64,
-    pub burst_limit: u32,
+    #[cfg(feature = "rate_limiting")]
+    pub burst_limit: u64,
 
     // OpenTelemetry
     #[cfg(feature = "otel")]
@@ -66,6 +70,7 @@ fn get_var(key: &str) -> Result<String> {
         .map_err(|e| Error::new(e).context(format!("Environment variable {} not set", key)))
 }
 
+#[allow(dead_code)]
 fn parse_env_var<T>(key: &str, default: T, min: T, max: T) -> T
 where
     T: std::str::FromStr + PartialOrd + Ord + Copy + Display,
@@ -121,8 +126,12 @@ pub fn init_env() -> Result<&'static EnvConfig> {
     let client_secret = get_var("CLIENT_SECRET")?;
     let client_id = get_var("CLIENT_ID")?;
 
-    let ms_per_request = parse_env_var("MS_PER_REQUEST", 100, 1, 1000);
-    let burst_limit = parse_env_var("BURST_LIMIT", 10, 1, 100);
+    #[cfg(feature = "rate_limiting")]
+    let redis_url = get_var("REDIS_URL")?;
+    #[cfg(feature = "rate_limiting")]
+    let ms_per_request = parse_env_var("MS_PER_REQUEST", 100, 1, 60000);
+    #[cfg(feature = "rate_limiting")]
+    let burst_limit = parse_env_var("BURST_LIMIT", 10, 1, 10000);
 
     #[cfg(feature = "otel")]
     let otlp_endpoint = get_var("OTLP_ENDPOINT")?;
@@ -163,7 +172,11 @@ pub fn init_env() -> Result<&'static EnvConfig> {
         enable_registrations,
         client_secret,
         client_id,
+        #[cfg(feature = "rate_limiting")]
+        redis_url,
+        #[cfg(feature = "rate_limiting")]
         ms_per_request,
+        #[cfg(feature = "rate_limiting")]
         burst_limit,
         #[cfg(feature = "otel")]
         otlp_endpoint,

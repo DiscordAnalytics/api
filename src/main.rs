@@ -11,13 +11,19 @@ mod utils;
 use std::{net::Ipv4Addr, sync::Arc};
 
 use actix_cors::Cors;
-use actix_governor::{Governor, GovernorConfigBuilder};
 use actix_web::{App, HttpServer, http, web::Data};
 use anyhow::Result;
-use apistos::{app::OpenApiWrapper, web::scope};
+use apistos::app::OpenApiWrapper;
 use tokio::{spawn, sync::Mutex, try_join};
 use tracing::{Level, info};
 use tracing_actix_web::TracingLogger;
+#[cfg(feature = "rate_limiting")]
+use {
+    actix_limitation::{Limiter, RateLimiter},
+    actix_session::SessionExt,
+    actix_web::dev::ServiceRequest,
+    std::time::Duration,
+};
 
 #[cfg(feature = "reports")]
 use crate::tasks::reports_task;
@@ -93,12 +99,20 @@ async fn main() -> Result<()> {
         "ChatServer initialized",
     );
 
-    let governor_config = GovernorConfigBuilder::default()
-        .milliseconds_per_request(app_env!().ms_per_request)
-        .burst_size(app_env!().burst_limit)
-        .use_headers()
-        .finish()
-        .ok_or_else(|| anyhow::anyhow!("Failed to create GovernorConfig"))?;
+    #[cfg(feature = "rate_limiting")]
+    let limiter = Data::new(
+        Limiter::builder(&app_env!().redis_url)
+            .key_by(|req: &ServiceRequest| {
+                {
+                    req.get_session()
+                        .get("session-id")
+                        .unwrap_or_else(|_| req.cookie("rate-api-id").map(|c| c.to_string()))
+                }
+            })
+            .limit(((1000 / app_env!().ms_per_request).max(1) + app_env!().burst_limit) as usize)
+            .period(Duration::from_secs(1))
+            .build()?,
+    );
 
     let http_server = HttpServer::new(move || {
         let cors = Cors::default()
@@ -114,7 +128,7 @@ async fn main() -> Result<()> {
 
         let spec = build_spec();
 
-        App::new()
+        let app = App::new()
             .document(spec)
             .app_data(Data::new(repos.clone()))
             .app_data(Data::new(services.clone()))
@@ -122,13 +136,12 @@ async fn main() -> Result<()> {
             .app_data(chat_server_handle.clone())
             .wrap(TracingLogger::default())
             .wrap(cors)
-            .wrap(AuthMiddleware)
-            .service(
-                scope("")
-                    .wrap(Governor::new(&governor_config))
-                    .configure(routes::configure),
-            )
-            .build("/openapi.json")
+            .wrap(AuthMiddleware);
+
+        #[cfg(feature = "rate_limiting")]
+        let app = app.app_data(limiter.clone()).wrap(RateLimiter::default());
+
+        app.configure(routes::configure).build("/openapi.json")
     })
     .bind((Ipv4Addr::UNSPECIFIED, app_env!().port))?
     .run();

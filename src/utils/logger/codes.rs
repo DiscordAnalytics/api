@@ -36,6 +36,7 @@ pub enum LogCode {
     Websocket,
     /// Tasks events
     Task,
+    #[cfg(feature = "reports")]
     /// Reports events
     Report,
 }
@@ -60,6 +61,7 @@ impl LogCode {
             LogCode::Webhook => "WH",
             LogCode::Websocket => "WS",
             LogCode::Task => "TASK",
+            #[cfg(feature = "reports")]
             LogCode::Report => "REPORT",
         }
     }

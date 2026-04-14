@@ -38,9 +38,7 @@ pub use bot_stat::{
 pub use custom_event::{CustomEventBody, CustomEventResponse, CustomEventUpdatePayload};
 pub use health::HealthResponse;
 pub use integrations::{IntegrationPayload, TopGGIntegrationPayload};
-pub use invitation::{
-    InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse, UserInvitationResponse,
-};
+pub use invitation::{InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse};
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 #[cfg(feature = "reports")]
 pub use stat_report::{StatsReportResponse, StatsReportSubPayload};

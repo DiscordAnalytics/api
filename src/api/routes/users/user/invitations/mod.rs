@@ -8,7 +8,7 @@ use tracing::{info, warn};
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::UserInvitationResponse,
+    openapi::schemas::InvitationResponse,
     repository::Repositories,
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -22,7 +22,7 @@ async fn get_user_invitations(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<Vec<UserInvitationResponse>>> {
+) -> ApiResult<Json<Vec<InvitationResponse>>> {
     let user_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
@@ -73,11 +73,13 @@ async fn get_user_invitations(
                 ApiError::NotFound(format!("User not found: {}", invitation.user_id))
             })?;
 
-            Ok(UserInvitationResponse {
+            Ok(InvitationResponse {
                 invitation: invitation.try_into()?,
                 bot_username: bot.username.clone(),
                 bot_avatar: bot.avatar.clone(),
-                owner_username: user.username.clone(),
+                user_username: None,
+                user_avatar: None,
+                owner_username: Some(user.username.clone()),
                 owner_avatar: user.avatar.clone(),
             })
         })

@@ -52,8 +52,10 @@ async fn get_invitations(
                 invitation: invitation.try_into()?,
                 bot_username: bot.username.clone(),
                 bot_avatar: bot.avatar.clone(),
-                user_username: user.username.clone(),
+                user_username: Some(user.username.clone()),
                 user_avatar: user.avatar.clone(),
+                owner_avatar: None,
+                owner_username: None,
             })
         })
         .collect::<Result<Vec<_>, _>>()?;

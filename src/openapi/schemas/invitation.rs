@@ -16,17 +16,9 @@ pub struct InvitationResponse {
     pub invitation: TeamInvitationResponse,
     pub bot_username: String,
     pub bot_avatar: Option<String>,
-    pub user_username: String,
+    pub user_username: Option<String>,
     pub user_avatar: Option<String>,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct UserInvitationResponse {
-    pub invitation: TeamInvitationResponse,
-    pub bot_username: String,
-    pub bot_avatar: Option<String>,
-    pub owner_username: String,
+    pub owner_username: Option<String>,
     pub owner_avatar: Option<String>,
 }
 

@@ -8,7 +8,7 @@ use tracing::{info, warn};
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{InvitationAcceptBody, InvitationAcceptResponse, UserInvitationResponse},
+    openapi::schemas::{InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse},
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
@@ -22,7 +22,7 @@ use crate::{
 async fn get_invitation(
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<UserInvitationResponse>> {
+) -> ApiResult<Json<InvitationResponse>> {
     let invitation_id = &id.into_inner();
 
     info!(
@@ -96,11 +96,13 @@ async fn get_invitation(
         "Successfully fetched invitation details",
     );
 
-    Ok(Json(UserInvitationResponse {
+    Ok(Json(InvitationResponse {
         invitation: invitation.try_into()?,
         bot_username: bot.username,
         bot_avatar: bot.avatar,
-        owner_username: owner.username,
+        user_username: None,
+        user_avatar: None,
+        owner_username: Some(owner.username),
         owner_avatar: owner.avatar,
     }))
 }

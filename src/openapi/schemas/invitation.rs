@@ -11,6 +11,7 @@ pub struct InvitationAcceptBody {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct InvitationResponse {
     pub invitation: TeamInvitationResponse,
     pub bot_username: String,

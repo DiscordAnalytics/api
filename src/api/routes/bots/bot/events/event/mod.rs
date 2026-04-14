@@ -8,7 +8,7 @@ use tracing::{error, info, warn};
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{CustomEventResponse, CustomEventUpdatePayload, MessageResponse},
+    openapi::schemas::{CustomEventPayload, CustomEventUpdatePayload, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -22,7 +22,7 @@ async fn get_event(
     auth: Authenticated,
     repos: Data<Repositories>,
     path: Path<(String, String)>,
-) -> ApiResult<Json<CustomEventResponse>> {
+) -> ApiResult<Json<CustomEventPayload>> {
     let (id, event_key) = path.into_inner();
     let bot_id = Snowflake::try_from(id)?.into_inner();
 
@@ -100,7 +100,7 @@ async fn get_event(
             ))
         })?;
 
-    Ok(Json(CustomEventResponse::from(event)))
+    Ok(Json(CustomEventPayload::from(event)))
 }
 
 #[api_operation(
@@ -113,7 +113,7 @@ async fn update_event(
     repos: Data<Repositories>,
     body: Json<CustomEventUpdatePayload>,
     path: Path<(String, String)>,
-) -> ApiResult<Json<CustomEventResponse>> {
+) -> ApiResult<Json<CustomEventPayload>> {
     let (id, event_key) = path.into_inner();
     let bot_id = Snowflake::try_from(id)?.into_inner();
 
@@ -219,7 +219,7 @@ async fn update_event(
         "Custom event updated successfully",
     );
 
-    Ok(Json(CustomEventResponse::from(update_result)))
+    Ok(Json(CustomEventPayload::from(update_result)))
 }
 
 #[api_operation(

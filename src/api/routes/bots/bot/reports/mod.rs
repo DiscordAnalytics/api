@@ -11,7 +11,7 @@ use crate::{
         error::{ApiError, ApiResult},
         models::StatsReport,
     },
-    openapi::schemas::{MessageResponse, StatsReportResponse, StatsReportSubPayload},
+    openapi::schemas::{MessageResponse, StatsReportSubPayload},
     repository::Repositories,
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -25,7 +25,7 @@ async fn get_subscriptions(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<Vec<StatsReportResponse>>> {
+) -> ApiResult<Json<Vec<StatsReport>>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
@@ -71,12 +71,7 @@ async fn get_subscriptions(
         return Err(ApiError::Forbidden);
     }
 
-    let reports = repos.stats_reports.find_by_bot(&bot_id).await?;
-
-    let reports_responses = reports
-        .into_iter()
-        .map(StatsReportResponse::try_from)
-        .collect::<Result<Vec<_>, _>>()?;
+    let reports_responses = repos.stats_reports.find_by_bot(&bot_id).await?;
 
     info!(
         code = %LogCode::Request,
@@ -97,7 +92,7 @@ async fn subscribe(
     repos: Data<Repositories>,
     payload: Json<StatsReportSubPayload>,
     id: Path<String>,
-) -> ApiResult<Json<StatsReportResponse>> {
+) -> ApiResult<Json<StatsReport>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     let body = payload.into_inner();
@@ -176,7 +171,7 @@ async fn subscribe(
         "Report subscription created",
     );
 
-    Ok(Json(StatsReportResponse::try_from(subscription)?))
+    Ok(Json(subscription))
 }
 
 #[api_operation(

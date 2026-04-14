@@ -4,7 +4,7 @@ use tracing::{debug, error, info};
 
 use crate::{
     app_env,
-    openapi::schemas::{DiscordBot, DiscordOAuthUser, DiscordTokenResponse},
+    openapi::schemas::{DiscordTokenResponse, DiscordUser},
     utils::{
         discord::{DiscordEmbed, DmChannel},
         logger::LogCode,
@@ -62,7 +62,7 @@ impl DiscordService {
         Ok(response.json().await?)
     }
 
-    pub async fn get_user(&self, token_type: &str, access_token: &str) -> Result<DiscordOAuthUser> {
+    pub async fn get_user(&self, token_type: &str, access_token: &str) -> Result<DiscordUser> {
         let response = self
             .client
             .get("https://discord.com/api/users/@me")
@@ -83,7 +83,7 @@ impl DiscordService {
         Ok(response.json().await?)
     }
 
-    pub async fn get_bot(&self, bot_id: &str) -> Result<DiscordBot> {
+    pub async fn get_bot(&self, bot_id: &str) -> Result<DiscordUser> {
         let response = self
             .client
             .get(format!("https://discord.com/api/users/{}", bot_id))

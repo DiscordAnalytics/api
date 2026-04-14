@@ -6,13 +6,13 @@ use crate::domain::models::CustomEvent;
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct CustomEventResponse {
+pub struct CustomEventPayload {
     pub default_value: Option<i32>,
     pub event_key: String,
     pub graph_name: String,
 }
 
-impl From<CustomEvent> for CustomEventResponse {
+impl From<CustomEvent> for CustomEventPayload {
     fn from(event: CustomEvent) -> Self {
         Self {
             default_value: event.default_value,
@@ -20,14 +20,6 @@ impl From<CustomEvent> for CustomEventResponse {
             graph_name: event.graph_name,
         }
     }
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct CustomEventBody {
-    pub default_value: Option<i32>,
-    pub event_key: String,
-    pub graph_name: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]

@@ -25,8 +25,7 @@ pub use achievement::{
 };
 pub use article::{ArticleAuthor, ArticleDeleteResponse, ArticleRequest, ArticleResponse};
 pub use auth::{
-    AuthCallbackQuery, AuthConfigResponse, DiscordBot, DiscordOAuthUser, DiscordTokenResponse,
-    LinkedRolesQuery,
+    AuthCallbackQuery, AuthConfigResponse, DiscordTokenResponse, DiscordUser, LinkedRolesQuery,
 };
 pub use bot::{
     BotCreationBody, BotDeletionPayload, BotResponse, BotSettingsPayload, BotSuspendRequest,
@@ -35,13 +34,13 @@ pub use bot::{
 pub use bot_stat::{
     BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, NormalizedStatsBody,
 };
-pub use custom_event::{CustomEventBody, CustomEventResponse, CustomEventUpdatePayload};
+pub use custom_event::{CustomEventPayload, CustomEventUpdatePayload};
 pub use health::HealthResponse;
 pub use integrations::{IntegrationPayload, TopGGIntegrationPayload};
 pub use invitation::{InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse};
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 #[cfg(feature = "reports")]
-pub use stat_report::{StatsReportResponse, StatsReportSubPayload};
+pub use stat_report::StatsReportSubPayload;
 pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};
 pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateRequest};
 pub use vote::VoteResponse;

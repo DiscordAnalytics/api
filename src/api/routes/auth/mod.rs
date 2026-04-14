@@ -17,14 +17,14 @@ use tracing::{error, info, warn};
 use crate::{
     app_env,
     domain::{
-        auth::{generate_access_token, generate_refresh_token, hash_refresh_token},
+        auth::{generate_token, hash_refresh_token},
         models::{Session, User},
     },
     openapi::schemas::AuthCallbackQuery,
     repository::{Repositories, UserUpdate},
     services::Services,
     utils::{
-        constants::{ACCESS_TOKEN_LIFETIME, MAX_BOTS_PER_USER},
+        constants::{ACCESS_TOKEN_LIFETIME, MAX_BOTS_PER_USER, REFRESH_TOKEN_LIFETIME},
         discord::get_user_creation_date,
         logger::LogCode,
     },
@@ -207,7 +207,7 @@ async fn oauth_callback(
     }
 
     let session_id = Uuid::new().to_string();
-    let refresh_token = match generate_refresh_token(&user_id, &session_id) {
+    let refresh_token = match generate_token(&user_id, &session_id, REFRESH_TOKEN_LIFETIME) {
         Ok(token) => token,
         Err(e) => {
             error!(
@@ -250,7 +250,7 @@ async fn oauth_callback(
         .temporary();
     }
 
-    let access_token = match generate_access_token(&user_id, &session.session_id) {
+    let access_token = match generate_token(&user_id, &session.session_id, ACCESS_TOKEN_LIFETIME) {
         Ok(token) => token,
         Err(e) => {
             error!(

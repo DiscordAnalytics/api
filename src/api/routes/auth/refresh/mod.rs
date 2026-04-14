@@ -7,7 +7,7 @@ use tracing::info;
 
 use crate::{
     domain::{
-        auth::{decode_refresh_token, generate_access_token, hash_refresh_token},
+        auth::{decode_token, generate_token, hash_refresh_token},
         error::{ApiError, ApiResult},
     },
     openapi::schemas::{RefreshTokenRequest, TokenResponse},
@@ -30,8 +30,7 @@ async fn refresh_token(
         "Refreshing access token",
     );
 
-    let refresh_claims =
-        decode_refresh_token(&body.refresh_token).map_err(|_| ApiError::InvalidToken)?;
+    let refresh_claims = decode_token(&body.refresh_token).map_err(|_| ApiError::InvalidToken)?;
 
     let token_hash = hash_refresh_token(&body.refresh_token);
 
@@ -55,7 +54,7 @@ async fn refresh_token(
 
     repos.sessions.update_last_used(&session.session_id).await?;
 
-    let access_token = generate_access_token(&session.user_id, &session.session_id)
+    let access_token = generate_token(&session.user_id, &session.session_id, ACCESS_TOKEN_LIFETIME)
         .map_err(|_| ApiError::TokenGenerationFailed)?;
 
     info!(

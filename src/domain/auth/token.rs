@@ -7,10 +7,7 @@ use ring::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    app_env,
-    utils::constants::{ACCESS_TOKEN_LIFETIME, REFRESH_TOKEN_LIFETIME},
-};
+use crate::app_env;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Claims {
@@ -20,35 +17,11 @@ pub struct Claims {
     pub exp: usize,  // expiration time
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct RefreshClaims {
-    pub sub: String, // user ID
-    pub sid: String, // session ID
-    pub iat: i64,    // issued at
-    pub exp: usize,  // expiration time
-}
-
-pub fn generate_access_token(user_id: &str, session_id: &str) -> Result<String> {
+pub fn generate_token(user_id: &str, session_id: &str, lifetime: i64) -> Result<String> {
     let now = Utc::now();
-    let exp = now + Duration::seconds(ACCESS_TOKEN_LIFETIME);
+    let exp = now + Duration::seconds(lifetime);
 
     let claims = Claims {
-        sub: user_id.to_string(),
-        sid: session_id.to_string(),
-        iat: now.timestamp(),
-        exp: exp.timestamp() as usize,
-    };
-
-    let encoding_key = EncodingKey::from_secret(app_env!().jwt_secret.as_bytes());
-    encode(&Header::default(), &claims, &encoding_key)
-        .map_err(|e| anyhow::anyhow!("Failed to encode JWT: {:?}", e))
-}
-
-pub fn generate_refresh_token(user_id: &str, session_id: &str) -> Result<String> {
-    let now = Utc::now();
-    let exp = now + Duration::seconds(REFRESH_TOKEN_LIFETIME);
-
-    let claims = RefreshClaims {
         sub: user_id.to_string(),
         sid: session_id.to_string(),
         iat: now.timestamp(),
@@ -65,20 +38,11 @@ pub fn hash_refresh_token(token: &str) -> String {
     hex::encode(hash.as_ref())
 }
 
-pub fn decode_access_token(token: &str) -> Result<Claims> {
+pub fn decode_token(token: &str) -> Result<Claims> {
     let decoding_key = DecodingKey::from_secret(app_env!().jwt_secret.as_ref());
     let validation = Validation::default();
 
     decode::<Claims>(token, &decoding_key, &validation)
-        .map(|data| data.claims)
-        .map_err(|e| anyhow::anyhow!("Failed to decode JWT: {:?}", e))
-}
-
-pub fn decode_refresh_token(token: &str) -> Result<RefreshClaims> {
-    let decoding_key = DecodingKey::from_secret(app_env!().jwt_secret.as_ref());
-    let validation = Validation::default();
-
-    decode::<RefreshClaims>(token, &decoding_key, &validation)
         .map(|data| data.claims)
         .map_err(|e| anyhow::anyhow!("Failed to decode JWT: {:?}", e))
 }

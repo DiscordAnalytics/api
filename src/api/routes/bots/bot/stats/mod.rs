@@ -292,7 +292,7 @@ async fn post_stats(
             }
 
             if let Some(guilds) = body.guilds {
-                updates = updates.with_guilds(&guilds);
+                updates = updates.with_guilds(&guilds, &existing_stats.guilds.unwrap_or_default());
             }
 
             let guilds_locales: Vec<(&str, i32)> = body
@@ -300,7 +300,7 @@ async fn post_stats(
                 .iter()
                 .map(|locale_stat| (locale_stat.locale.as_str(), locale_stat.number))
                 .collect();
-            updates = updates.with_guild_locales(&guilds_locales);
+            updates = updates.with_guild_locales(&guilds_locales, &existing_stats.guild_locales);
 
             updates = body
                 .guild_members
@@ -309,14 +309,17 @@ async fn post_stats(
                     u.with_guild_member(&bucket, count)
                 });
 
-            updates = updates.with_interactions(&body.interactions);
+            updates = updates.with_interactions(&body.interactions, &existing_stats.interactions);
 
             let interactions_locales: Vec<(&str, i32)> = body
                 .interactions_locales
                 .iter()
                 .map(|locale_stat| (locale_stat.locale.as_str(), locale_stat.number))
                 .collect();
-            updates = updates.with_interactions_locales(&interactions_locales);
+            updates = updates.with_interactions_locales(
+                &interactions_locales,
+                &existing_stats.interactions_locales,
+            );
 
             if body.removed_guilds != 0 {
                 updates = updates.with_removed_guilds(body.removed_guilds);

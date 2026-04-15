@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use futures::stream::TryStreamExt as _;
 use mongodb::{
     Collection, Database,
@@ -8,7 +10,7 @@ use mongodb::{
 };
 
 use crate::{
-    domain::models::{BotStats, Guild, Interaction},
+    domain::models::{BotStats, Guild, Interaction, Locale},
     utils::constants::BOT_STATS_COLLECTION,
 };
 
@@ -32,13 +34,30 @@ impl BotStatsUpdate {
         self
     }
 
-    pub fn with_guilds(mut self, guilds: &[Guild]) -> Self {
-        if guilds.is_empty() {
+    pub fn with_guilds(mut self, guilds: &[Guild], existing_guilds: &[Guild]) -> Self {
+        if guilds.is_empty() && existing_guilds.is_empty() {
             return self;
         }
 
-        let new_guilds = guilds
-            .iter()
+        let mut map: HashMap<String, Guild> = HashMap::new();
+
+        for g in existing_guilds {
+            map.insert(g.guild_id.clone(), g.clone());
+        }
+
+        for g in guilds {
+            map.entry(g.guild_id.clone())
+                .and_modify(|existing| {
+                    existing.interactions += g.interactions;
+                    existing.members = g.members;
+                    existing.name = g.name.clone();
+                    existing.icon = g.icon.clone();
+                })
+                .or_insert_with(|| g.clone());
+        }
+
+        let merged = map
+            .into_values()
             .map(|guild| {
                 doc! {
                     "guildId": &guild.guild_id,
@@ -50,53 +69,7 @@ impl BotStatsUpdate {
             })
             .collect::<Vec<_>>();
 
-        let update_doc = doc! {
-            "guilds": {
-                "$let": {
-                    "vars": { "guilds": { "$ifNull": [ "$guilds", [] ] } },
-                    "in": {
-                        "$reduce": {
-                            "input": new_guilds,
-                            "initialValue": "$$guilds",
-                            "in": {
-                                "$let": {
-                                    "vars": { "existing": "$$value" },
-                                    "in": {
-                                        "$cond": [
-                                            { "$in": [ "$$this.guildId", "$$existing.guildId" ] },
-                                            {
-                                                "$map": {
-                                                    "input": "$$existing",
-                                                    "as": "g",
-                                                    "in": {
-                                                        "$cond": [
-                                                            { "$eq": [ "$$g.guildId", "$$this.guildId" ] },
-                                                            {
-                                                                "guildId": "$$g.guildId",
-                                                                "name": "$$this.name",
-                                                                "icon": "$$this.icon",
-                                                                "members": "$$this.members",
-                                                                "interactions": { "$add": [ "$$g.interactions", "$$this.interactions" ] }
-                                                            },
-                                                            "$$g"
-                                                        ]
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "$concatArrays": [ "$$existing", [ "$$this" ] ]
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        self.builder = self.builder.set(update_doc);
+        self.builder = self.builder.set(doc! { "guilds": merged });
 
         self
     }
@@ -106,8 +79,8 @@ impl BotStatsUpdate {
         self
     }
 
-    pub fn with_guild_locales(mut self, locales: &[(&str, i32)]) -> Self {
-        let update_doc = Self::build_locale_update("guildLocales", locales);
+    pub fn with_guild_locales(mut self, locales: &[(&str, i32)], existing: &[Locale]) -> Self {
+        let update_doc = Self::build_locale_update("guildLocales", locales, existing);
         self.builder = self.builder.set(update_doc);
         self
     }
@@ -119,13 +92,30 @@ impl BotStatsUpdate {
         self
     }
 
-    pub fn with_interactions(mut self, interactions: &[Interaction]) -> Self {
-        if interactions.is_empty() {
+    pub fn with_interactions(
+        mut self,
+        interactions: &[Interaction],
+        existing_interactions: &[Interaction],
+    ) -> Self {
+        if interactions.is_empty() && existing_interactions.is_empty() {
             return self;
         }
 
-        let new_interactions = interactions
-            .iter()
+        let mut map: HashMap<(Option<i32>, String, i32), Interaction> = HashMap::new();
+
+        for i in existing_interactions {
+            map.insert((i.command_type, i.name.clone(), i.type_), i.clone());
+        }
+
+        for i in interactions {
+            let key = (i.command_type, i.name.clone(), i.type_);
+            map.entry(key)
+                .and_modify(|existing| existing.number += i.number)
+                .or_insert_with(|| i.clone());
+        }
+
+        let merged = map
+            .into_values()
             .map(|interaction| {
                 doc! {
                     "commandType": interaction.command_type,
@@ -136,58 +126,17 @@ impl BotStatsUpdate {
             })
             .collect::<Vec<_>>();
 
-        let update_doc = doc! {
-            "interactions": {
-                "$let": {
-                  "vars": { "interactions": { "$ifNull": [ "$interactions", [] ] } },
-                  "in": {
-                      "$reduce": {
-                          "input": new_interactions,
-                          "initialValue": "$$interactions",
-                          "in": {
-                              "$let": {
-                                  "vars": { "existing": "$$value" },
-                                  "in": {
-                                      "$cond": [
-                                          { "$in": [ "$$this.name", "$$existing.name" ] },
-                                          {
-                                              "$map": {
-                                                  "input": "$$existing",
-                                                  "as": "i",
-                                                  "in": {
-                                                      "$cond": [
-                                                          { "$eq": [ "$$i.name", "$$this.name" ] },
-                                                          {
-                                                              "commandType": "$$this.commandType",
-                                                              "name": "$$i.name",
-                                                              "number": { "$add": [ "$$i.number", "$$this.number" ] },
-                                                              "type": "$$i.type"
-                                                          },
-                                                          "$$i"
-                                                      ]
-                                                  }
-                                              }
-                                          },
-                                          {
-                                              "$concatArrays": [ "$$existing", [ "$$this" ] ]
-                                          }
-                                      ]
-                                  }
-                              }
-                          }
-                      }
-                  }
-                }
-            }
-        };
-
-        self.builder = self.builder.set(update_doc);
+        self.builder = self.builder.set(doc! { "interactions": merged });
 
         self
     }
 
-    pub fn with_interactions_locales(mut self, locales: &[(&str, i32)]) -> Self {
-        let update_doc = Self::build_locale_update("interactionsLocales", locales);
+    pub fn with_interactions_locales(
+        mut self,
+        locales: &[(&str, i32)],
+        existing: &[Locale],
+    ) -> Self {
+        let update_doc = Self::build_locale_update("interactionsLocales", locales, existing);
         self.builder = self.builder.set(update_doc);
         self
     }
@@ -216,58 +165,29 @@ impl BotStatsUpdate {
         self
     }
 
-    fn build_locale_update(field: &str, updates: &[(&str, i32)]) -> Document {
-        let new_locales = updates
-            .iter()
-            .map(|(locale, number)| {
-                doc! {
-                    "locale": locale,
-                    "number": number,
-                }
-            })
-            .collect::<Vec<_>>();
+    fn build_locale_update(field: &str, updates: &[(&str, i32)], existing: &[Locale]) -> Document {
+        let mut map: HashMap<String, i32> = HashMap::new();
+
+        for l in existing {
+            map.insert(l.locale.clone(), l.number);
+        }
+
+        for (locale, number) in updates {
+            map.entry(locale.to_string())
+                .and_modify(|n| *n += *number)
+                .or_insert(*number);
+        }
 
         doc! {
-            field: {
-                "$let": {
-                    "vars": { "locales": { "$ifNull": [ format!("${field}"), [] ] } },
-                    "in": {
-                        "$reduce": {
-                            "input": new_locales,
-                            "initialValue": "$$locales",
-                            "in": {
-                                "$let": {
-                                    "vars": { "existing": "$$value" },
-                                    "in": {
-                                        "$cond": [
-                                            { "$in": [ "$$this.locale", "$$existing.locale" ] },
-                                            {
-                                                "$map": {
-                                                    "input": "$$existing",
-                                                    "as": "l",
-                                                    "in": {
-                                                        "$cond": [
-                                                            { "$eq": [ "$$l.locale", "$$this.locale" ] },
-                                                            {
-                                                                "locale": "$$l.locale",
-                                                                "number": { "$add": [ "$$l.number", "$$this.number" ] }
-                                                            },
-                                                            "$$l"
-                                                        ]
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "$concatArrays": [ "$$existing", [ "$$this" ] ]
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        }
+            field: map
+                .into_iter()
+                .map(|(locale, number)| {
+                    doc! {
+                        "locale": locale,
+                        "number": number,
                     }
-                }
-            }
+                })
+                .collect::<Vec<_>>(),
         }
     }
 

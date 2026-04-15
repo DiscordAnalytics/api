@@ -80,7 +80,7 @@ impl Logger {
         let mut headers = HashMap::new();
         headers.insert(
             String::from("Authorization"),
-            format!("Basic {}", env.otlp_token),
+            format!("Bearer {}", env.otlp_token),
         );
         headers.insert("stream-name".to_string(), env.otlp_stream.clone());
 
@@ -88,7 +88,7 @@ impl Logger {
             .with_http()
             .with_protocol(Protocol::HttpBinary)
             .with_headers(headers)
-            .with_endpoint(format!("{}/v1/logs", env.otlp_endpoint))
+            .with_endpoint(env.otlp_endpoint.clone())
             .build()?;
 
         let resource = Resource::builder().with_service_name("api").build();

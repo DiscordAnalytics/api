@@ -61,11 +61,6 @@ impl BotUpdate {
         self
     }
 
-    pub fn with_team(mut self, team: Vec<String>) -> Self {
-        self.builder = self.builder.set(doc! { "team": team });
-        self
-    }
-
     pub fn with_teammates_limit(mut self, teammates_limit: Option<i32>) -> Self {
         if let Some(teammates_limit) = teammates_limit {
             self.builder = self.builder.set(doc! { "teammatesLimit": teammates_limit });

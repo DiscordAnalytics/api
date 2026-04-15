@@ -63,7 +63,6 @@ pub struct BotCreationBody {
 pub struct BotUpdateBody {
     pub avatar: Option<String>,
     pub framework: Option<String>,
-    pub team: Option<Vec<String>>,
     pub username: Option<String>,
     pub version: Option<String>,
 }

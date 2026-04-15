@@ -296,9 +296,6 @@ async fn patch_bot(
     if let Some(framework) = update_data.framework {
         update = update.with_framework(framework);
     }
-    if let Some(team) = update_data.team {
-        update = update.with_team(team);
-    }
     if let Some(username) = update_data.username {
         update = update.with_username(username);
     }

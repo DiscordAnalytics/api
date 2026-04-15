@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument, TimeseriesGranularity},
+    options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
@@ -12,7 +12,7 @@ use crate::{
     utils::constants::BOT_STATS_COLLECTION,
 };
 
-use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
+use super::common::{UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct BotStatsUpdate {
@@ -284,16 +284,7 @@ pub struct BotStatsRepository {
 impl BotStatsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(
-                db,
-                BOT_STATS_COLLECTION,
-                CollectionSpec::TimeSeries {
-                    time_field: "date",
-                    meta_field: Some("botId".to_owned()),
-                    granularity: Some(TimeseriesGranularity::Hours),
-                },
-            )
-            .await?,
+            collection: ensure_collection(db, BOT_STATS_COLLECTION).await?,
         })
     }
 

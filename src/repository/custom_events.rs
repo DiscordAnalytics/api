@@ -9,7 +9,7 @@ use mongodb::{
 
 use crate::{domain::models::CustomEvent, utils::constants::CUSTOM_EVENTS_COLLECTION};
 
-use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
+use super::common::{UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct CustomEventUpdate {
@@ -35,8 +35,7 @@ pub struct CustomEventsRepository {
 impl CustomEventsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(db, CUSTOM_EVENTS_COLLECTION, CollectionSpec::Standard)
-                .await?,
+            collection: ensure_collection(db, CUSTOM_EVENTS_COLLECTION).await?,
         })
     }
 

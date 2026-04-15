@@ -8,7 +8,7 @@ use mongodb::{
 
 use crate::{domain::models::StatsReport, utils::constants::STATS_REPORTS_COLLECTION};
 
-use super::common::{CollectionSpec, ensure_collection};
+use super::common::ensure_collection;
 
 #[derive(Clone)]
 pub struct StatsReportsRepository {
@@ -18,8 +18,7 @@ pub struct StatsReportsRepository {
 impl StatsReportsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(db, STATS_REPORTS_COLLECTION, CollectionSpec::Standard)
-                .await?,
+            collection: ensure_collection(db, STATS_REPORTS_COLLECTION).await?,
         })
     }
 

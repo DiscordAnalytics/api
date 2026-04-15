@@ -2,7 +2,6 @@ use mongodb::{
     Collection, Database,
     bson::{Bson, Document, doc},
     error::Result,
-    options::{TimeseriesGranularity, TimeseriesOptions},
 };
 
 #[derive(Clone, Default)]
@@ -55,43 +54,14 @@ impl UpdateBuilder {
     }
 }
 
-pub enum CollectionSpec<'a> {
-    Standard,
-    TimeSeries {
-        time_field: &'a str,
-        meta_field: Option<String>,
-        granularity: Option<TimeseriesGranularity>,
-    },
-}
-
-pub async fn ensure_collection<T>(
-    db: &Database,
-    name: &str,
-    spec: CollectionSpec<'_>,
-) -> Result<Collection<T>>
+pub async fn ensure_collection<T>(db: &Database, name: &str) -> Result<Collection<T>>
 where
     T: Sync + Send,
 {
     let exists = db.list_collection_names().await?.iter().any(|n| n == name);
 
     if !exists {
-        match spec {
-            CollectionSpec::Standard => {
-                db.create_collection(name).await?;
-            }
-            CollectionSpec::TimeSeries {
-                time_field,
-                meta_field,
-                granularity,
-            } => {
-                let options = TimeseriesOptions::builder()
-                    .time_field(time_field)
-                    .meta_field(meta_field)
-                    .granularity(granularity)
-                    .build();
-                db.create_collection(name).timeseries(options).await?;
-            }
-        }
+        db.create_collection(name).await?;
     }
 
     Ok(db.collection::<T>(name))

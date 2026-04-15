@@ -11,7 +11,7 @@ use mongodb::{
 
 use crate::{domain::models::Achievement, utils::constants::ACHIEVEMENTS_COLLECTION};
 
-use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
+use super::common::{UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct AchievementUpdate {
@@ -62,8 +62,7 @@ pub struct AchievementsRepository {
 impl AchievementsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(db, ACHIEVEMENTS_COLLECTION, CollectionSpec::Standard)
-                .await?,
+            collection: ensure_collection(db, ACHIEVEMENTS_COLLECTION).await?,
         })
     }
 

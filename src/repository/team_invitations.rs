@@ -8,7 +8,7 @@ use mongodb::{
 
 use crate::{domain::models::TeamInvitation, utils::constants::TEAM_INVITATIONS_COLLECTION};
 
-use super::common::{CollectionSpec, ensure_collection};
+use super::common::ensure_collection;
 
 #[derive(Clone)]
 pub struct TeamInvitationsRepository {
@@ -18,12 +18,7 @@ pub struct TeamInvitationsRepository {
 impl TeamInvitationsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(
-                db,
-                TEAM_INVITATIONS_COLLECTION,
-                CollectionSpec::Standard,
-            )
-            .await?,
+            collection: ensure_collection(db, TEAM_INVITATIONS_COLLECTION).await?,
         })
     }
 

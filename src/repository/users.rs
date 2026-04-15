@@ -11,7 +11,7 @@ use mongodb::{
 
 use crate::{domain::models::User, utils::constants::USERS_COLLECTION};
 
-use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
+use super::common::{UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct UserUpdate {
@@ -64,7 +64,7 @@ pub struct UsersRepository {
 impl UsersRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(db, USERS_COLLECTION, CollectionSpec::Standard).await?,
+            collection: ensure_collection(db, USERS_COLLECTION).await?,
         })
     }
 

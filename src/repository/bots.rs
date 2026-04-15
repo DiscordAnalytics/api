@@ -15,7 +15,7 @@ use crate::{
     utils::constants::BOTS_COLLECTION,
 };
 
-use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
+use super::common::{UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct BotUpdate {
@@ -125,7 +125,7 @@ pub struct BotsRepository {
 impl BotsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(db, BOTS_COLLECTION, CollectionSpec::Standard).await?,
+            collection: ensure_collection(db, BOTS_COLLECTION).await?,
         })
     }
 

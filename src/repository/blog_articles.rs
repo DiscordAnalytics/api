@@ -9,7 +9,7 @@ use mongodb::{
 
 use crate::{domain::models::BlogArticle, utils::constants::BLOG_ARTICLES_COLLECTION};
 
-use super::common::{CollectionSpec, UpdateBuilder, ensure_collection};
+use super::common::{UpdateBuilder, ensure_collection};
 
 #[derive(Clone, Default)]
 pub struct BlogArticleUpdate {
@@ -65,8 +65,7 @@ pub struct BlogArticlesRepository {
 impl BlogArticlesRepository {
     pub async fn new(db: &Database) -> Result<Self> {
         Ok(Self {
-            collection: ensure_collection(db, BLOG_ARTICLES_COLLECTION, CollectionSpec::Standard)
-                .await?,
+            collection: ensure_collection(db, BLOG_ARTICLES_COLLECTION).await?,
         })
     }
 

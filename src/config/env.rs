@@ -127,7 +127,7 @@ pub fn init_env() -> Result<&'static EnvConfig> {
     let client_id = get_var("CLIENT_ID")?;
 
     #[cfg(feature = "rate_limiting")]
-    let redis_url = get_var("REDIS_URL")?;
+    let redis_url = get_var("REDIS_URL").unwrap_or("redis://localhost:6379".to_string());
     #[cfg(feature = "rate_limiting")]
     let ms_per_request = parse_env_var("MS_PER_REQUEST", 100, 1, 60000);
     #[cfg(feature = "rate_limiting")]

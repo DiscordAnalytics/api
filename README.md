@@ -10,9 +10,7 @@ Built with [Rust](https://www.rust-lang.org/), [Actix-Web](https://actix.rs/), a
 
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
 - [Running the API](#running-the-api)
-- [Architecture](#architecture)
 - [Authentication](#authentication)
 
 ---
@@ -22,10 +20,10 @@ Built with [Rust](https://www.rust-lang.org/), [Actix-Web](https://actix.rs/), a
 - [Rust](https://www.rust-lang.org/tools/install)
 - [MongoDB](https://www.mongodb.com/) instance
 - A Discord application (for OAuth2)
+- A Redis server (for rate limiting)
 - An SMTP server (optional, for email notifications)
 - A Cloudflare R2 bucket (optional, for file storage)
 - An OpenTelemetry collector (optional, for telemetry data)
-- A Redis server (optional if running using the container)
 
 ---
 
@@ -75,37 +73,6 @@ cargo build --release
 ```
 
 The API will start on `http://0.0.0.0:3001` by default. The OpenAPI specification is available at `/openapi.json`.
-
----
-
-## Architecture
-
-```
-src/
-├── api/
-│   ├── middleware/       # Auth middleware and request extractors
-│   └── routes/           # Route handlers grouped by resource
-│       ├── achievements/
-│       ├── auth/         # OAuth2 callback, token refresh, session management
-│       ├── bots/         # Bot CRUD operations
-│       ├── health/       # Health check endpoint
-│       ├── invitations/  # Team invitations
-│       ├── stats/        # Global statistics
-│       ├── users/        # User CRUD and management
-│       └── websocket/    # WebSocket endpoint
-├── config/               # Environment configuration
-├── domain/
-│   ├── auth/             # JWT, token generation, auth context
-│   ├── error.rs          # API error types
-│   └── models/           # MongoDB document models
-├── managers/
-│   ├── chat.rs           # WebSocket chat server
-│   └── webhook.rs        # Vote webhook delivery manager
-├── openapi/              # OpenAPI spec builder
-├── repository/           # MongoDB repository layer
-├── services/             # Business logic layer
-└── utils/                # Constants, logger, Discord utilities
-```
 
 ---
 

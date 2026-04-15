@@ -115,7 +115,6 @@ pub struct BotStatsBodyOld {
     #[serde(rename = "addedGuilds")]
     pub added_guilds: i32,
     pub custom_events: Option<HashMap<String, i32>>,
-    pub date: String,
     pub guilds: i32,
     #[serde(rename = "guildsLocales")]
     pub guilds_locales: Vec<Locale>,

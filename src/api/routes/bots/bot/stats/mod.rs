@@ -19,7 +19,7 @@ use crate::{
         BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, MessageResponse,
         NormalizedStatsBody, VoteResponse,
     },
-    repository::{BotStatsUpdate, Repositories},
+    repository::{BotStatsUpdate, BotUpdate, Repositories},
     utils::{constants::MAX_DATE_RANGE, discord::Snowflake, logger::LogCode},
 };
 
@@ -423,6 +423,9 @@ async fn post_stats(
             )
             .await?;
     }
+
+    let bot_update = BotUpdate::default().with_last_push(Some(DateTime::now()));
+    repos.bots.update(&bot_id, bot_update).await?;
 
     info!(
         code = %LogCode::Request,

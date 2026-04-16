@@ -56,6 +56,13 @@ impl BotUpdate {
         self
     }
 
+    pub fn with_last_push(mut self, last_push: Option<DateTime>) -> Self {
+        if let Some(last_push) = last_push {
+            self.builder = self.builder.set(doc! { "lastPush": last_push });
+        }
+        self
+    }
+
     pub fn with_suspended(mut self, suspended: bool) -> Self {
         self.builder = self.builder.set(doc! { "suspended": suspended });
         self

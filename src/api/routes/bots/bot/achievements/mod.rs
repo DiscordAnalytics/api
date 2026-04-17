@@ -56,13 +56,15 @@ async fn get_bot_achievements(
             bot_id = %bot_id,
             "Admin access granted for bot achievements",
         );
-    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to access achievements of another bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempting to access achievements of another bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {

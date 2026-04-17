@@ -49,13 +49,15 @@ async fn update_settings(
             bot_id = %bot_id,
             "User is admin, proceeding with settings update",
         );
-    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempted to update settings of a different bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempted to update settings of a different bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_owner(user_id) {

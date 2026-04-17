@@ -71,13 +71,15 @@ async fn get_bot(
             bot_id = %bot_id,
             "Admin access granted for bot details",
         );
-    } else if ctx.is_bot() && ctx.token.as_deref() != Some(&bot.token) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to access details of another bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempting to access details of another bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {
@@ -245,6 +247,15 @@ async fn patch_bot(
         "Attempting to update bot",
     );
 
+    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
+        info!(
+            code = %LogCode::Request,
+            bot_id = %bot_id,
+            "Bot not found for update",
+        );
+        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
+    })?;
+
     let ctx = &auth;
 
     if !(ctx.is_admin() || ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
@@ -256,15 +267,6 @@ async fn patch_bot(
         );
         return Err(ApiError::Forbidden);
     }
-
-    let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
-        info!(
-            code = %LogCode::Request,
-            bot_id = %bot_id,
-            "Bot not found for update",
-        );
-        ApiError::NotFound(format!("Bot with ID {} not found", bot_id))
-    })?;
 
     if bot.suspended && !ctx.is_admin() {
         warn!(

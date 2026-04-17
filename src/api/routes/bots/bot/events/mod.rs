@@ -13,7 +13,7 @@ use crate::{
         error::{ApiError, ApiResult},
         models::CustomEvent,
     },
-    openapi::schemas::CustomEventPayload,
+    openapi::schemas::{CustomEventPayload, CustomEventResponse},
     repository::Repositories,
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -27,7 +27,7 @@ async fn get_all_events(
     auth: Authenticated,
     repos: Data<Repositories>,
     id: Path<String>,
-) -> ApiResult<Json<Vec<CustomEventPayload>>> {
+) -> ApiResult<Json<Vec<CustomEventResponse>>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     info!(
@@ -93,7 +93,7 @@ async fn get_all_events(
 
     let events = repos.custom_events.find_by_bot_id(&bot_id).await?;
 
-    let event_responses = events.into_iter().map(CustomEventPayload::from).collect();
+    let event_responses = events.into_iter().map(CustomEventResponse::from).collect();
 
     info!(
         code = %LogCode::Request,
@@ -114,7 +114,7 @@ async fn create_event(
     repos: Data<Repositories>,
     event: Json<CustomEventPayload>,
     id: Path<String>,
-) -> ApiResult<Json<CustomEventPayload>> {
+) -> ApiResult<Json<CustomEventResponse>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
 
     let bot = repos.bots.find_by_id(&bot_id).await?.ok_or_else(|| {
@@ -217,7 +217,7 @@ async fn create_event(
         "Custom event created successfully",
     );
 
-    Ok(Json(CustomEventPayload::from(new_event)))
+    Ok(Json(CustomEventResponse::from(new_event)))
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {

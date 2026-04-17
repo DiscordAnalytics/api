@@ -3,12 +3,13 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
+use mongodb::bson::DateTime;
 use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{CustomEventPayload, CustomEventUpdatePayload, MessageResponse},
+    openapi::schemas::{CustomEventResponse, CustomEventUpdatePayload, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -22,7 +23,7 @@ async fn get_event(
     auth: Authenticated,
     repos: Data<Repositories>,
     path: Path<(String, String)>,
-) -> ApiResult<Json<CustomEventPayload>> {
+) -> ApiResult<Json<CustomEventResponse>> {
     let (id, event_key) = path.into_inner();
     let bot_id = Snowflake::try_from(id)?.into_inner();
 
@@ -102,7 +103,19 @@ async fn get_event(
             ))
         })?;
 
-    Ok(Json(CustomEventPayload::from(event)))
+    let current_date = DateTime::now();
+    let start_of_hour = DateTime::from_millis(
+        current_date.timestamp_millis() - (current_date.timestamp_millis() % 3600000),
+    );
+
+    let stats = repos
+        .bot_stats
+        .find_by_date(&bot_id, &start_of_hour)
+        .await?;
+
+    let current_value = stats.and_then(|s| s.custom_events.get(&event_key).copied());
+
+    Ok(Json(CustomEventResponse::new(event, current_value)))
 }
 
 #[api_operation(
@@ -115,7 +128,7 @@ async fn update_event(
     repos: Data<Repositories>,
     body: Json<CustomEventUpdatePayload>,
     path: Path<(String, String)>,
-) -> ApiResult<Json<CustomEventPayload>> {
+) -> ApiResult<Json<CustomEventResponse>> {
     let (id, event_key) = path.into_inner();
     let bot_id = Snowflake::try_from(id)?.into_inner();
 
@@ -223,7 +236,7 @@ async fn update_event(
         "Custom event updated successfully",
     );
 
-    Ok(Json(CustomEventPayload::from(update_result)))
+    Ok(Json(CustomEventResponse::from(update_result)))
 }
 
 #[api_operation(

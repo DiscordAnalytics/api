@@ -13,11 +13,11 @@ use crate::{
     api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
-        models::AchievementType,
+        models::{AchievementType, BotStats},
     },
     openapi::schemas::{
         BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, MessageResponse,
-        NormalizedStatsBody, VoteResponse,
+        VoteResponse,
     },
     repository::{BotStatsUpdate, BotUpdate, Repositories},
     utils::{constants::MAX_DATE_RANGE, discord::Snowflake, logger::LogCode},
@@ -249,12 +249,8 @@ async fn post_stats(
     );
 
     let body = match body.into_inner() {
-        BotStatsBody::New(new_body) => {
-            NormalizedStatsBody::from_new(new_body, &bot_id, &start_of_hour)
-        }
-        BotStatsBody::Old(old_body) => {
-            NormalizedStatsBody::from_old(old_body, &bot_id, &start_of_hour)
-        }
+        BotStatsBody::New(new_body) => BotStats::from_new(new_body, &bot_id, &start_of_hour),
+        BotStatsBody::Old(old_body) => BotStats::from_old(old_body, &bot_id, &start_of_hour),
     };
 
     let new_stats = match repos
@@ -355,9 +351,8 @@ async fn post_stats(
                 })?
         }
         None => {
-            let new_stats = body.into_stats();
-            repos.bot_stats.insert(&new_stats).await?;
-            new_stats
+            repos.bot_stats.insert(&body).await?;
+            body
         }
     };
 

@@ -31,10 +31,8 @@ pub use bot::{
     BotCreationBody, BotDeletionPayload, BotResponse, BotSettingsPayload, BotSuspendRequest,
     BotTokenResponse, BotUpdateBody,
 };
-pub use bot_stat::{
-    BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, NormalizedStatsBody,
-};
-pub use custom_event::{CustomEventPayload, CustomEventUpdatePayload};
+pub use bot_stat::{BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse};
+pub use custom_event::{CustomEventPayload, CustomEventResponse, CustomEventUpdatePayload};
 pub use health::HealthResponse;
 pub use integrations::{IntegrationPayload, TopGGIntegrationPayload};
 pub use invitation::{InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse};

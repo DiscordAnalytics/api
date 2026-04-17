@@ -104,16 +104,18 @@ async fn get_event(
         })?;
 
     let current_date = DateTime::now();
-    let start_of_hour = DateTime::from_millis(
-        current_date.timestamp_millis() - (current_date.timestamp_millis() % 3600000),
+    let start_of_day = DateTime::from_millis(
+        current_date.timestamp_millis() - (current_date.timestamp_millis() % 86400000),
     );
 
     let stats = repos
         .bot_stats
-        .find_by_date(&bot_id, &start_of_hour)
+        .find_from_date_range(&bot_id, &start_of_day, &current_date)
         .await?;
 
-    let current_value = stats.and_then(|s| s.custom_events.get(&event_key).copied());
+    let current_value = stats
+        .last()
+        .and_then(|s| s.custom_events.get(&event_key).copied());
 
     Ok(Json(CustomEventResponse::new(event, current_value)))
 }

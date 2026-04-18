@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/DiscordAnalytics/api/compare/v1.0.1...v1.0.2) (2026-04-18)
+
+
+### Bug Fixes
+
+* **repos:** $set in $set not allowed fixed ([2ce2622](https://github.com/DiscordAnalytics/api/commit/2ce26222b7c5751b151fc7ccaeafa08354edf865))
+* **repos:** $set in $set not allowed fixed ([#19](https://github.com/DiscordAnalytics/api/issues/19)) ([6578376](https://github.com/DiscordAnalytics/api/commit/6578376322f30d2bc7a916e539251b42c452fecc))
+
 ## [1.0.1](https://github.com/DiscordAnalytics/api/compare/v1.0.0...v1.0.1) (2026-04-18)
 
 

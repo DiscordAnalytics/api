@@ -1,4 +1,3 @@
-use anyhow::Result;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
@@ -24,10 +23,10 @@ impl BlogArticle {
         description: &str,
         tags: Vec<String>,
         title: &str,
-    ) -> Result<Self> {
-        Ok(Self {
+    ) -> Self {
+        Self {
             author_id: author_id.to_string(),
-            article_id: Self::generate_article_id(title)?,
+            article_id: Self::generate_article_id(title),
             content: content.to_string(),
             cover: None,
             created_at: DateTime::now(),
@@ -36,7 +35,7 @@ impl BlogArticle {
             tags,
             title: title.to_string(),
             updated_at: None,
-        })
+        }
     }
 
     pub fn with_cover(mut self, cover: &str) -> Self {
@@ -44,8 +43,8 @@ impl BlogArticle {
         self
     }
 
-    pub fn generate_article_id(title: &str) -> Result<String> {
-        let timestamp = DateTime::now().try_to_rfc3339_string()?;
+    pub fn generate_article_id(title: &str) -> String {
+        let timestamp = DateTime::now().timestamp_millis();
         let sanitized_title = title
             .to_lowercase()
             .chars()
@@ -54,6 +53,6 @@ impl BlogArticle {
             .collect::<String>();
 
         let article_id = format!("{}-{}", timestamp, sanitized_title);
-        Ok(article_id.chars().take(100).collect())
+        article_id.chars().take(100).collect()
     }
 }

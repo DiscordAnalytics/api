@@ -39,14 +39,16 @@ async fn get_user_invitations(
             user_id = %user_id,
             "Admin access granted for user invitations"
         );
-    } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            user_id = %user_id,
-            "User attempted to access another user's invitations"
-        );
-        return Err(ApiError::Forbidden);
-    } else if !ctx.is_user() {
+    } else if ctx.is_user() {
+        if ctx.user_id.as_deref() != Some(&user_id) {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                "User attempted to access another user's invitations"
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,

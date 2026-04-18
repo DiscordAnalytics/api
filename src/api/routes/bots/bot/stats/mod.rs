@@ -225,7 +225,7 @@ async fn post_stats(
             );
             return Err(ApiError::Forbidden);
         }
-    } else if !ctx.is_admin() && !ctx.is_bot() {
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

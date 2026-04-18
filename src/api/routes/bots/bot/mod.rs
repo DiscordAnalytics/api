@@ -258,7 +258,22 @@ async fn patch_bot(
 
     let ctx = &auth;
 
-    if !(ctx.is_admin() || ctx.is_bot() && ctx.bot_id.as_deref() == Some(bot_id.as_str())) {
+    if ctx.is_admin() {
+        info!(
+            code = %LogCode::AdminAction,
+            bot_id = %bot_id,
+            "Admin access granted to update bot",
+        );
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Unauthorized bot update attempt",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -275,18 +290,6 @@ async fn patch_bot(
             "Access denied for suspended bot update",
         );
         return Err(ApiError::BotSuspended);
-    }
-
-    if ctx.is_bot() {
-        let auth_token = ctx.token.as_deref().ok_or(ApiError::InvalidToken)?;
-        if bot.token() != auth_token {
-            warn!(
-                code = %LogCode::InvalidToken,
-                bot_id = %bot_id,
-                "Bot token mismatch during update",
-            );
-            return Err(ApiError::InvalidToken);
-        }
     }
 
     let update_data = body.into_inner();

@@ -157,7 +157,7 @@ async fn create_achievement(
             );
             return Err(ApiError::Forbidden);
         }
-    } else if !ctx.is_user() {
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -317,7 +317,7 @@ async fn update_achievement(
             );
             return Err(ApiError::Forbidden);
         }
-    } else if !ctx.is_user() {
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -456,7 +456,7 @@ async fn delete_achievement(
             );
             return Err(ApiError::Forbidden);
         }
-    } else if !ctx.is_user() {
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

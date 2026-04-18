@@ -47,14 +47,16 @@ async fn get_user(
             user_id = %user_id,
             "Admin access granted for user details"
         );
-    } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            user_id = %user_id,
-            "User attempted to access another user's details"
-        );
-        return Err(ApiError::Forbidden);
-    } else if !ctx.is_user() {
+    } else if ctx.is_user() {
+        if ctx.user_id.as_deref() != Some(&user_id) {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                "User attempted to access another user's details"
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
@@ -162,14 +164,16 @@ async fn delete_user(
             user_id = %user_id,
             "Admin access granted for user deletion"
         );
-    } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            user_id = %user_id,
-            "User attempted to delete another user's account"
-        );
-        return Err(ApiError::Forbidden);
-    } else if !ctx.is_user() {
+    } else if ctx.is_user() {
+        if ctx.user_id.as_deref() != Some(&user_id) {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                "User attempted to delete another user's account"
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,

@@ -62,7 +62,7 @@ async fn get_subscriptions(
             );
             return Err(ApiError::Forbidden);
         }
-    } else if !ctx.is_user() {
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,

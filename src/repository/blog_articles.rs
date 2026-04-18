@@ -109,7 +109,7 @@ impl BlogArticlesRepository {
                 doc! {
                   "articleId": article_id
                 },
-                doc! { "$set": updates },
+                updates,
             )
             .with_options(options)
             .await

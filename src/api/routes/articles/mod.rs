@@ -93,7 +93,7 @@ async fn create_article(
         &article_request.description,
         article_request.tags.clone(),
         &article_request.title,
-    )?;
+    );
 
     if let Some(cover) = &article_request.cover {
         new_article = new_article.with_cover(cover);

@@ -75,10 +75,7 @@ impl CustomEventsRepository {
             .build();
 
         self.collection
-            .find_one_and_update(
-                doc! { "botId": bot_id, "eventKey": event_key },
-                doc! { "$set": updates },
-            )
+            .find_one_and_update(doc! { "botId": bot_id, "eventKey": event_key }, updates)
             .with_options(options)
             .await
     }

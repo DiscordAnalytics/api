@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/DiscordAnalytics/api/compare/v1.0.0...v1.0.1) (2026-04-18)
+
+
+### Bug Fixes
+
+* **articles:** use timestamp instead of date ([34eecb9](https://github.com/DiscordAnalytics/api/commit/34eecb99fc8332a9eb37ba5bfc29fd6287e11a0f))
+* **articles:** use timestamp instead of date ([#17](https://github.com/DiscordAnalytics/api/issues/17)) ([1a22d8b](https://github.com/DiscordAnalytics/api/commit/1a22d8b321173ed2a9149858cbbfca36f17bbc71))
+
 # 1.0.0 (2026-04-18)
 
 

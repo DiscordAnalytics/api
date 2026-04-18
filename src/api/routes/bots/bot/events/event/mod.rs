@@ -3,7 +3,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
-use mongodb::bson::DateTime;
 use tracing::{error, info, warn};
 
 use crate::{
@@ -103,19 +102,10 @@ async fn get_event(
             ))
         })?;
 
-    let current_date = DateTime::now();
-    let start_of_day = DateTime::from_millis(
-        current_date.timestamp_millis() - (current_date.timestamp_millis() % 86400000),
-    );
-
-    let stats = repos
-        .bot_stats
-        .find_from_date_range(&bot_id, &start_of_day, &current_date)
-        .await?;
-
+    let stats = repos.bot_stats.find_last(&bot_id).await?;
     let current_value = stats
-        .last()
-        .and_then(|s| s.custom_events.get(&event_key).copied());
+        .and_then(|s| s.custom_events.get(&event_key).copied())
+        .or(event.default_value);
 
     Ok(Json(CustomEventResponse::new(event, current_value)))
 }

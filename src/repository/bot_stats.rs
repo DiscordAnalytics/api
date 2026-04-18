@@ -5,7 +5,7 @@ use mongodb::{
     Collection, Database,
     bson::{DateTime, Document, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument},
+    options::{FindOneAndUpdateOptions, FindOneOptions, FindOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
@@ -206,6 +206,14 @@ impl BotStatsRepository {
         Ok(Self {
             collection: ensure_collection(db, BOT_STATS_COLLECTION).await?,
         })
+    }
+
+    pub async fn find_last(&self, bot_id: &str) -> Result<Option<BotStats>> {
+        let options = FindOneOptions::builder().sort(doc! { "date": -1 }).build();
+        self.collection
+            .find_one(doc! { "botId": bot_id })
+            .with_options(options)
+            .await
     }
 
     pub async fn find_by_date(&self, bot_id: &str, date: &DateTime) -> Result<Option<BotStats>> {

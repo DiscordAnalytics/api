@@ -62,10 +62,6 @@ impl Bot {
         }
     }
 
-    pub fn token(self) -> String {
-        self.token
-    }
-
     pub fn is_owner(&self, user_id: &str) -> bool {
         self.owner_id == user_id
     }

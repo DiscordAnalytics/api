@@ -14,8 +14,6 @@ pub enum LogCode {
     Unauthorized,
     /// Forbidden access attempts
     Forbidden,
-    /// Invalid token or authentication failures
-    InvalidToken,
     /// Admin actions
     AdminAction,
     /// Bot expiration warnings
@@ -50,7 +48,6 @@ impl LogCode {
             LogCode::Auth => "AUTH",
             LogCode::Unauthorized => "UNAUTH",
             LogCode::Forbidden => "FORBID",
-            LogCode::InvalidToken => "INV_TOKEN",
             LogCode::AdminAction => "ADMIN",
             LogCode::BotExpiration => "BOT_EXP",
             LogCode::User => "USER",

@@ -13,11 +13,11 @@ use crate::{
     api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
-        models::AchievementType,
+        models::{AchievementType, BotStats},
     },
     openapi::schemas::{
         BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse, MessageResponse,
-        NormalizedStatsBody, VoteResponse,
+        VoteResponse,
     },
     repository::{BotStatsUpdate, BotUpdate, Repositories},
     utils::{constants::MAX_DATE_RANGE, discord::Snowflake, logger::LogCode},
@@ -110,13 +110,15 @@ async fn get_stats(
             bot_id = %bot_id,
             "Admin access granted for bot stats",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to access stats of another bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempting to access stats of another bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {
@@ -214,14 +216,16 @@ async fn post_stats(
             bot_id = %bot_id,
             "Admin access granted for posting bot stats",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to post stats for another bot",
-        );
-        return Err(ApiError::Forbidden);
-    } else if !ctx.is_admin() && !ctx.is_bot() {
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempting to post stats for another bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             bot_id = %bot_id,
@@ -245,12 +249,8 @@ async fn post_stats(
     );
 
     let body = match body.into_inner() {
-        BotStatsBody::New(new_body) => {
-            NormalizedStatsBody::from_new(new_body, &bot_id, &start_of_hour)
-        }
-        BotStatsBody::Old(old_body) => {
-            NormalizedStatsBody::from_old(old_body, &bot_id, &start_of_hour)
-        }
+        BotStatsBody::New(new_body) => BotStats::from_new(new_body, &bot_id, &start_of_hour),
+        BotStatsBody::Old(old_body) => BotStats::from_old(old_body, &bot_id, &start_of_hour),
     };
 
     let new_stats = match repos
@@ -351,9 +351,8 @@ async fn post_stats(
                 })?
         }
         None => {
-            let new_stats = body.into_stats();
-            repos.bot_stats.insert(&new_stats).await?;
-            new_stats
+            repos.bot_stats.insert(&body).await?;
+            body
         }
     };
 

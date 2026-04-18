@@ -178,7 +178,7 @@ async fn answer_invitation(
             user_id = %user_id,
             "User processing invitation",
         );
-    } else if !ctx.is_user() {
+    } else {
         info!(
             code = %LogCode::Forbidden,
             invitation_id = %invitation_id,

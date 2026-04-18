@@ -1,5 +1,4 @@
 use actix_web::web::{Data, Json, Path};
-use anyhow::Result;
 use apistos::{
     api_operation,
     web::{ServiceConfig, get},
@@ -40,14 +39,16 @@ async fn get_user_bots(
             user_id = %user_id,
             "Admin access granted for user bots"
         );
-    } else if ctx.is_user() && ctx.user_id.as_deref() != Some(&user_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            user_id = %user_id,
-            "User attempted to access another user's bots"
-        );
-        return Err(ApiError::Forbidden);
-    } else if !ctx.is_user() {
+    } else if ctx.is_user() {
+        if ctx.user_id.as_deref() != Some(&user_id) {
+            warn!(
+                code = %LogCode::Forbidden,
+                user_id = %user_id,
+                "User attempted to access another user's bots"
+            );
+            return Err(ApiError::Forbidden);
+        }
+    } else {
         warn!(
             code = %LogCode::Forbidden,
             user_id = %user_id,
@@ -58,21 +59,19 @@ async fn get_user_bots(
 
     let user_bots = repos.bots.find_by_user_id(&user_id).await?;
 
-    let owned_bots = user_bots
-        .iter()
-        .filter(|b| b.owner_id == user_id)
-        .cloned()
-        .map(BotResponse::try_from)
-        .collect::<Result<Vec<_>>>()?;
-    let team_bots = user_bots
-        .into_iter()
-        .filter(|b| b.team.contains(&user_id))
-        .map(|b| {
-            let mut res = BotResponse::try_from(b)?;
-            res.webhooks_config = None;
-            Ok(res)
-        })
-        .collect::<ApiResult<Vec<_>>>()?;
+    let (owned_bots, team_bots) = user_bots.into_iter().try_fold(
+        (Vec::new(), Vec::new()),
+        |(mut owned, mut team), b| -> ApiResult<(Vec<BotResponse>, Vec<BotResponse>)> {
+            if b.owner_id == user_id {
+                owned.push(BotResponse::try_from(b)?);
+            } else if b.team.contains(&user_id) {
+                let mut res = BotResponse::try_from(b)?;
+                res.webhooks_config = None;
+                team.push(res);
+            }
+            Ok((owned, team))
+        },
+    )?;
 
     info!(
         code = %LogCode::Request,

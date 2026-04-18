@@ -57,13 +57,15 @@ async fn get_team(
             bot_id = %bot_id,
             "Admin access granted to fetch team for bot",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot access denied to fetch team for another bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot access denied to fetch team for another bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_owner(user_id) {
@@ -172,14 +174,16 @@ async fn add_to_team(
             user_id = %body.user_id,
             "Admin access granted to add user to bot team",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            user_id = %body.user_id,
-            "Bot access denied to add user to another bot team",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %body.user_id,
+                "Bot access denied to add user to another bot team",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_owner(user_id) {
@@ -382,14 +386,16 @@ async fn delete_from_team(
             user_id = %body.user_id,
             "Admin access granted to remove user from bot team",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            user_id = %body.user_id,
-            "Bot access denied to remove user from another bot team",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                user_id = %body.user_id,
+                "Bot access denied to remove user from another bot team",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_owner(user_id) {

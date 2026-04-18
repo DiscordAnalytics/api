@@ -3,12 +3,13 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
+use mongodb::bson::DateTime;
 use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::Authenticated,
     domain::error::{ApiError, ApiResult},
-    openapi::schemas::{CustomEventPayload, CustomEventUpdatePayload, MessageResponse},
+    openapi::schemas::{CustomEventResponse, CustomEventUpdatePayload, MessageResponse},
     repository::{CustomEventUpdate, Repositories},
     utils::{discord::Snowflake, logger::LogCode},
 };
@@ -22,7 +23,7 @@ async fn get_event(
     auth: Authenticated,
     repos: Data<Repositories>,
     path: Path<(String, String)>,
-) -> ApiResult<Json<CustomEventPayload>> {
+) -> ApiResult<Json<CustomEventResponse>> {
     let (id, event_key) = path.into_inner();
     let bot_id = Snowflake::try_from(id)?.into_inner();
 
@@ -44,14 +45,16 @@ async fn get_event(
             event_key = %event_key,
             "Admin access granted for retrieving custom event",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            event_key = %event_key,
-            "Bot access denied for retrieving custom event",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Bot access denied for retrieving custom event",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {
@@ -100,7 +103,22 @@ async fn get_event(
             ))
         })?;
 
-    Ok(Json(CustomEventPayload::from(event)))
+    let current_date = DateTime::now();
+    let start_of_hour = DateTime::from_millis(
+        current_date.timestamp_millis() - (current_date.timestamp_millis() % 3600000),
+    );
+
+    let stats = repos
+        .bot_stats
+        .find_last_event_occurence(&bot_id, &event_key)
+        .await?;
+
+    let current_value = stats
+        .filter(|s| event.default_value.is_none() || s.date == start_of_hour)
+        .and_then(|s| s.custom_events.get(&event_key).copied())
+        .or(event.default_value);
+
+    Ok(Json(CustomEventResponse::new(event, current_value)))
 }
 
 #[api_operation(
@@ -113,7 +131,7 @@ async fn update_event(
     repos: Data<Repositories>,
     body: Json<CustomEventUpdatePayload>,
     path: Path<(String, String)>,
-) -> ApiResult<Json<CustomEventPayload>> {
+) -> ApiResult<Json<CustomEventResponse>> {
     let (id, event_key) = path.into_inner();
     let bot_id = Snowflake::try_from(id)?.into_inner();
 
@@ -135,14 +153,16 @@ async fn update_event(
             event_key = %event_key,
             "Admin access granted for updating custom event",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            event_key = %event_key,
-            "Bot access denied for updating custom event",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Bot access denied for updating custom event",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {
@@ -219,7 +239,7 @@ async fn update_event(
         "Custom event updated successfully",
     );
 
-    Ok(Json(CustomEventPayload::from(update_result)))
+    Ok(Json(CustomEventResponse::from(update_result)))
 }
 
 #[api_operation(
@@ -253,14 +273,16 @@ async fn delete_event(
             event_key = %event_key,
             "Admin access granted for deleting custom event",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            event_key = %event_key,
-            "Bot access denied for deleting custom event",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                event_key = %event_key,
+                "Bot access denied for deleting custom event",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.has_access(user_id) {

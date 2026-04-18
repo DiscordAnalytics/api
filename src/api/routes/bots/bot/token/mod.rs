@@ -55,13 +55,15 @@ async fn get_token(
             bot_id = %bot_id,
             "Admin access granted for token retrieval",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to retrieve token for a different bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempting to retrieve token for a different bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_owner(user_id) {
@@ -127,13 +129,15 @@ async fn refresh_token(
             bot_id = %bot_id,
             "Admin access granted for token refresh",
         );
-    } else if ctx.is_bot() && ctx.bot_id.as_deref() != Some(&bot_id) {
-        warn!(
-            code = %LogCode::Forbidden,
-            bot_id = %bot_id,
-            "Bot attempting to refresh token for a different bot",
-        );
-        return Err(ApiError::Forbidden);
+    } else if ctx.is_bot() {
+        if ctx.token.as_deref() != Some(&bot.token) {
+            warn!(
+                code = %LogCode::Forbidden,
+                bot_id = %bot_id,
+                "Bot attempting to refresh token for a different bot",
+            );
+            return Err(ApiError::Forbidden);
+        }
     } else if ctx.is_user() {
         let user_id = ctx.user_id.as_deref().ok_or(ApiError::Unauthorized)?;
         if !bot.is_owner(user_id) {

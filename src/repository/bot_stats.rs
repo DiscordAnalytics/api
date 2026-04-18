@@ -208,10 +208,16 @@ impl BotStatsRepository {
         })
     }
 
-    pub async fn find_last(&self, bot_id: &str) -> Result<Option<BotStats>> {
+    pub async fn find_last_event_occurence(
+        &self,
+        bot_id: &str,
+        event_key: &str,
+    ) -> Result<Option<BotStats>> {
         let options = FindOneOptions::builder().sort(doc! { "date": -1 }).build();
         self.collection
-            .find_one(doc! { "botId": bot_id })
+            .find_one(
+                doc! { "botId": bot_id, format!("customEvents.{event_key}"): { "$exists": true } },
+            )
             .with_options(options)
             .await
     }

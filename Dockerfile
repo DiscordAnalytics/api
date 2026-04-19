@@ -1,5 +1,5 @@
 # ── Chef Stage ────────────
-FROM rust:1-alpine AS chef
+FROM rust:1-alpine@sha256:606fd313a0f49743ee2a7bd49a0914bab7deedb12791f3a846a34a4711db7ed2 AS chef
 
 RUN apk add --no-cache \
     pkgconfig \
@@ -42,7 +42,7 @@ ARG BUILD_ARGS="--features=full"
 RUN cargo build --release ${BUILD_ARGS} --bin discord-analytics-api
 
 # ── Runtime Stage ─────────
-FROM alpine:3 AS runtime
+FROM alpine:3@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS runtime
 
 LABEL maintainer="Discord Analytics"
 LABEL org.opencontainers.image.title="Discord Analytics API"

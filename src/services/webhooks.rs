@@ -190,7 +190,7 @@ impl WebhooksService {
             webhook_secret: None,
         };
 
-        if let Some(webhook_config) = bot.webhooks_config.webhooks.get(provider) {
+        if let Some(webhook_config) = bot.webhooks_config.providers.get(provider) {
             webhook.webhook_secret = Some(match &webhook_config.webhook_secret {
                 Some(secret) if !secret.is_empty() => secret.clone(),
                 _ => {

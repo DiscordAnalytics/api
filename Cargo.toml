@@ -87,7 +87,7 @@ s3 = { version = "0.1.27", optional = true, features = ["providers"] }
 schemars = { package = "apistos-schemars", version = "0.8.22", default-features = false }
 serde = { version = "1.0.228", default-features = false }
 serde_json = { version = "1.0.149", default-features = false }
-tokio = "1.52.0"
+tokio = "1.52.1"
 tracing = { version = "0.1.44", default-features = false }
 tracing-actix-web = { version = "0.7.21", default-features = false, features = [
   "emit_event_on_error",

@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/DiscordAnalytics/api/compare/v1.0.2...v1.0.3) (2026-04-19)
+
+
+### Bug Fixes
+
+* **webhooks:** remove flatten to avoid bson errors ([1a72419](https://github.com/DiscordAnalytics/api/commit/1a724191daff17e7e70d80153bab4fa48f8e7f06))
+
 ## [1.0.2](https://github.com/DiscordAnalytics/api/compare/v1.0.1...v1.0.2) (2026-04-18)
 
 

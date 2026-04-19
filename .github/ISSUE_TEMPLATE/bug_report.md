@@ -12,9 +12,9 @@ assignees: ''
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
+1. Install '...'
+2. Start with '....'
+3. Make a request on '....'
 4. See error
 
 **Expected behavior**
@@ -24,11 +24,7 @@ Steps to reproduce the behavior:
 <!-- If applicable, add screenshots to help explain your problem. -->
 
 **Device informations:**
-- OS: [e.g. Ubuntu Desktop 24.04]
-- Architecture [e.g. x86]
 - Discord Analytics Version [e.g. v1.0.3]
-<!-- https://www.digitaltrends.com/computing/how-to-determine-your-browser-version/ -->
-- Browser [e.g. Firefox 147.0.4]
 - Installation method
 
 **Logs:**
@@ -40,10 +36,18 @@ your logs here
 ```
 </details>
 
+
+**Docker Info:**
+<details>
+<summary>Click to reveal</summary>
+
+```
+run the docker info command and paste the result here
+```
+</details>
+
 **Checklist**
 - [ ] I checked for similar issues
-- [ ] I am able to reproduce the bug in [safe mode](https://www.computerhope.com/issues/ch001565.htm)
-
 
 **Additional context**
 <!-- Add any other context about the problem here. -->

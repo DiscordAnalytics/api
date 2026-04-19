@@ -81,8 +81,7 @@ impl Bot {
 #[serde(rename_all = "camelCase")]
 pub struct WebhooksConfig {
     pub webhook_url: Option<String>,
-    #[serde(flatten)]
-    pub webhooks: HashMap<String, WebhookConfig>,
+    pub providers: HashMap<String, WebhookConfig>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, ApiComponent, JsonSchema)]

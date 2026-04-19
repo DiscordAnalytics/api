@@ -8,6 +8,5 @@ use serde::{Deserialize, Serialize};
 pub struct Vote {
     pub bot_id: String,
     pub date: DateTime,
-    #[serde(flatten)]
     pub votes: HashMap<String, u32>,
 }

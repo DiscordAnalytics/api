@@ -140,7 +140,7 @@ async fn handle_botlistme(
 ) -> ApiResult<ProviderResponse> {
     let webhook_config = bot
         .webhooks_config
-        .webhooks
+        .providers
         .get("botlistme")
         .ok_or_else(|| {
             ApiError::WebhookError(
@@ -181,7 +181,7 @@ async fn handle_dblist(
     bot: &Bot,
     authorization: Option<&str>,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.webhooks.get("dblist").ok_or_else(|| {
+    let webhook_config = bot.webhooks_config.providers.get("dblist").ok_or_else(|| {
         ApiError::WebhookError("Bot does not have webhook configured for dblist".to_string())
     })?;
 
@@ -215,7 +215,7 @@ async fn handle_dblist(
 async fn handle_discordlist(body_bytes: &[u8], bot: &Bot) -> ApiResult<ProviderResponse> {
     let webhook_config = bot
         .webhooks_config
-        .webhooks
+        .providers
         .get("discordlist")
         .ok_or_else(|| {
             ApiError::WebhookError(
@@ -252,7 +252,7 @@ async fn handle_discordplace(
 ) -> ApiResult<ProviderResponse> {
     let webhook_config = bot
         .webhooks_config
-        .webhooks
+        .providers
         .get("discordplace")
         .ok_or_else(|| {
             ApiError::WebhookError(
@@ -295,7 +295,7 @@ async fn handle_discordscom(
 ) -> ApiResult<ProviderResponse> {
     let webhook_config = bot
         .webhooks_config
-        .webhooks
+        .providers
         .get("discordscom")
         .ok_or_else(|| {
             ApiError::WebhookError(
@@ -341,7 +341,7 @@ async fn handle_topgg(
     bot: &Bot,
     headers: &HeaderMap,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.webhooks.get("topgg").ok_or_else(|| {
+    let webhook_config = bot.webhooks_config.providers.get("topgg").ok_or_else(|| {
         ApiError::WebhookError("Bot does not have webhook configured for top.gg".to_string())
     })?;
 

@@ -11,7 +11,6 @@ use crate::domain::models::Vote;
 pub struct VoteResponse {
     pub bot_id: String,
     pub date: String,
-    #[serde(flatten)]
     pub votes: HashMap<String, u32>,
 }
 

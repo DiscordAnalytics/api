@@ -232,8 +232,8 @@ async fn oauth_callback(
     {
         session = session.with_user_agent(ua.to_string());
     }
-    if let Some(ip) = req.peer_addr() {
-        session = session.with_ip(ip.ip().to_string());
+    if let Some(ip) = req.connection_info().realip_remote_addr() {
+        session = session.with_ip(ip.to_string());
     }
 
     if let Err(e) = repos.sessions.insert(&session).await {

@@ -13,7 +13,6 @@ pub struct BotResponse {
     pub custom_events_limit: i32,
     pub framework: Option<String>,
     pub goals_limit: i32,
-    pub language: Option<String>,
     pub last_push: Option<String>,
     pub owner_id: String,
     pub suspended: bool,
@@ -36,7 +35,6 @@ impl TryFrom<Bot> for BotResponse {
             custom_events_limit: bot.custom_events_limit,
             framework: bot.framework,
             goals_limit: bot.goals_limit,
-            language: bot.language,
             last_push: bot
                 .last_push
                 .map(|dt| dt.try_to_rfc3339_string())

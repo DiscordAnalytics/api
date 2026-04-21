@@ -25,6 +25,10 @@
       "automerge": true,
       "automergeType": "pr",
       "ignoreTests": false
+    },
+    {
+      "matchPackageNames": ["s3"],
+      "minimumReleaseAge": "10 days"
     }
   ]
 }

@@ -45,7 +45,15 @@ impl BotUpdate {
     }
 
     pub fn with_framework(mut self, framework: String) -> Self {
-        self.builder = self.builder.set(doc! { "framework": framework });
+        let language = match framework.as_str() {
+            "discord.js" | "oceanic" => "javascript",
+            "discord.py" => "python",
+            _ => "other",
+        };
+        self.builder = self.builder.set(doc! {
+            "framework": framework,
+            "language": language
+        });
         self
     }
 

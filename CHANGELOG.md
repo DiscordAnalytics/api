@@ -1,3 +1,13 @@
+## [1.0.5](https://github.com/DiscordAnalytics/api/compare/v1.0.4...v1.0.5) (2026-04-21)
+
+
+### Bug Fixes
+
+* **auth:** invalid session ip ([#31](https://github.com/DiscordAnalytics/api/issues/31)) ([9ac8b15](https://github.com/DiscordAnalytics/api/commit/9ac8b15d8265372a7273fab57d818dedfdd4050c))
+* **auth:** use a better method to get session ip ([fe555dc](https://github.com/DiscordAnalytics/api/commit/fe555dcd70120a9a840f74f099d496596d9deb74))
+* **mails:** missing snake case ([5c1a8e7](https://github.com/DiscordAnalytics/api/commit/5c1a8e742d76f8dcdb9bba1aefdd0d332fd38429))
+* **mails:** missing snake case ([#32](https://github.com/DiscordAnalytics/api/issues/32)) ([888e4c1](https://github.com/DiscordAnalytics/api/commit/888e4c1ec9003eda7b26507e8f5a580513f88900))
+
 ## [1.0.4](https://github.com/DiscordAnalytics/api/compare/v1.0.3...v1.0.4) (2026-04-21)
 
 ## [1.0.3](https://github.com/DiscordAnalytics/api/compare/v1.0.2...v1.0.3) (2026-04-19)

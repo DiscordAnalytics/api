@@ -5,9 +5,9 @@
 
         <mj-divider border-color="#5865F2"></mj-divider>
 
-        <mj-text font-family="helvetica">Dear {{userUsername}},
+        <mj-text font-family="helvetica">Dear {{user_username}},
           <br />
-          Your bot {{botUsername}} ({{botId}}) has been deleted due to inactivity.</mj-text>
+          Your bot {{bot_username}} ({{bot_id}}) has been deleted due to inactivity.</mj-text>
 
         <mj-text font-family="helvetica">If you believe this was a mistake or would like more information, please contact our support.</mj-text>
 

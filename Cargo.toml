@@ -34,7 +34,7 @@ actix-web = { version = "4.13.0", default-features = false }
 actix-ws = { version = "0.4.0", default-features = false }
 anyhow = { version = "1.0.102", default-features = false }
 apistos = { version = "0.6.0", default-features = false }
-charts-rs = { version = "0.4.1", optional = true, default-features = false, features = [
+charts-rs = { version = "0.4.2", optional = true, default-features = false, features = [
   "image-encoder",
 ] }
 chrono = { version = "0.4.44", default-features = false, features = [
@@ -45,7 +45,7 @@ chrono = { version = "0.4.44", default-features = false, features = [
 dotenvy = { version = "0.15.7", default-features = false }
 futures = { version = "0.3.32", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-jsonwebtoken = { version = "10.3.0", default-features = false, features = [
+jsonwebtoken = { version = "10.4.0", default-features = false, features = [
   "aws_lc_rs",
   "hmac",
   "sha2",
@@ -63,7 +63,7 @@ mongodb = { version = "3.6.0", default-features = false, features = [
   "dns-resolver",
   "rustls-tls",
 ] }
-mrml = { version = "6.0.0", optional = true, default-features = false, features = [
+mrml = { version = "6.0.1", optional = true, default-features = false, features = [
   "parse",
   "render",
 ] }
@@ -76,18 +76,18 @@ opentelemetry-otlp = { version = "0.32.0", optional = true, default-features = f
 ] }
 opentelemetry_sdk = { version = "0.32.0", optional = true, default-features = false }
 regex = { version = "1.12.3", default-features = false, features = ["std"] }
-reqwest = { version = "0.13.2", default-features = false, features = [
+reqwest = { version = "0.13.3", default-features = false, features = [
   "form",
   "http2",
   "json",
   "rustls",
 ] }
 ring = { version = "0.17.14", default-features = false }
-s3 = { version = "0.1.27", optional = true, features = ["providers"] }
+s3 = { version = "0.1.28", optional = true, features = ["providers"] }
 schemars = { package = "apistos-schemars", version = "0.8.22", default-features = false }
 serde = { version = "1.0.228", default-features = false }
 serde_json = { version = "1.0.149", default-features = false }
-tokio = "1.52.1"
+tokio = "1.52.3"
 tracing = { version = "0.1.44", default-features = false }
 tracing-actix-web = { version = "0.7.21", default-features = false, features = [
   "emit_event_on_error",

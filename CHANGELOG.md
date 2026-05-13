@@ -3,6 +3,16 @@
 
 ### Bug Fixes
 
+* **actions:** add rust toolchain install/update ([3cbb6c3](https://github.com/DiscordAnalytics/api/commit/3cbb6c351c939f670d6262567f5ac28ffdb7ea9f))
+* **deps:** update opentelemetry-rust monorepo to 0.32.0 ([#41](https://github.com/DiscordAnalytics/api/issues/41)) ([843494e](https://github.com/DiscordAnalytics/api/commit/843494e05a9e862723d14d8e26f43e3eb12cbc85))
+* **repos:** invalid provider key in db query string ([aa636c0](https://github.com/DiscordAnalytics/api/commit/aa636c0ffa30b5a21b6d42834966801d01a72caa))
+* **repos:** webhooks config providers key ([#42](https://github.com/DiscordAnalytics/api/issues/42)) ([1ac6a46](https://github.com/DiscordAnalytics/api/commit/1ac6a4679eebbf657db6d7181e9cd54241d42844))
+
+## [1.0.6](https://github.com/DiscordAnalytics/api/compare/v1.0.5...v1.0.6) (2026-05-13)
+
+
+### Bug Fixes
+
 * **deps:** update opentelemetry-rust monorepo to 0.32.0 ([#41](https://github.com/DiscordAnalytics/api/issues/41)) ([843494e](https://github.com/DiscordAnalytics/api/commit/843494e05a9e862723d14d8e26f43e3eb12cbc85))
 * **repos:** invalid provider key in db query string ([aa636c0](https://github.com/DiscordAnalytics/api/commit/aa636c0ffa30b5a21b6d42834966801d01a72caa))
 * **repos:** webhooks config providers key ([#42](https://github.com/DiscordAnalytics/api/issues/42)) ([1ac6a46](https://github.com/DiscordAnalytics/api/commit/1ac6a4679eebbf657db6d7181e9cd54241d42844))

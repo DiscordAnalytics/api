@@ -101,12 +101,12 @@ impl BotUpdate {
     }
 
     pub fn with_webhook_config(mut self, provider: &str, config: WebhookConfig) -> Self {
-        self.builder = self
-            .builder
-            .set(doc! { format!("webhooksConfig.{}", provider): doc! {
+        self.builder = self.builder.set(
+            doc! { format!("webhooksConfig.providers.{}", provider): doc! {
                 "connectionId": config.connection_id,
                 "webhookSecret": config.webhook_secret,
-            }});
+            }},
+        );
         self
     }
 
@@ -266,7 +266,7 @@ impl BotsRepository {
     }
 
     pub async fn remove_integration(&self, provider: &str, connection_id: &str) -> Result<()> {
-        let provider_key = format!("webhooksConfig.{}", provider);
+        let provider_key = format!("webhooksConfig.providers.{}", provider);
         let key = format!("{}.connectionId", provider_key);
 
         self.collection

@@ -34,7 +34,7 @@ actix-web = { version = "4.13.0", default-features = false }
 actix-ws = { version = "0.4.0", default-features = false }
 anyhow = { version = "1.0.102", default-features = false }
 apistos = { version = "0.6.0", default-features = false }
-charts-rs = { version = "0.4.2", optional = true, default-features = false, features = [
+charts-rs = { version = "0.5.0", optional = true, default-features = false, features = [
   "image-encoder",
 ] }
 chrono = { version = "0.4.44", default-features = false, features = [

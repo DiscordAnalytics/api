@@ -6,7 +6,6 @@ use apistos::{
     web::{ServiceConfig, delete, get, resource, scope},
 };
 use serde_json::{Value, json};
-use tracing::info;
 
 use crate::{
     api::middleware::Authenticated,

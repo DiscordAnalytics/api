@@ -5,7 +5,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, post, resource, scope},
 };
-use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,

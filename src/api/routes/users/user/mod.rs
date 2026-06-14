@@ -7,7 +7,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, resource, scope},
 };
-use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::{Authenticated, RequireAdmin},

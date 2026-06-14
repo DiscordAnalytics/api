@@ -14,7 +14,6 @@ use apistos::{
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
 use mongodb::bson::DateTime;
-use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::Authenticated,

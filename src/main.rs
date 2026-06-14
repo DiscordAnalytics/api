@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate tracing;
+
 mod api;
 mod config;
 mod domain;
@@ -15,7 +18,6 @@ use actix_web::{App, HttpServer, http, web::Data};
 use anyhow::Result;
 use apistos::app::OpenApiWrapper;
 use tokio::{spawn, sync::Mutex, try_join};
-use tracing::{Level, info};
 use tracing_actix_web::TracingLogger;
 #[cfg(feature = "rate_limiting")]
 use {
@@ -44,10 +46,7 @@ async fn main() -> Result<()> {
 
     init_env().expect("Failed to initialize environment variables");
 
-    Logger::new()
-        .with_level(if dev_mode { Level::DEBUG } else { Level::INFO })
-        .init()
-        .expect("Failed to initialize logger");
+    Logger::new().init().expect("Failed to initialize logger");
 
     info!(
         code = %LogCode::Server,

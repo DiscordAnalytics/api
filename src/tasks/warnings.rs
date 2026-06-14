@@ -4,7 +4,6 @@ use tokio::{
     spawn,
     time::{Duration, Instant, interval_at},
 };
-use tracing::{error, info};
 
 use crate::{
     repository::{BotUpdate, Repositories},
@@ -49,8 +48,6 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
 
     let six_days_ago = Utc::now() - ChronoDuration::days(6);
     let six_days_ago = DateTime::from_millis(six_days_ago.timestamp_millis());
-    let one_week_ago = Utc::now() - ChronoDuration::weeks(1);
-    let one_week_ago = DateTime::from_millis(one_week_ago.timestamp_millis());
 
     for bot in not_configured {
         let owner = match repos.users.find_by_id(&bot.owner_id).await {
@@ -181,8 +178,6 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
 
     let five_months_ago = Utc::now() - ChronoDuration::days(5 * 30);
     let five_months_ago = DateTime::from_millis(five_months_ago.timestamp_millis());
-    let six_months_ago = Utc::now() - ChronoDuration::days(6 * 30);
-    let six_months_ago = DateTime::from_millis(six_months_ago.timestamp_millis());
 
     for bot in inactive {
         if let Some(last_push) = bot.last_push {

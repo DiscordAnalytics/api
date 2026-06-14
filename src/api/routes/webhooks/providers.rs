@@ -4,7 +4,6 @@ use actix_web::http::header::HeaderMap;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use ring::hmac::{HMAC_SHA256, Key, sign};
 use serde_json::{Value, from_value};
-use tracing::info;
 
 use crate::{
     domain::{

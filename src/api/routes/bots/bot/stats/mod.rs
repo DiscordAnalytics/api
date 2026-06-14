@@ -7,7 +7,6 @@ use apistos::{
 };
 use chrono::{Duration, Utc};
 use mongodb::bson::DateTime;
-use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,

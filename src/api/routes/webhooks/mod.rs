@@ -12,7 +12,6 @@ use apistos::{
 };
 use serde_json::{Value, from_slice};
 use tokio::sync::Mutex;
-use tracing::{info, warn};
 
 use self::providers::{ProviderResponse, handle_provider};
 

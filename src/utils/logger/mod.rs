@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::io;
 
 use anyhow::Result;
-use tracing::Level;
+use tracing::level_filters::LevelFilter;
 #[cfg(not(feature = "otel"))]
 use tracing_subscriber::layer::Identity;
 use tracing_subscriber::{
@@ -29,7 +29,6 @@ use {
 use crate::app_env;
 
 pub struct Logger {
-    level: Level,
     dev_mode: bool,
 }
 
@@ -44,18 +43,16 @@ pub use codes::LogCode;
 impl Logger {
     pub fn new() -> Self {
         Self {
-            level: Level::INFO,
             dev_mode: cfg!(debug_assertions),
         }
     }
 
-    pub fn with_level(mut self, level: Level) -> Self {
-        self.level = level;
-        self
-    }
-
     pub fn init(self) -> Result<()> {
-        let filter = EnvFilter::from_default_env().add_directive(self.level.into());
+        let filter = EnvFilter::try_from_default_env().unwrap_or(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        );
 
         let stdout_layer = layer()
             .with_writer(io::stdout)

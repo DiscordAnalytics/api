@@ -3,7 +3,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
-use tracing::info;
 
 use crate::{
     api::middleware::{OptionalAuth, RequireAdmin},

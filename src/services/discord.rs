@@ -1,6 +1,5 @@
 use anyhow::{Result, anyhow};
 use reqwest::Client;
-use tracing::{debug, error, info};
 
 use crate::{
     app_env,

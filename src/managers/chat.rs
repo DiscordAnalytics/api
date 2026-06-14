@@ -10,7 +10,6 @@ use std::{
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::Serialize;
 use tokio::sync::{mpsc, oneshot};
-use tracing::info;
 
 use crate::utils::logger::LogCode;
 

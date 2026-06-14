@@ -14,7 +14,6 @@ use futures::{
     future::{Either, select},
 };
 use tokio::{sync::mpsc, task::spawn_local, time::interval};
-use tracing::error;
 
 use crate::{
     domain::error::ApiResult,

@@ -3,7 +3,6 @@ use apistos::ApiComponent;
 use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::{Value, from_value};
-use tracing::{info, warn};
 
 use crate::{
     app_env,

@@ -6,7 +6,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, resource, scope},
 };
-use tracing::info;
 
 use crate::{
     api::middleware::RequireAdmin, domain::error::ApiResult, openapi::schemas::BotResponse,

@@ -3,7 +3,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, delete, post, scope},
 };
-use tracing::{error, info};
 
 use crate::{
     api::middleware::RequireAdmin,

@@ -12,7 +12,6 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
 };
 use tokio::{sync::Mutex, time::sleep};
-use tracing::info;
 
 use crate::{
     domain::models::{Provider, Webhook, WebhookSendData},

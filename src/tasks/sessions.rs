@@ -2,7 +2,6 @@ use tokio::{
     spawn,
     time::{Duration, Instant, interval_at},
 };
-use tracing::{error, info};
 
 use crate::{repository::Repositories, utils::logger::LogCode};
 

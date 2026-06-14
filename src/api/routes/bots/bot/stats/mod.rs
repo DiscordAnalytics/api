@@ -424,7 +424,18 @@ async fn post_stats(
     }
 
     let bot_update = BotUpdate::default().with_last_push(Some(DateTime::now()));
-    repos.bots.update(&bot_id, bot_update).await?;
+    repos
+        .bots
+        .update(&bot_id, bot_update)
+        .await?
+        .ok_or_else(|| {
+            warn!(
+                code = %LogCode::DbError,
+                bot_id = %bot_id,
+                "Failed to update lastPush for bot",
+            );
+            ApiError::DatabaseError("Failed to update lastPush for bot".to_string())
+        })?;
 
     info!(
         code = %LogCode::Request,

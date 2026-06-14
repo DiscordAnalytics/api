@@ -1,9 +1,9 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
-    Collection, Database,
+    Collection, Database, IndexModel,
     bson::{Document, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, ReturnDocument},
+    options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 

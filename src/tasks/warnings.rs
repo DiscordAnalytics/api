@@ -113,7 +113,7 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
             let one_day_ago = Utc::now() - ChronoDuration::days(1);
             let one_day_ago = DateTime::from_millis(one_day_ago.timestamp_millis());
 
-            if warned_at.map_or(false, |t| t < one_day_ago) {
+            if warned_at.is_some_and(|t| t < one_day_ago) {
                 if let Err(e) = services
                     .discord
                     .send_dm(
@@ -243,7 +243,7 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
                 let thirty_days_ago = Utc::now() - ChronoDuration::days(30);
                 let thirty_days_ago = DateTime::from_millis(thirty_days_ago.timestamp_millis());
 
-                if warned_at.map_or(false, |at| at < thirty_days_ago) {
+                if warned_at.is_some_and(|at| at < thirty_days_ago) {
                     if let Err(e) = services
                         .discord
                         .send_dm(

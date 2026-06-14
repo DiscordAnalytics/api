@@ -1,8 +1,9 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
-    Collection, Database,
+    Collection, Database, IndexModel,
     bson::{DateTime, doc},
     error::Result,
+    options::IndexOptions,
     results::{InsertOneResult, UpdateResult},
 };
 
@@ -17,9 +18,18 @@ pub struct SessionsRepository {
 
 impl SessionsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        Ok(Self {
-            collection: ensure_collection(db, SESSIONS_COLLECTION).await?,
-        })
+        let collection = ensure_collection(db, SESSIONS_COLLECTION).await?;
+
+        collection
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! { "sessionId": 1 })
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+            )
+            .await?;
+
+        Ok(Self { collection })
     }
 
     pub async fn insert(&self, session: &Session) -> Result<InsertOneResult> {

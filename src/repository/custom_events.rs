@@ -34,9 +34,18 @@ pub struct CustomEventsRepository {
 
 impl CustomEventsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        Ok(Self {
-            collection: ensure_collection(db, CUSTOM_EVENTS_COLLECTION).await?,
-        })
+        let collection = ensure_collection(db, CUSTOM_EVENTS_COLLECTION).await?;
+
+        collection
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! { "botId": 1, "eventKey": 1 })
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+            )
+            .await?;
+
+        Ok(Self { collection })
     }
 
     pub async fn find_by_bot_id(&self, bot_id: &str) -> Result<Vec<CustomEvent>> {

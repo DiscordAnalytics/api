@@ -100,6 +100,11 @@ impl BotUpdate {
         self
     }
 
+    pub fn with_warned_at(mut self, warned_at: Option<DateTime>) -> Self {
+        self.builder = self.builder.set(doc! { "warnedAt": warned_at });
+        self
+    }
+
     pub fn with_webhook_config(mut self, provider: &str, config: WebhookConfig) -> Self {
         self.builder = self.builder.set(
             doc! { format!("webhooksConfig.providers.{}", provider): doc! {

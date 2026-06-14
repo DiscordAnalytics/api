@@ -2,7 +2,7 @@ use chrono::{Duration as ChronoDuration, Utc};
 use mongodb::bson::DateTime;
 use tokio::{
     spawn,
-    time::{Duration, interval},
+    time::{Duration, Instant, interval_at},
 };
 use tracing::{error, info};
 
@@ -17,7 +17,9 @@ use crate::{
 
 pub fn warnings_task(repos: Repositories, services: Services) {
     spawn(async move {
-        let mut interval = interval(Duration::from_secs(24 * 60 * 60));
+        let period = Duration::from_secs(24 * 60 * 60);
+        let start = Instant::now() + period;
+        let mut interval = interval_at(start, period);
 
         loop {
             interval.tick().await;
@@ -58,6 +60,7 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
 
         let watched_since = bot.watched_since;
         let warn_level = bot.warn_level;
+        let warned_at = bot.warned_at;
 
         if watched_since < six_days_ago && warn_level == 0 {
             if let Err(e) = services
@@ -93,7 +96,9 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
                 );
             }
 
-            let update = BotUpdate::default().with_warn_level(1);
+            let update = BotUpdate::default()
+                .with_warn_level(1)
+                .with_warned_at(Some(DateTime::now()));
 
             match repos.bots.update(&bot.bot_id, update).await {
                 Ok(Some(_)) => info!(
@@ -107,49 +112,54 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
                     "Failed to warn bot for not being configured",
                 ),
             }
-        } else if watched_since < one_week_ago && warn_level == 1 {
-            if let Err(e) = services
-                .discord
-                .send_dm(
-                    &owner.user_id,
-                    Some(DiscordNotification::create(
-                        NotificationType::BotConfigurationDeletion {
-                            bot_username: bot.username.clone(),
-                            bot_id: bot.bot_id.clone(),
-                        },
-                    )),
-                )
-                .await
-            {
-                error!(
-                    code = %LogCode::BotExpiration,
-                    error = %e,
-                    "Failed to send non-configured bot deletion DM"
-                );
-            }
+        } else if warn_level == 1 {
+            let one_day_ago = Utc::now() - ChronoDuration::days(1);
+            let one_day_ago = DateTime::from_millis(one_day_ago.timestamp_millis());
 
-            #[cfg(feature = "mails")]
-            if let Err(e) = services.mail.send_bot_configuration_deletion(&owner, &bot) {
-                error!(
-                    code = %LogCode::BotExpiration,
-                    error = %e,
-                    "Failed to send non-configured bot deletion email"
-                );
-            }
-
-            match services.bots.delete_bot(&bot.bot_id).await {
-                Ok(_) => info!(
-                    code = %LogCode::BotExpiration,
-                    bot_id = %bot.bot_id,
-                    "Deleted non-configured bot"
-                ),
-                Err(e) => {
+            if warned_at.map_or(false, |t| t < one_day_ago) {
+                if let Err(e) = services
+                    .discord
+                    .send_dm(
+                        &owner.user_id,
+                        Some(DiscordNotification::create(
+                            NotificationType::BotConfigurationDeletion {
+                                bot_username: bot.username.clone(),
+                                bot_id: bot.bot_id.clone(),
+                            },
+                        )),
+                    )
+                    .await
+                {
                     error!(
                         code = %LogCode::BotExpiration,
-                        bot_id = %bot.bot_id,
                         error = %e,
-                        "Failed to delete non-configured bot"
+                        "Failed to send non-configured bot deletion DM"
                     );
+                }
+
+                #[cfg(feature = "mails")]
+                if let Err(e) = services.mail.send_bot_configuration_deletion(&owner, &bot) {
+                    error!(
+                        code = %LogCode::BotExpiration,
+                        error = %e,
+                        "Failed to send non-configured bot deletion email"
+                    );
+                }
+
+                match services.bots.delete_bot(&bot.bot_id).await {
+                    Ok(_) => info!(
+                        code = %LogCode::BotExpiration,
+                        bot_id = %bot.bot_id,
+                        "Deleted non-configured bot"
+                    ),
+                    Err(e) => {
+                        error!(
+                            code = %LogCode::BotExpiration,
+                            bot_id = %bot.bot_id,
+                            error = %e,
+                            "Failed to delete non-configured bot"
+                        );
+                    }
                 }
             }
         }
@@ -182,8 +192,9 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
             };
 
             let warn_level = bot.warn_level;
+            let warned_at = bot.warned_at;
 
-            if last_push < five_months_ago && warn_level != 2 {
+            if last_push < five_months_ago && warn_level == 0 {
                 if let Err(e) = services
                     .discord
                     .send_dm(
@@ -217,7 +228,9 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
                     );
                 }
 
-                let update = BotUpdate::default().with_warn_level(2);
+                let update = BotUpdate::default()
+                    .with_warn_level(2)
+                    .with_warned_at(Some(DateTime::now()));
 
                 match repos.bots.update(&bot.bot_id, update).await {
                     Ok(Some(_)) => info!(
@@ -231,49 +244,54 @@ async fn handle_inactive(repos: &Repositories, services: &Services) {
                         "Failed to warn bot for being inactive",
                     ),
                 }
-            } else if last_push < six_months_ago && warn_level == 2 {
-                if let Err(e) = services
-                    .discord
-                    .send_dm(
-                        &owner.user_id,
-                        Some(DiscordNotification::create(
-                            NotificationType::BotInactiveDeletion {
-                                bot_username: bot.username.clone(),
-                                bot_id: bot.bot_id.clone(),
-                            },
-                        )),
-                    )
-                    .await
-                {
-                    error!(
-                        code = %LogCode::BotExpiration,
-                        error = %e,
-                        "Failed to send inactive bot deletion DM"
-                    );
-                }
+            } else if last_push < five_months_ago && warn_level == 2 {
+                let thirty_days_ago = Utc::now() - ChronoDuration::days(30);
+                let thirty_days_ago = DateTime::from_millis(thirty_days_ago.timestamp_millis());
 
-                #[cfg(feature = "mails")]
-                if let Err(e) = services.mail.send_bot_inactive_deletion(&owner, &bot) {
-                    error!(
-                        code = %LogCode::BotExpiration,
-                        error = %e,
-                        "Failed to send inactive bot deletion email"
-                    );
-                }
-
-                match services.bots.delete_bot(&bot.bot_id).await {
-                    Ok(_) => info!(
-                        code = %LogCode::BotExpiration,
-                        bot_id = %bot.bot_id,
-                        "Deleted inactive bot"
-                    ),
-                    Err(e) => {
+                if warned_at.map_or(false, |at| at < thirty_days_ago) {
+                    if let Err(e) = services
+                        .discord
+                        .send_dm(
+                            &owner.user_id,
+                            Some(DiscordNotification::create(
+                                NotificationType::BotInactiveDeletion {
+                                    bot_username: bot.username.clone(),
+                                    bot_id: bot.bot_id.clone(),
+                                },
+                            )),
+                        )
+                        .await
+                    {
                         error!(
                             code = %LogCode::BotExpiration,
-                            bot_id = %bot.bot_id,
                             error = %e,
-                            "Failed to delete inactive bot"
+                            "Failed to send inactive bot deletion DM"
                         );
+                    }
+
+                    #[cfg(feature = "mails")]
+                    if let Err(e) = services.mail.send_bot_inactive_deletion(&owner, &bot) {
+                        error!(
+                            code = %LogCode::BotExpiration,
+                            error = %e,
+                            "Failed to send inactive bot deletion email"
+                        );
+                    }
+
+                    match services.bots.delete_bot(&bot.bot_id).await {
+                        Ok(_) => info!(
+                            code = %LogCode::BotExpiration,
+                            bot_id = %bot.bot_id,
+                            "Deleted inactive bot"
+                        ),
+                        Err(e) => {
+                            error!(
+                                code = %LogCode::BotExpiration,
+                                bot_id = %bot.bot_id,
+                                error = %e,
+                                "Failed to delete inactive bot"
+                            );
+                        }
                     }
                 }
             }

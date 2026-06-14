@@ -423,7 +423,10 @@ async fn post_stats(
             .await?;
     }
 
-    let bot_update = BotUpdate::default().with_last_push(Some(DateTime::now()));
+    let bot_update = BotUpdate::default()
+        .with_last_push(Some(DateTime::now()))
+        .with_warn_level(0)
+        .with_warned_at(None);
     repos
         .bots
         .update(&bot_id, bot_update)

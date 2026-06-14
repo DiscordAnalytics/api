@@ -294,7 +294,7 @@ async fn patch_bot(
 
     let update_data = body.into_inner();
 
-    let mut update = BotUpdate::default();
+    let mut update = BotUpdate::default().with_warn_level(0).with_warned_at(None);
     if let Some(avatar) = update_data.avatar {
         update = update.with_avatar(avatar);
     }

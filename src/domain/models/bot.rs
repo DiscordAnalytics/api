@@ -27,6 +27,7 @@ pub struct Bot {
     pub username: String,
     pub version: Option<String>,
     pub warn_level: i32,
+    pub warned_at: Option<DateTime>,
     pub watched_since: DateTime,
     pub webhooks_config: WebhooksConfig,
 }
@@ -55,6 +56,7 @@ impl Bot {
             username: username.to_string(),
             version: None,
             warn_level: 0,
+            warned_at: None,
             watched_since: DateTime::now(),
             webhooks_config: WebhooksConfig::default(),
         }

@@ -1,14 +1,15 @@
 use tokio::{
     spawn,
-    time::{Duration, interval},
+    time::{Duration, Instant, interval_at},
 };
-use tracing::{error, info};
 
 use crate::{repository::Repositories, utils::logger::LogCode};
 
 pub fn invitations_task(repos: Repositories) {
     spawn(async move {
-        let mut interval = interval(Duration::from_secs(60 * 60));
+        let period = Duration::from_secs(60 * 60);
+        let start = Instant::now() + period;
+        let mut interval = interval_at(start, period);
 
         loop {
             interval.tick().await;

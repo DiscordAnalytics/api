@@ -4,7 +4,6 @@ use lettre::{
     message::{Mailbox, header::ContentType},
     transport::smtp::authentication::Credentials,
 };
-use tracing::{error, info};
 
 use crate::{app_env, utils::logger::LogCode};
 

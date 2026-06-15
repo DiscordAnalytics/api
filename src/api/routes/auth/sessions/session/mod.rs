@@ -4,7 +4,6 @@ use apistos::{
     web::{ServiceConfig, delete},
 };
 use serde_json::{Value, json};
-use tracing::info;
 
 use crate::{
     api::middleware::Authenticated,

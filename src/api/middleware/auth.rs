@@ -6,7 +6,6 @@ use actix_web::{
     http::header::{self, HeaderValue},
 };
 use futures::future::LocalBoxFuture;
-use tracing::{info, warn};
 
 use crate::{
     domain::auth::{AuthContext, AuthType, Authorization, decode_token},

@@ -3,7 +3,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, post},
 };
-use tracing::info;
 
 use crate::{
     domain::{

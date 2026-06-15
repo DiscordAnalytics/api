@@ -5,7 +5,6 @@ use chrono::{Duration, Utc};
 use mongodb::bson::DateTime;
 use serde_json::Value;
 use tokio::sync::Mutex;
-use tracing::{error, info};
 
 use crate::{
     domain::models::{AchievementType, Bot, Provider, User, Vote, Webhook, WebhookData},

@@ -4,7 +4,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get},
 };
-use tracing::info;
 
 use crate::{
     api::middleware::OptionalAuth, domain::error::ApiResult, openapi::schemas::AchievementResponse,

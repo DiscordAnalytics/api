@@ -5,7 +5,6 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, scope},
 };
-use tracing::info;
 
 use crate::{
     api::middleware::RequireAdmin,

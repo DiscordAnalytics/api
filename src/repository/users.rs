@@ -2,10 +2,10 @@ use std::collections::{HashMap, HashSet};
 
 use futures::stream::TryStreamExt as _;
 use mongodb::{
-    Collection, Database,
+    Collection, Database, IndexModel,
     bson::{Document, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, ReturnDocument},
+    options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
@@ -63,9 +63,18 @@ pub struct UsersRepository {
 
 impl UsersRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        Ok(Self {
-            collection: ensure_collection(db, USERS_COLLECTION).await?,
-        })
+        let collection = ensure_collection(db, USERS_COLLECTION).await?;
+
+        collection
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! { "userId": 1 })
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+            )
+            .await?;
+
+        Ok(Self { collection })
     }
 
     pub async fn find_all(&self) -> Result<Vec<User>> {

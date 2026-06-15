@@ -1,6 +1,5 @@
 use anyhow::Result;
 use mrml::{mjml::Mjml, prelude::render::RenderOptions};
-use tracing::warn;
 
 use crate::utils::logger::LogCode;
 

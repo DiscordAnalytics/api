@@ -14,7 +14,6 @@ use apistos::{
     web::{ServiceConfig, delete, get, patch, post, resource, scope},
 };
 use mongodb::bson::DateTime;
-use tracing::{error, info, warn};
 
 use crate::{
     api::middleware::Authenticated,
@@ -294,7 +293,7 @@ async fn patch_bot(
 
     let update_data = body.into_inner();
 
-    let mut update = BotUpdate::default();
+    let mut update = BotUpdate::default().with_warn_level(0).with_warned_at(None);
     if let Some(avatar) = update_data.avatar {
         update = update.with_avatar(avatar);
     }

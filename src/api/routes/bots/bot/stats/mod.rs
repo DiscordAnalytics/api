@@ -7,7 +7,6 @@ use apistos::{
 };
 use chrono::{Duration, Utc};
 use mongodb::bson::DateTime;
-use tracing::{info, warn};
 
 use crate::{
     api::middleware::Authenticated,
@@ -423,8 +422,22 @@ async fn post_stats(
             .await?;
     }
 
-    let bot_update = BotUpdate::default().with_last_push(Some(DateTime::now()));
-    repos.bots.update(&bot_id, bot_update).await?;
+    let bot_update = BotUpdate::default()
+        .with_last_push(Some(DateTime::now()))
+        .with_warn_level(0)
+        .with_warned_at(None);
+    repos
+        .bots
+        .update(&bot_id, bot_update)
+        .await?
+        .ok_or_else(|| {
+            warn!(
+                code = %LogCode::DbError,
+                bot_id = %bot_id,
+                "Failed to update lastPush for bot",
+            );
+            ApiError::DatabaseError("Failed to update lastPush for bot".to_string())
+        })?;
 
     info!(
         code = %LogCode::Request,

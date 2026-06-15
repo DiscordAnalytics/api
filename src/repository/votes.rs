@@ -1,9 +1,9 @@
 use futures::stream::TryStreamExt as _;
 use mongodb::{
-    Collection, Database,
+    Collection, Database, IndexModel,
     bson::{DateTime, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, ReturnDocument},
+    options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
@@ -18,9 +18,18 @@ pub struct VotesRepository {
 
 impl VotesRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        Ok(Self {
-            collection: ensure_collection(db, VOTES_COLLECTION).await?,
-        })
+        let collection = ensure_collection(db, VOTES_COLLECTION).await?;
+
+        collection
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! { "botId": 1, "date": 1 })
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+            )
+            .await?;
+
+        Ok(Self { collection })
     }
 
     pub async fn find_by_date(&self, bot_id: &str, date: &DateTime) -> Result<Option<Vote>> {

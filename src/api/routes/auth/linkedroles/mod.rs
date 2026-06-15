@@ -8,7 +8,6 @@ use apistos::{
     web::{ServiceConfig, get},
 };
 use mongodb::bson::Uuid;
-use tracing::{error, info};
 
 use crate::{
     app_env, openapi::schemas::LinkedRolesQuery, repository::Repositories, services::Services,

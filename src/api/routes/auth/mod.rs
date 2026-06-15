@@ -12,7 +12,6 @@ use apistos::{
     web::{Redirect, ServiceConfig, get, resource, scope},
 };
 use mongodb::bson::{DateTime, Uuid};
-use tracing::{error, info, warn};
 
 use crate::{
     app_env,

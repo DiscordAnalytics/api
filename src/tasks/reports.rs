@@ -7,7 +7,6 @@ use chrono::{
 };
 use mongodb::bson::DateTime as MongoDateTime;
 use tokio::{spawn, time::sleep};
-use tracing::{error, info};
 
 use crate::{
     domain::models::StatsReportFrequency,

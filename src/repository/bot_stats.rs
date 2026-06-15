@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use futures::stream::TryStreamExt as _;
 use mongodb::{
-    Collection, Database,
+    Collection, Database, IndexModel,
     bson::{DateTime, Document, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, FindOneOptions, FindOptions, ReturnDocument},
+    options::{FindOneAndUpdateOptions, FindOneOptions, FindOptions, IndexOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
@@ -19,6 +19,11 @@ use super::common::{UpdateBuilder, ensure_collection};
 #[derive(Clone, Default)]
 pub struct BotStatsUpdate {
     builder: UpdateBuilder,
+}
+
+enum UpdateMode {
+    Add,
+    Set,
 }
 
 impl BotStatsUpdate {
@@ -80,7 +85,8 @@ impl BotStatsUpdate {
     }
 
     pub fn with_guild_locales(mut self, locales: &[(&str, i32)], existing: &[Locale]) -> Self {
-        let update_doc = Self::build_locale_update("guildLocales", locales, existing);
+        let update_doc =
+            Self::build_locale_update("guildLocales", locales, existing, UpdateMode::Set);
         self.builder = self.builder.set(update_doc);
         self
     }
@@ -136,7 +142,8 @@ impl BotStatsUpdate {
         locales: &[(&str, i32)],
         existing: &[Locale],
     ) -> Self {
-        let update_doc = Self::build_locale_update("interactionsLocales", locales, existing);
+        let update_doc =
+            Self::build_locale_update("interactionsLocales", locales, existing, UpdateMode::Add);
         self.builder = self.builder.set(update_doc);
         self
     }
@@ -165,7 +172,12 @@ impl BotStatsUpdate {
         self
     }
 
-    fn build_locale_update(field: &str, updates: &[(&str, i32)], existing: &[Locale]) -> Document {
+    fn build_locale_update(
+        field: &str,
+        updates: &[(&str, i32)],
+        existing: &[Locale],
+        update_mode: UpdateMode,
+    ) -> Document {
         let mut map: HashMap<String, i32> = HashMap::new();
 
         for l in existing {
@@ -173,9 +185,16 @@ impl BotStatsUpdate {
         }
 
         for (locale, number) in updates {
-            map.entry(locale.to_string())
-                .and_modify(|n| *n += *number)
-                .or_insert(*number);
+            match update_mode {
+                UpdateMode::Add => {
+                    map.entry(locale.to_string())
+                        .and_modify(|n| *n += *number)
+                        .or_insert(*number);
+                }
+                UpdateMode::Set => {
+                    map.insert(locale.to_string(), *number);
+                }
+            }
         }
 
         doc! {
@@ -203,9 +222,18 @@ pub struct BotStatsRepository {
 
 impl BotStatsRepository {
     pub async fn new(db: &Database) -> Result<Self> {
-        Ok(Self {
-            collection: ensure_collection(db, BOT_STATS_COLLECTION).await?,
-        })
+        let collection = ensure_collection(db, BOT_STATS_COLLECTION).await?;
+
+        collection
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! { "botId": 1, "date": 1 })
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+            )
+            .await?;
+
+        Ok(Self { collection })
     }
 
     pub async fn find_last_event_occurence(

@@ -67,7 +67,7 @@ impl AchievementsRepository {
             .create_index(
                 IndexModel::builder()
                     .keys(doc! { "botId": 1 })
-                    .options(IndexOptions::builder().unique(true).build())
+                    .options(IndexOptions::builder().build())
                     .build(),
             )
             .await?;

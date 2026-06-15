@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/DiscordAnalytics/api/compare/v1.1.1...v1.1.2) (2026-06-15)
+
+
+### Bug Fixes
+
+* fixed unique index in BotStats collection ([1a4412d](https://github.com/DiscordAnalytics/api/commit/1a4412d3a2fd2b0b0f976a105fa27d3b77aaedcb))
+
 ## [1.1.1](https://github.com/DiscordAnalytics/api/compare/v1.1.0...v1.1.1) (2026-06-15)
 
 

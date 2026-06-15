@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/DiscordAnalytics/api/compare/v1.1.0...v1.1.1) (2026-06-15)
+
+
+### Bug Fixes
+
+* fixed unique index in Achievements collection ([d110695](https://github.com/DiscordAnalytics/api/commit/d1106953bb59a9d793d1b6775a960ace6b697232))
+
 # [1.1.0](https://github.com/DiscordAnalytics/api/compare/v1.0.6...v1.1.0) (2026-06-15)
 
 

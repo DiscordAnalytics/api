@@ -1,3 +1,21 @@
+# [1.1.0](https://github.com/DiscordAnalytics/api/compare/v1.0.6...v1.1.0) (2026-06-15)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate charts-rs to 0.5.0 ([#52](https://github.com/DiscordAnalytics/api/issues/52)) ([481594d](https://github.com/DiscordAnalytics/api/commit/481594d0df85ff559949c1e0c3cf33b60fecd908))
+* **repos:** add indexing ([5991a8a](https://github.com/DiscordAnalytics/api/commit/5991a8a9ed8aa92fe29bedabf9a238440f7e4f3a))
+* **repos:** add missing imports ([63bc4d6](https://github.com/DiscordAnalytics/api/commit/63bc4d66c0af73bd30bd0bb3cdc9b77445065dd2))
+* **repos:** add UpdateMode enum to change locales stats builder ([bc6c204](https://github.com/DiscordAnalytics/api/commit/bc6c204498a42db913522b5fff5d5d1cafaaf907))
+* **tasks:** now save warnedAt in the bot document to avoid issues ([9fa7c88](https://github.com/DiscordAnalytics/api/commit/9fa7c8802500de015b59a60aab5eb3a0af841ed7))
+* use is_some_and instead of map_or ([121d9fe](https://github.com/DiscordAnalytics/api/commit/121d9fea0249893256e5e87da6c49617a720a1f6))
+
+
+### Features
+
+* Add UpdateMode enum and lastPush log, fix warnedAt saving ([#59](https://github.com/DiscordAnalytics/api/issues/59)) ([70cc09f](https://github.com/DiscordAnalytics/api/commit/70cc09f0b496a1c7e71e09a2627f054332117d35))
+* **stats:** add lastPush update log information ([6f537ee](https://github.com/DiscordAnalytics/api/commit/6f537eed587b49c24d11fae0cbe416d7e1605829))
+
 ## [1.0.6](https://github.com/DiscordAnalytics/api/compare/v1.0.5...v1.0.6) (2026-05-13)
 
 

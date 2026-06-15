@@ -228,7 +228,7 @@ impl BotStatsRepository {
             .create_index(
                 IndexModel::builder()
                     .keys(doc! { "botId": 1, "date": 1 })
-                    .options(IndexOptions::builder().unique(true).build())
+                    .options(IndexOptions::builder().build())
                     .build(),
             )
             .await?;

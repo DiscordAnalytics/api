@@ -1,3 +1,13 @@
+## [1.1.3](https://github.com/DiscordAnalytics/api/compare/v1.1.2...v1.1.3) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate charts-rs to 0.6.0 ([#60](https://github.com/DiscordAnalytics/api/issues/60)) ([0fd3eff](https://github.com/DiscordAnalytics/api/commit/0fd3effa507b76918dbd80e092067c12cb1d43de))
+* **deps:** update rust crate charts-rs to 0.7.0 ([#63](https://github.com/DiscordAnalytics/api/issues/63)) ([7c1ea90](https://github.com/DiscordAnalytics/api/commit/7c1ea903fece8927ccfd13d419c1d9b348f99f28))
+* **logs:** apply EnvFilter to OpenTelemetry layer ([c42bc33](https://github.com/DiscordAnalytics/api/commit/c42bc339821ff88201011b30084f8c0540a09a10))
+* **logs:** apply EnvFilter to OpenTelemetry layer ([#66](https://github.com/DiscordAnalytics/api/issues/66)) ([cce9060](https://github.com/DiscordAnalytics/api/commit/cce9060ef4f8aa154cb9ffdb91e08fa3f9b993d7))
+
 ## [1.1.2](https://github.com/DiscordAnalytics/api/compare/v1.1.1...v1.1.2) (2026-06-15)
 
 

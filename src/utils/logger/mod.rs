@@ -58,10 +58,12 @@ impl Logger {
             .with_writer(io::stdout)
             .with_ansi(self.dev_mode)
             .with_span_events(FmtSpan::CLOSE)
-            .with_filter(filter);
+            .with_filter(filter.clone());
 
         #[cfg(feature = "otel")]
-        let otel_layer = (!self.dev_mode).then(|| self.otel_layer()).transpose()?;
+        let otel_layer = (!self.dev_mode)
+            .then(|| self.otel_layer().map(|layer| layer.with_filter(filter)))
+            .transpose()?;
         #[cfg(not(feature = "otel"))]
         let otel_layer: Option<Identity> = None;
 

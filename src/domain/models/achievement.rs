@@ -70,7 +70,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Be on 75 servers.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.1.description"
+                    "pages.dash.achievements.default_achievements.1.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -82,7 +82,7 @@ impl Achievement {
                 shared: true,
                 title: "#RoadToCertification".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.1.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.1.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -94,7 +94,7 @@ impl Achievement {
                 description: "Have an average of at least 10 interactions over the 7 days."
                     .to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.2.description"
+                    "pages.dash.achievements.default_achievements.2.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -106,7 +106,7 @@ impl Achievement {
                 shared: true,
                 title: "Get started with interactions".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.2.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.2.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -117,7 +117,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Have at least 10% of French-speaking users.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.3.description"
+                    "pages.dash.achievements.default_achievements.3.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -129,7 +129,7 @@ impl Achievement {
                 shared: true,
                 title: "French power 🥖".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.3.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.3.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -140,7 +140,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Be on 300 servers.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.4.description"
+                    "pages.dash.achievements.default_achievements.4.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -152,7 +152,7 @@ impl Achievement {
                 shared: true,
                 title: "Medium bot".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.4.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.4.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -163,7 +163,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Use Discord Analytics for at least a year.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.5.description"
+                    "pages.dash.achievements.default_achievements.5.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -175,7 +175,7 @@ impl Achievement {
                 shared: true,
                 title: "Old member".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.5.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.5.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -186,7 +186,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Have users who speak at least 15 different languages.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.6.description"
+                    "pages.dash.achievements.default_achievements.6.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -198,7 +198,7 @@ impl Achievement {
                 shared: true,
                 title: "Diversified users".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.6.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.6.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -209,7 +209,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Be on 1k servers.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.7.description"
+                    "pages.dash.achievements.default_achievements.7.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -221,7 +221,7 @@ impl Achievement {
                 shared: true,
                 title: "Big bot".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.7.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.7.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -233,7 +233,7 @@ impl Achievement {
                 description: "Have an average of at least 1k interactions over the 7 days."
                     .to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.8.description"
+                    "pages.dash.achievements.default_achievements.8.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -245,7 +245,7 @@ impl Achievement {
                 shared: true,
                 title: "In search of popularity".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.8.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.8.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -256,7 +256,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Have at least 100k users.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.9.description"
+                    "pages.dash.achievements.default_achievements.9.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -268,7 +268,7 @@ impl Achievement {
                 shared: true,
                 title: "Oh! Big servers".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.9.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.9.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -279,7 +279,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Have at least 1M users.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.10.description"
+                    "pages.dash.achievements.default_achievements.10.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -291,7 +291,7 @@ impl Achievement {
                 shared: true,
                 title: "Big servers + {username} = ♥".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.10.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.10.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -302,7 +302,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Be on 10k servers.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.11.description"
+                    "pages.dash.achievements.default_achievements.11.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -314,7 +314,7 @@ impl Achievement {
                 shared: true,
                 title: "Huge bot".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.11.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.11.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -326,7 +326,7 @@ impl Achievement {
                 description: "Have an average of at least 20k interactions over the 7 days."
                     .to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.12.description"
+                    "pages.dash.achievements.default_achievements.12.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -338,7 +338,7 @@ impl Achievement {
                 shared: true,
                 title: "Too popular for you".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.12.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.12.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -350,7 +350,7 @@ impl Achievement {
                 description: "Have an average of at least 50k interactions over the 7 days."
                     .to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.13.description"
+                    "pages.dash.achievements.default_achievements.13.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -362,7 +362,7 @@ impl Achievement {
                 shared: true,
                 title: "Explosion of interactions".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.13.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.13.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -373,7 +373,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Have at least 10k users.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.14.description"
+                    "pages.dash.achievements.default_achievements.14.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -385,7 +385,7 @@ impl Achievement {
                 shared: true,
                 title: "Just a little for me".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.14.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.14.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -396,7 +396,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Finish Discord Analytics' configuration.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.15.description"
+                    "pages.dash.achievements.default_achievements.15.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -408,7 +408,7 @@ impl Achievement {
                 shared: true,
                 title: "All the stats for me".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.15.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.15.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -419,7 +419,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Use Discord Analytics for at least a month.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.16.description"
+                    "pages.dash.achievements.default_achievements.16.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -431,7 +431,7 @@ impl Achievement {
                 shared: true,
                 title: "Oh! That's nice".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.16.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.16.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -442,7 +442,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Be on 10 servers.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.17.description"
+                    "pages.dash.achievements.default_achievements.17.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -454,7 +454,7 @@ impl Achievement {
                 shared: true,
                 title: "Bot on the move".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.17.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.17.title".to_owned(),
                 ),
                 used_by: 0,
             },
@@ -465,7 +465,7 @@ impl Achievement {
                 current: Some(0),
                 description: "Have received at least 20 votes over the 30 days.".to_owned(),
                 description_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.18.description"
+                    "pages.dash.achievements.default_achievements.18.description"
                         .to_owned(),
                 ),
                 from: Some("DiscordAnalytics".to_owned()),
@@ -477,7 +477,7 @@ impl Achievement {
                 shared: true,
                 title: "Votes operation".to_owned(),
                 title_i18n: Some(
-                    "pages.dashboard.bots.achievements.default_achievements.18.title".to_owned(),
+                    "pages.dash.achievements.default_achievements.18.title".to_owned(),
                 ),
                 used_by: 0,
             },

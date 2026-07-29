@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/DiscordAnalytics/api/compare/v1.1.4...v1.1.5) (2026-07-29)
+
+
+### Bug Fixes
+
+* **stats:** store guildMembers as a snapshot instead of incrementing ([fe07f40](https://github.com/DiscordAnalytics/api/commit/fe07f404046334e739f33c16901dd49554da449f))
+
 ## [1.1.4](https://github.com/DiscordAnalytics/api/compare/v1.1.3...v1.1.4) (2026-07-15)
 
 

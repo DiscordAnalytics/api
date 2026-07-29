@@ -1,3 +1,11 @@
+## [1.1.4](https://github.com/DiscordAnalytics/api/compare/v1.1.3...v1.1.4) (2026-07-15)
+
+
+### Bug Fixes
+
+* update achievement i18n keys to pages.dash.achievements ([4ffc6da](https://github.com/DiscordAnalytics/api/commit/4ffc6da882b9429c1fa511583d16345de2b0b265))
+* update achievement i18n keys to pages.dash.achievements ([#70](https://github.com/DiscordAnalytics/api/issues/70)) ([a8f03e0](https://github.com/DiscordAnalytics/api/commit/a8f03e02e8b08ff672b37ead02fde54815bb351e))
+
 ## [1.1.3](https://github.com/DiscordAnalytics/api/compare/v1.1.2...v1.1.3) (2026-06-29)
 
 

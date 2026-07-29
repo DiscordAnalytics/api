@@ -94,7 +94,7 @@ impl BotStatsUpdate {
     pub fn with_guild_member(mut self, bucket: &str, count: i32) -> Self {
         self.builder = self
             .builder
-            .inc(doc! { format!("guildMembers.{}", bucket): count });
+            .set(doc! { format!("guildMembers.{}", bucket): count });
         self
     }
 

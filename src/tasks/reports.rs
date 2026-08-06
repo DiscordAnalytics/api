@@ -1,9 +1,9 @@
 use std::{collections::HashSet, time::Duration as StdDuration};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Error, Result, anyhow};
 use chrono::{
     DateTime as ChronoDateTime, Datelike, Duration as ChronoDuration, Local, NaiveDate, TimeZone,
-    Weekday,
+    Utc, Weekday,
 };
 use mongodb::bson::DateTime as MongoDateTime;
 use tokio::{spawn, time::sleep};
@@ -45,6 +45,14 @@ fn time_to_sleep_until(now: ChronoDateTime<Local>) -> Result<StdDuration> {
 
 fn is_last_day_of_month(date: NaiveDate) -> bool {
     date.succ_opt().is_none_or(|d| d.month() != date.month())
+}
+
+fn utc_midnight_millis(date: NaiveDate) -> Result<i64> {
+    Ok(date
+        .and_hms_opt(0, 0, 0)
+        .ok_or_else(|| anyhow!("invalid midnight for {date}"))?
+        .and_utc()
+        .timestamp_millis())
 }
 
 pub fn reports_task(repos: Repositories, services: Services) {
@@ -138,24 +146,70 @@ async fn handle_reports(
         }
     };
 
-    let now = Local::now();
-    let from = match frequency {
-        StatsReportFrequency::Weekly => now - ChronoDuration::days(7 * 2),
-        StatsReportFrequency::Monthly => now - ChronoDuration::days(30 * 2),
-    };
-    let to = match frequency {
-        StatsReportFrequency::Weekly => now - ChronoDuration::days(7),
-        StatsReportFrequency::Monthly => now - ChronoDuration::days(30),
+    let days_count: usize = match frequency {
+        StatsReportFrequency::Weekly => 7,
+        StatsReportFrequency::Monthly => 30,
     };
 
-    let mongo_from = MongoDateTime::from_millis(from.timestamp_millis());
-    let mongo_to = MongoDateTime::from_millis(to.timestamp_millis());
-    let mongo_now = MongoDateTime::now();
+    let today = Utc::now().date_naive();
+    let current_start = today - ChronoDuration::days(days_count as i64);
+    let previous_start = today - ChronoDuration::days(2 * days_count as i64);
+
+    let boundaries = (|| {
+        Ok::<_, Error>((
+            utc_midnight_millis(previous_start)?,
+            utc_midnight_millis(current_start)?,
+            utc_midnight_millis(today)?,
+        ))
+    })();
+    let (previous_start_ms, current_start_ms, today_ms) = match boundaries {
+        Ok(boundaries) => boundaries,
+        Err(e) => {
+            error!(
+                code = %LogCode::Report,
+                error = ?e,
+                "Failed to compute report date boundaries"
+            );
+            return;
+        }
+    };
+
+    let mongo_previous_start = MongoDateTime::from_millis(previous_start_ms);
+    let mongo_previous_end = MongoDateTime::from_millis(current_start_ms - 1);
+    let mongo_current_start = MongoDateTime::from_millis(current_start_ms);
+    let mongo_current_end = MongoDateTime::from_millis(today_ms - 1);
 
     for subscription in subscriptions {
+        let user = match users.get(&subscription.user_id) {
+            Some(user) => user,
+            None => {
+                error!(
+                    code = %LogCode::Report,
+                    user_id = %subscription.user_id,
+                    "Failed to get user for stats report"
+                );
+                continue;
+            }
+        };
+        let bot = match bots.get(&subscription.bot_id) {
+            Some(bot) => bot,
+            None => {
+                error!(
+                    code = %LogCode::Report,
+                    bot_id = %subscription.bot_id,
+                    "Failed to get bot for stats report"
+                );
+                continue;
+            }
+        };
+
         let previous_stats = match repos
             .bot_stats
-            .find_from_date_range(&subscription.bot_id, &mongo_from, &mongo_to)
+            .find_from_date_range(
+                &subscription.bot_id,
+                &mongo_previous_start,
+                &mongo_previous_end,
+            )
             .await
         {
             Ok(stats) => stats,
@@ -171,7 +225,11 @@ async fn handle_reports(
 
         let current_stats = match repos
             .bot_stats
-            .find_from_date_range(&subscription.bot_id, &mongo_to, &mongo_now)
+            .find_from_date_range(
+                &subscription.bot_id,
+                &mongo_current_start,
+                &mongo_current_end,
+            )
             .await
         {
             Ok(stats) => stats,
@@ -185,16 +243,16 @@ async fn handle_reports(
             }
         };
 
-        let days_count = (to - from).num_days();
         let (previous_interactions, previous_guilds, previous_users) =
-            compute_stats(previous_stats, mongo_from, days_count as usize);
+            compute_stats(previous_stats, mongo_previous_start, days_count);
         let (current_interactions, current_guilds, current_users) =
-            compute_stats(current_stats, mongo_to, days_count as usize);
+            compute_stats(current_stats, mongo_current_start, days_count);
 
         let interactions_chart = match draw_chart(
             previous_interactions,
             current_interactions,
-            days_count as usize,
+            days_count,
+            current_start,
         ) {
             Ok(chart) => chart,
             Err(e) => {
@@ -206,18 +264,20 @@ async fn handle_reports(
                 continue;
             }
         };
-        let guilds_chart = match draw_chart(previous_guilds, current_guilds, days_count as usize) {
-            Ok(chart) => chart,
-            Err(e) => {
-                error!(
-                    code = %LogCode::Report,
-                    error = ?e,
-                    "Failed to draw guilds chart"
-                );
-                continue;
-            }
-        };
-        let users_chart = match draw_chart(previous_users, current_users, days_count as usize) {
+        let guilds_chart =
+            match draw_chart(previous_guilds, current_guilds, days_count, current_start) {
+                Ok(chart) => chart,
+                Err(e) => {
+                    error!(
+                        code = %LogCode::Report,
+                        error = ?e,
+                        "Failed to draw guilds chart"
+                    );
+                    continue;
+                }
+            };
+        let users_chart = match draw_chart(previous_users, current_users, days_count, current_start)
+        {
             Ok(chart) => chart,
             Err(e) => {
                 error!(
@@ -262,27 +322,6 @@ async fn handle_reports(
                     "Failed to upload users chart"
                 );
             });
-
-        let user = match users.get(&subscription.user_id) {
-            Some(user) => user,
-            None => {
-                error!(
-                    code = %LogCode::Report,
-                    "Failed to get user for stats report"
-                );
-                return;
-            }
-        };
-        let bot = match bots.get(&subscription.bot_id) {
-            Some(bot) => bot,
-            None => {
-                error!(
-                    code = %LogCode::Report,
-                    "Failed to get bot for stats report"
-                );
-                return;
-            }
-        };
 
         match services.mail.send_stats_reports(
             user,

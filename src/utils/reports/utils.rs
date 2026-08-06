@@ -30,8 +30,8 @@ pub fn compute_stats(
                 .iter()
                 .map(|i| i.number as f32)
                 .sum::<f32>();
-            guilds_count[day_index] += stat.guild_count as f32;
-            users_count[day_index] += stat.user_count as f32;
+            guilds_count[day_index] = stat.guild_count as f32;
+            users_count[day_index] = stat.user_count as f32;
         }
     }
 

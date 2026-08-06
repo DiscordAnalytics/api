@@ -1,6 +1,6 @@
 use anyhow::Result;
 use charts_rs::{Box, LegendCategory, LineChart, Series, svg_to_png};
-use chrono::{Duration, Local};
+use chrono::{Duration, NaiveDate};
 use hex::encode;
 use ring::rand::{SecureRandom, SystemRandom};
 
@@ -8,6 +8,7 @@ pub fn draw_chart(
     previous_data: Vec<f32>,
     current_data: Vec<f32>,
     days_count: usize,
+    current_start: NaiveDate,
 ) -> Result<(String, Vec<u8>)> {
     let min = previous_data
         .iter()
@@ -22,7 +23,7 @@ pub fn draw_chart(
             Series::new(format!("Last {period}"), previous_data),
             Series::new(format!("Current {period}"), current_data),
         ],
-        get_rotated_weekdays(days_count),
+        get_day_labels(current_start, days_count),
         "shadcn",
     );
 
@@ -40,6 +41,7 @@ pub fn draw_chart(
     } else {
         0.0
     });
+    chart.y_axis_configs[0].axis_formatter = Some("{t}".to_string());
 
     let file_path = format!("reports/charts/{}.png", generate_random_id());
 
@@ -49,12 +51,9 @@ pub fn draw_chart(
     Ok((file_path, png_bytes))
 }
 
-fn get_rotated_weekdays(days_count: usize) -> Vec<String> {
-    let today = Local::now().date_naive();
-
+fn get_day_labels(current_start: NaiveDate, days_count: usize) -> Vec<String> {
     (0..days_count)
-        .rev()
-        .map(|i| today - Duration::days(i as i64))
+        .map(|i| current_start + Duration::days(i as i64))
         .map(|date| date.format("%d %b").to_string())
         .collect()
 }

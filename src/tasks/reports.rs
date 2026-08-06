@@ -1,6 +1,6 @@
 use std::{collections::HashSet, time::Duration as StdDuration};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Error, Result, anyhow};
 use chrono::{
     DateTime as ChronoDateTime, Datelike, Duration as ChronoDuration, Local, NaiveDate, TimeZone,
     Utc, Weekday,
@@ -156,7 +156,7 @@ async fn handle_reports(
     let previous_start = today - ChronoDuration::days(2 * days_count as i64);
 
     let boundaries = (|| {
-        Ok::<_, anyhow::Error>((
+        Ok::<_, Error>((
             utc_midnight_millis(previous_start)?,
             utc_midnight_millis(current_start)?,
             utc_midnight_millis(today)?,

@@ -1,3 +1,11 @@
+## [1.1.6](https://github.com/DiscordAnalytics/api/compare/v1.1.5...v1.1.6) (2026-08-06)
+
+
+### Bug Fixes
+
+* **reports:** align email chart aggregation with the dashboard ([112aace](https://github.com/DiscordAnalytics/api/commit/112aace2bac62733b500f3dd3b49e244eb9223e8))
+* **reports:** align email chart aggregation with the dashboard ([#82](https://github.com/DiscordAnalytics/api/issues/82)) ([3f41186](https://github.com/DiscordAnalytics/api/commit/3f4118671e8066991dedc17cdff3d680d08a1dfa))
+
 ## [1.1.5](https://github.com/DiscordAnalytics/api/compare/v1.1.4...v1.1.5) (2026-07-29)
 
 

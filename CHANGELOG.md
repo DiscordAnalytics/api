@@ -1,3 +1,11 @@
+## [1.1.7](https://github.com/DiscordAnalytics/api/compare/v1.1.6...v1.1.7) (2026-08-21)
+
+
+### Bug Fixes
+
+* **votes:** return every bucket in the date range instead of only the first ([40d3a45](https://github.com/DiscordAnalytics/api/commit/40d3a45f6c193b5d1f20587d3869c48994d088ca))
+* **votes:** return every bucket in the date range instead of only the first ([#86](https://github.com/DiscordAnalytics/api/issues/86)) ([b15f378](https://github.com/DiscordAnalytics/api/commit/b15f378744083968e00149a8a109611477eeb121))
+
 ## [1.1.6](https://github.com/DiscordAnalytics/api/compare/v1.1.5...v1.1.6) (2026-08-06)
 
 

@@ -3,7 +3,7 @@ use mongodb::{
     Collection, Database, IndexModel,
     bson::{DateTime, doc},
     error::Result,
-    options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument},
+    options::{FindOneAndUpdateOptions, FindOptions, IndexOptions, ReturnDocument},
     results::{DeleteResult, InsertOneResult},
 };
 
@@ -43,10 +43,15 @@ impl VotesRepository {
         bot_id: &str,
         from: &DateTime,
         to: &DateTime,
-    ) -> Result<Option<Vote>> {
-        self.collection
-            .find_one(doc! { "botId": bot_id, "date": { "$gte": from, "$lte": to } })
-            .await
+    ) -> Result<Vec<Vote>> {
+        let options = FindOptions::builder().sort(doc! { "date": 1 }).build();
+
+        let cursor = self
+            .collection
+            .find(doc! { "botId": bot_id, "date": { "$gte": from, "$lte": to } })
+            .with_options(options)
+            .await?;
+        cursor.try_collect().await
     }
 
     pub async fn count_votes_since(&self, bot_id: &str, since: &DateTime) -> Result<i64> {

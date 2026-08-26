@@ -1,3 +1,11 @@
+## [1.1.8](https://github.com/DiscordAnalytics/api/compare/v1.1.7...v1.1.8) (2026-08-26)
+
+
+### Bug Fixes
+
+* **votes:** extract bot ID from discord.place webhook payload ([9f12868](https://github.com/DiscordAnalytics/api/commit/9f128684d351d6871387cf0b23aa9ef2a57cb721))
+* **votes:** extract bot ID from discord.place webhook payload ([#89](https://github.com/DiscordAnalytics/api/issues/89)) ([602b131](https://github.com/DiscordAnalytics/api/commit/602b13103de4380582f5266062551b9f853f5cb0))
+
 ## [1.1.7](https://github.com/DiscordAnalytics/api/compare/v1.1.6...v1.1.7) (2026-08-21)
 
 

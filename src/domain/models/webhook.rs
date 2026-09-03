@@ -5,6 +5,7 @@ use serde_json::Value;
 #[derive(Clone, Debug, Serialize, PartialEq)]
 pub enum Provider {
     TopGG,
+    Botillon,
     DiscordList,
     DiscordsCom,
     BotListMe,
@@ -17,6 +18,7 @@ impl Provider {
     pub fn to_str(&self) -> &'static str {
         match self {
             Provider::TopGG => "topgg",
+            Provider::Botillon => "botillon",
             Provider::DiscordList => "discordlist",
             Provider::DiscordsCom => "discordscom",
             Provider::BotListMe => "botlistme",
@@ -29,12 +31,37 @@ impl Provider {
     pub fn parse_str(provider: &str) -> Self {
         match provider {
             "topgg" => Provider::TopGG,
+            "botillon" => Provider::Botillon,
             "discordlist" => Provider::DiscordList,
             "discordscom" => Provider::DiscordsCom,
             "botlistme" => Provider::BotListMe,
             "dblist" => Provider::DBList,
             "discordplace" => Provider::DiscordPlace,
             _ => Provider::Test,
+        }
+    }
+}
+
+pub struct PlatformProvider {
+    pub key: &'static str,
+    pub signature_header: &'static str,
+    pub routes: &'static [&'static str],
+}
+
+impl PlatformProvider {
+    pub fn from_key(provider: &str) -> Option<Self> {
+        match provider {
+            "topgg" => Some(Self {
+                key: "topgg",
+                signature_header: "x-topgg-signature",
+                routes: &["vote.create"],
+            }),
+            "botillon" => Some(Self {
+                key: "botillon",
+                signature_header: "x-botillon-signature",
+                routes: &["vote.create", "webhook.test"],
+            }),
+            _ => None,
         }
     }
 }

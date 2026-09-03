@@ -22,4 +22,4 @@ pub use stats_report::{StatsReport, StatsReportFrequency};
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;
-pub use webhook::{Provider, Webhook, WebhookData, WebhookSendData};
+pub use webhook::{PlatformProvider, Provider, Webhook, WebhookData, WebhookSendData};

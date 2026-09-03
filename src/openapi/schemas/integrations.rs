@@ -11,22 +11,22 @@ pub struct IntegrationPayload {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGIntegrationPayload {
-    pub data: TopGGIntegrationData,
+pub struct PlatformIntegrationPayload {
+    pub data: PlatformIntegrationData,
     #[serde(rename = "type")]
     pub type_: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGIntegrationData {
+pub struct PlatformIntegrationData {
     pub connection_id: Option<String>,
-    pub project: Option<TopGGIntegrationProject>,
-    pub user: Option<TopGGIntegrationUser>,
+    pub project: Option<PlatformIntegrationProject>,
+    pub user: Option<PlatformIntegrationUser>,
     pub webhook_secret: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGIntegrationProject {
+pub struct PlatformIntegrationProject {
     pub platform: String,
     pub platform_id: String,
     #[serde(rename = "type")]
@@ -34,6 +34,6 @@ pub struct TopGGIntegrationProject {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGIntegrationUser {
+pub struct PlatformIntegrationUser {
     pub platform_id: String,
 }

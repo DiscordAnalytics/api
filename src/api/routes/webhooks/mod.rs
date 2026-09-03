@@ -3,12 +3,12 @@ mod providers;
 use std::sync::Arc;
 
 use actix_web::{
-    HttpRequest, HttpResponse,
+    HttpRequest,
     web::{Data, Json, Path},
 };
 use apistos::{
     api_operation,
-    web::{ServiceConfig, post, resource, scope},
+    web::{ServiceConfig, post},
 };
 use serde_json::{Value, from_slice};
 use tokio::sync::Mutex;
@@ -209,56 +209,6 @@ async fn vote_webhook(
     }
 }
 
-#[api_operation(
-    summary = "Legacy webhook endpoint",
-    description = "This endpoint is a legacy webhook handler that is now deprecated. It was previously used to receive webhooks from vote providers, but it has been replaced by the new /webhooks/{provider} endpoint. This endpoint will return a message indicating that it is deprecated and should not be used for new integrations.",
-    tag = "Webhooks",
-    deprecated
-)]
-async fn legacy_vote_webhook(
-    req: HttpRequest,
-    services: Data<Services>,
-    repos: Data<Repositories>,
-    webhook_manager: Data<Arc<Mutex<VotesWebhooksManager>>>,
-    path: Path<(String, String)>,
-    body: RawBody,
-) -> ApiResult<HttpResponse> {
-    let (bot_id, provider) = path.into_inner();
-
-    warn!(
-        code = %LogCode::Webhook,
-        provider = %provider,
-        bot_id = %bot_id,
-        "Received webhook on legacy endpoint, this endpoint is deprecated and should not be used"
-    );
-
-    let mut body_with_bot_id = from_slice::<Value>(&body.into_inner()).unwrap_or(Value::Null);
-    if let Value::Object(ref mut map) = body_with_bot_id {
-        map.insert("bot_id".to_string(), Value::String(bot_id.clone()));
-    }
-
-    let result = vote_webhook(
-        req,
-        services,
-        repos,
-        webhook_manager,
-        Path::from(provider.clone()),
-        RawBody(body_with_bot_id.to_string().into_bytes()),
-    )
-    .await?;
-
-    Ok(HttpResponse::Ok()
-        .insert_header((
-            "X-Deprecation-Warning",
-            "This endpoint is deprecated, please use POST /webhooks/{provider} instead",
-        ))
-        .insert_header(("X-New-Endpoint", format!("/webhooks/{}", provider)))
-        .json(result.into_inner()))
-}
-
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/webhooks").service(resource("/{provider}").route(post().to(vote_webhook))))
-        .service(
-            resource("/bots/{id}/votes/webhooks/{provider}").route(post().to(legacy_vote_webhook)),
-        );
+    cfg.route("/webhooks/{provider}", post().to(vote_webhook));
 }

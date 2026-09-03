@@ -1,5 +1,3 @@
-#![allow(deprecated)]
-
 use std::collections::HashMap;
 
 use apistos::ApiComponent;
@@ -65,80 +63,8 @@ pub struct BotStatsQuery {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[serde(untagged)]
-pub enum BotStatsBody {
-    New(BotStatsBodyNew),
-    Old(BotStatsBodyOld),
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[deprecated]
-pub struct OldInteraction {
-    pub command_type: Option<i32>,
-    pub name: String,
-    pub number: i32,
-    #[serde(rename = "type")]
-    pub type_: i32,
-}
-
-impl From<OldInteraction> for Interaction {
-    fn from(value: OldInteraction) -> Self {
-        Interaction {
-            command_type: value.command_type,
-            name: value.name,
-            number: value.number,
-            type_: value.type_,
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[deprecated]
-pub struct OldUserType {
-    pub admin: i32,
-    pub moderator: i32,
-    pub new_member: i32,
-    pub other: i32,
-    pub private_message: i32,
-}
-
-impl From<OldUserType> for UserType {
-    fn from(value: OldUserType) -> Self {
-        UserType {
-            admin: value.admin,
-            moderator: value.moderator,
-            new_member: value.new_member,
-            other: value.other,
-            private_message: value.private_message,
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-#[deprecated]
-pub struct BotStatsBodyOld {
-    #[serde(rename = "addedGuilds")]
-    pub added_guilds: i32,
-    pub custom_events: Option<HashMap<String, i32>>,
-    pub guilds: i32,
-    #[serde(rename = "guildsLocales")]
-    pub guilds_locales: Vec<Locale>,
-    #[serde(rename = "guildMembers")]
-    pub guild_members: GuildMembers,
-    #[serde(rename = "guildsStats")]
-    pub guilds_stats: Option<Vec<Guild>>,
-    pub interactions: Vec<OldInteraction>,
-    pub locales: Vec<Locale>,
-    #[serde(rename = "removedGuilds")]
-    pub removed_guilds: i32,
-    pub users: i32,
-    pub user_install_count: Option<i32>,
-    pub users_type: Option<OldUserType>,
-}
-
-#[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct BotStatsBodyNew {
+pub struct BotStatsBody {
     pub added_guilds: i32,
     pub custom_events: HashMap<String, i32>,
     pub guilds: Option<Vec<Guild>>,
@@ -154,41 +80,22 @@ pub struct BotStatsBodyNew {
 }
 
 impl BotStats {
-    pub fn from_old(old: BotStatsBodyOld, bot_id: &str, date: &DateTime) -> Self {
+    pub fn from_payload(body: BotStatsBody, bot_id: &str, date: &DateTime) -> Self {
         Self {
-            added_guilds: old.added_guilds,
+            added_guilds: body.added_guilds,
             bot_id: bot_id.to_string(),
-            custom_events: old.custom_events.unwrap_or_default(),
+            custom_events: body.custom_events,
             date: *date,
-            guilds: old.guilds_stats,
-            guild_count: old.guilds,
-            guild_locales: old.guilds_locales,
-            guild_members: old.guild_members,
-            interactions: old.interactions.into_iter().map(|i| i.into()).collect(),
-            interactions_locales: old.locales,
-            removed_guilds: old.removed_guilds,
-            user_count: old.users,
-            user_install_count: old.user_install_count,
-            users_type: old.users_type.map(|u| u.into()),
-        }
-    }
-
-    pub fn from_new(new: BotStatsBodyNew, bot_id: &str, date: &DateTime) -> Self {
-        Self {
-            added_guilds: new.added_guilds,
-            bot_id: bot_id.to_string(),
-            custom_events: new.custom_events,
-            date: *date,
-            guilds: new.guilds,
-            guild_count: new.guild_count,
-            guild_locales: new.guild_locales,
-            guild_members: new.guild_members,
-            interactions: new.interactions,
-            interactions_locales: new.interactions_locales,
-            removed_guilds: new.removed_guilds,
-            user_count: new.user_count,
-            user_install_count: new.user_install_count,
-            users_type: new.users_type,
+            guilds: body.guilds,
+            guild_count: body.guild_count,
+            guild_locales: body.guild_locales,
+            guild_members: body.guild_members,
+            interactions: body.interactions,
+            interactions_locales: body.interactions_locales,
+            removed_guilds: body.removed_guilds,
+            user_count: body.user_count,
+            user_install_count: body.user_install_count,
+            users_type: body.users_type,
         }
     }
 }

@@ -1,3 +1,20 @@
+# [1.2.0](https://github.com/DiscordAnalytics/api/compare/v1.1.8...v1.2.0) (2026-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate actix-limitation to 0.6.0 ([#90](https://github.com/DiscordAnalytics/api/issues/90)) ([a1638b5](https://github.com/DiscordAnalytics/api/commit/a1638b5289800a871961f93346f30468875ca013))
+* **deps:** update rust crate charts-rs to v1 ([49bc2ec](https://github.com/DiscordAnalytics/api/commit/49bc2ec73f29ab1c1f30486b07b885eff7d7e2e7))
+* **deps:** update rust crate charts-rs to v1 ([#81](https://github.com/DiscordAnalytics/api/issues/81)) ([bef6b9f](https://github.com/DiscordAnalytics/api/commit/bef6b9f750aaa32bb9fe4eb6b8f9ba390ee08d61))
+* **votes:** increment the provider count inside the votes subdocument ([12de6e3](https://github.com/DiscordAnalytics/api/commit/12de6e33779f723d1a9019d48f08efd364c2b100))
+* **votes:** increment the provider count inside the votes subdocument ([#95](https://github.com/DiscordAnalytics/api/issues/95)) ([08c24a4](https://github.com/DiscordAnalytics/api/commit/08c24a4daa73c40daa9ad6fa9a9646847f804d56))
+
+
+### Features
+
+* **votes:** add botillon as a vote provider ([245ec87](https://github.com/DiscordAnalytics/api/commit/245ec8798eb9a5a5d2809fa6e1b4eb74c01889b0))
+* **votes:** add botillon as a vote provider ([#93](https://github.com/DiscordAnalytics/api/issues/93)) ([c1fef3a](https://github.com/DiscordAnalytics/api/commit/c1fef3acbaf0cd90d613007a8b02c7be824bb76f))
+
 ## [1.1.8](https://github.com/DiscordAnalytics/api/compare/v1.1.7...v1.1.8) (2026-08-26)
 
 

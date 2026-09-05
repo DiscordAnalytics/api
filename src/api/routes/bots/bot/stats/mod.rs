@@ -187,7 +187,7 @@ async fn get_stats(
 async fn post_stats(
     auth: Authenticated,
     repos: Data<Repositories>,
-    Json(body): Json<BotStatsBody>,
+    body: Json<BotStatsBody>,
     id: Path<String>,
 ) -> ApiResult<Json<MessageResponse>> {
     let bot_id = Snowflake::try_from(id.into_inner())?.into_inner();
@@ -247,6 +247,7 @@ async fn post_stats(
         current_date.timestamp_millis() - (current_date.timestamp_millis() % 3600000),
     );
 
+    let body = body.into_inner();
     let body = BotStats::from_payload(body, &bot_id, &start_of_hour);
 
     let new_stats = match repos

@@ -472,9 +472,9 @@ checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 
 [[package]]
 name = "arc-swap"
-version = "1.9.1"
+version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a3a1fd6f75306b68087b831f025c712524bcb19aad54e557b1129cfa0a2b207"
+checksum = "c049c0be4daef0b145cb3555416b3b8ef5b7888a38aea1a3a155801fe7b0810b"
 dependencies = [
  "rustversion",
 ]
@@ -805,32 +805,16 @@ dependencies = [
 
 [[package]]
 name = "charts-rs"
-version = "0.7.1"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61414c3953cdd423aa9dfe6416db37a5709814ae45f66ca137050d20f229b81c"
+checksum = "345df58e125d09449010e16c1569994610543dc293f32454c1306d5d6e4623ce"
 dependencies = [
- "ahash",
  "arc-swap",
- "charts-rs-derive",
  "fontdue",
- "html-escape",
  "image",
- "regex",
  "resvg",
  "serde",
  "serde_json",
- "snafu",
- "substring",
-]
-
-[[package]]
-name = "charts-rs-derive"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "909cf8dd6b3d3bbebb4c0f3a7d15a94934f99ae62094b144f2b284f09863b33f"
-dependencies = [
- "quote",
- "syn 2.0.118",
 ]
 
 [[package]]
@@ -1506,17 +1490,17 @@ dependencies = [
  "log",
  "slotmap",
  "tinyvec",
- "ttf-parser 0.25.1",
+ "ttf-parser",
 ]
 
 [[package]]
 name = "fontdue"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e57e16b3fe8ff4364c0661fdaac543fb38b29ea9bc9c2f45612d90adf931d2b"
+checksum = "7894823fa221401399e2598f8b63f81ac77ff5c63248b7656779bff1632d7d3d"
 dependencies = [
  "hashbrown 0.15.5",
- "ttf-parser 0.21.1",
+ "ttf-parser",
 ]
 
 [[package]]
@@ -1885,15 +1869,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "windows-link",
-]
-
-[[package]]
-name = "html-escape"
-version = "0.2.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d1ad449764d627e22bfd7cd5e8868264fc9236e07c752972b4080cd351cb476"
-dependencies = [
- "utf8-width",
 ]
 
 [[package]]
@@ -3857,7 +3832,7 @@ dependencies = [
  "core_maths",
  "log",
  "smallvec",
- "ttf-parser 0.25.1",
+ "ttf-parser",
  "unicode-bidi-mirroring",
  "unicode-ccc",
  "unicode-properties",
@@ -4181,27 +4156,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
-name = "snafu"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1a012328be2e3f5d5f6f3218147ca02588cea4cb865e876849ab6debcf36522"
-dependencies = [
- "snafu-derive",
-]
-
-[[package]]
-name = "snafu-derive"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f103c50866b8743da9429b8a581d81a27c2d3a9c4ac7df8f8571c1dd7896eda"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.118",
-]
-
-[[package]]
 name = "socket2"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4242,15 +4196,6 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
-
-[[package]]
-name = "substring"
-version = "1.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42ee6433ecef213b2e72f587ef64a2f5943e7cd16fbd82dbe8bc07486c534c86"
-dependencies = [
- "autocfg",
-]
 
 [[package]]
 name = "subtle"
@@ -4679,12 +4624,6 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "ttf-parser"
-version = "0.21.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c591d83f69777866b9126b24c6dd9a18351f177e49d625920d19f989fd31cf8"
-
-[[package]]
-name = "ttf-parser"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
@@ -4865,18 +4804,12 @@ dependencies = [
  "strict-num",
  "svgtypes",
  "tiny-skia-path",
- "ttf-parser 0.25.1",
+ "ttf-parser",
  "unicode-bidi",
  "unicode-script",
  "unicode-vo",
  "xmlwriter",
 ]
-
-[[package]]
-name = "utf8-width"
-version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1292c0d970b54115d14f2492fe0170adf21d68a1de108eebc51c1df4f346a091"
 
 [[package]]
 name = "utf8-zero"

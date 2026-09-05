@@ -34,7 +34,7 @@ pub use bot::{
 pub use bot_stat::{BotStatsBody, BotStatsContent, BotStatsQuery, BotStatsResponse};
 pub use custom_event::{CustomEventPayload, CustomEventResponse, CustomEventUpdatePayload};
 pub use health::HealthResponse;
-pub use integrations::{IntegrationPayload, TopGGIntegrationPayload};
+pub use integrations::{IntegrationPayload, PlatformIntegrationPayload};
 pub use invitation::{InvitationAcceptBody, InvitationAcceptResponse, InvitationResponse};
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 #[cfg(feature = "reports")]
@@ -44,7 +44,7 @@ pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateReq
 pub use vote::VoteResponse;
 pub use webhook::{
     BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
-    TopGGPayload,
+    PlatformVotePayload,
 };
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]

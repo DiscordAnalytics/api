@@ -9,9 +9,9 @@ use crate::{
     domain::{
         auth::generate_bot_token,
         error::{ApiError, ApiResult},
-        models::{Bot, WebhookConfig},
+        models::{Bot, PlatformProvider, WebhookConfig},
     },
-    openapi::schemas::{IntegrationPayload, TopGGIntegrationPayload},
+    openapi::schemas::{IntegrationPayload, PlatformIntegrationPayload},
     repository::{BotUpdate, Repositories},
     services::Services,
     utils::logger::LogCode,
@@ -34,8 +34,11 @@ pub async fn handle_provider(
     services: Data<Services>,
     repos: Data<Repositories>,
 ) -> ApiResult<IntegrationResponse> {
+    if let Some(spec) = PlatformProvider::from_key(provider) {
+        return handle_platform_integration(&spec, body, services, repos).await;
+    }
+
     match provider {
-        "topgg" => handle_topgg_integration(body, services, repos).await,
         "botlistme" | "dblist" | "discordlist" | "discordplace" | "discordscom" => {
             handle_integration(provider, body, services, repos).await
         }
@@ -101,7 +104,7 @@ async fn handle_integration(
         repos.bots.insert(&new_bot).await.map_err(|e| {
             warn!(
                 code = %LogCode::Webhook,
-                provider = "topgg",
+                provider = %provider,
                 bot_id = %bot_id,
                 error = %e,
                 "Failed to insert new bot from integration into database"
@@ -133,21 +136,25 @@ async fn handle_integration(
     }))
 }
 
-async fn handle_topgg_integration(
+async fn handle_platform_integration(
+    spec: &PlatformProvider,
     body: Value,
     services: Data<Services>,
     repos: Data<Repositories>,
 ) -> ApiResult<IntegrationResponse> {
-    let payload = match from_value::<TopGGIntegrationPayload>(body) {
+    let payload = match from_value::<PlatformIntegrationPayload>(body) {
         Ok(p) => p,
         Err(e) => {
             warn!(
                 code = %LogCode::Webhook,
-                provider = "topgg",
+                provider = %spec.key,
                 error = %e,
-                "Failed to parse TopGG integration payload"
+                "Failed to parse integration payload"
             );
-            return Err(ApiError::InvalidInput("Invalid TopGG payload".to_string()));
+            return Err(ApiError::InvalidInput(format!(
+                "Invalid {} payload",
+                spec.key
+            )));
         }
     };
 
@@ -156,7 +163,7 @@ async fn handle_topgg_integration(
     {
         repos
             .bots
-            .remove_integration("topgg", &connection_id)
+            .remove_integration(spec.key, &connection_id)
             .await?;
 
         return Ok(IntegrationResponse::Ignored);
@@ -165,18 +172,21 @@ async fn handle_topgg_integration(
     let project = payload.data.project.ok_or_else(|| {
         warn!(
             code = %LogCode::Webhook,
-            provider = "topgg",
-            "Received TopGG integration payload without project information"
+            provider = %spec.key,
+            "Received integration payload without project information"
         );
-        ApiError::InvalidInput("Missing project information in TopGG payload".to_string())
+        ApiError::InvalidInput(format!(
+            "Missing project information in {} payload",
+            spec.key
+        ))
     })?;
 
     if project.platform != "discord" {
         warn!(
             code = %LogCode::Webhook,
-            provider = "topgg",
+            provider = %spec.key,
             platform = %project.platform,
-            "Received TopGG integration for unsupported platform"
+            "Received integration for unsupported platform"
         );
         return Ok(IntegrationResponse::Ignored);
     }
@@ -184,9 +194,9 @@ async fn handle_topgg_integration(
     if project.type_ != "bot" {
         warn!(
             code = %LogCode::Webhook,
-            provider = "topgg",
+            provider = %spec.key,
             project_type = %project.type_,
-            "Received TopGG integration for unsupported project type"
+            "Received integration for unsupported project type"
         );
         return Ok(IntegrationResponse::Ignored);
     }
@@ -194,9 +204,9 @@ async fn handle_topgg_integration(
     if payload.type_ != "integration.create" {
         warn!(
             code = %LogCode::Webhook,
-            provider = "topgg",
+            provider = %spec.key,
             event_type = %payload.type_,
-            "Received unsupported TopGG integration event type"
+            "Received unsupported integration event type"
         );
         return Ok(IntegrationResponse::Ignored);
     }
@@ -206,28 +216,28 @@ async fn handle_topgg_integration(
         let user = payload.data.user.ok_or_else(|| {
             warn!(
                 code = %LogCode::Webhook,
-                provider = "topgg",
-                "Received TopGG integration payload without user information for new bot"
+                provider = %spec.key,
+                "Received integration payload without user information for new bot"
             );
-            ApiError::InvalidInput("Missing user information in TopGG payload".to_string())
+            ApiError::InvalidInput(format!("Missing user information in {} payload", spec.key))
         })?;
         let token = generate_bot_token(bot_id).map_err(|e| {
             warn!(
                 code = %LogCode::Webhook,
-                provider = "topgg",
+                provider = %spec.key,
                 bot_id = %bot_id,
                 error = %e,
-                "Failed to generate bot token for new TopGG integration"
+                "Failed to generate bot token for new integration"
             );
             ApiError::InternalError("Failed to generate bot token".to_string())
         })?;
         let bot_details = services.discord.get_bot(bot_id).await.map_err(|e| {
             warn!(
                 code = %LogCode::Webhook,
-                provider = "topgg",
+                provider = %spec.key,
                 bot_id = %bot_id,
                 error = %e,
-                "Failed to fetch bot details from Discord for new TopGG integration"
+                "Failed to fetch bot details from Discord for new integration"
             );
             ApiError::InternalError("Failed to fetch bot details".to_string())
         })?;
@@ -246,17 +256,17 @@ async fn handle_topgg_integration(
         repos.bots.insert(&new_bot).await.map_err(|e| {
             warn!(
                 code = %LogCode::Webhook,
-                provider = "topgg",
+                provider = %spec.key,
                 bot_id = %bot_id,
                 error = %e,
-                "Failed to insert new bot from TopGG integration into database"
+                "Failed to insert new bot from integration into database"
             );
             ApiError::InternalError("Failed to create bot".to_string())
         })?;
     }
 
     let update = BotUpdate::default().with_webhook_config(
-        "topgg",
+        spec.key,
         WebhookConfig {
             connection_id: payload.data.connection_id,
             webhook_secret: payload.data.webhook_secret,
@@ -267,13 +277,13 @@ async fn handle_topgg_integration(
 
     info!(
         code = %LogCode::Webhook,
-        provider = "topgg",
+        provider = %spec.key,
         bot_id = %project.platform_id,
-        "Successfully processed TopGG integration event"
+        "Successfully processed integration event"
     );
 
     Ok(IntegrationResponse::Accepted(IntegrationResult {
-        webhook_url: format!("{}/webhooks/topgg", app_env!().api_url),
-        routes: vec!["vote.create"],
+        webhook_url: format!("{}/webhooks/{}", app_env!().api_url, spec.key),
+        routes: spec.routes.to_vec(),
     }))
 }

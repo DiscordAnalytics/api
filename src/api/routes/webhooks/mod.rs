@@ -27,7 +27,7 @@ use crate::{
 
 fn extract_bot_id_from_payload(provider: &str, body: &Value) -> Option<String> {
     match provider {
-        "topgg" => body
+        "topgg" | "botillon" => body
             .get("data")?
             .get("project")?
             .get("platform_id")?

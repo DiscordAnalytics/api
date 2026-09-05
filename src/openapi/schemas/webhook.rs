@@ -41,21 +41,21 @@ pub struct DiscordsComPayload {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGPayload {
-    pub data: TopGGData,
+pub struct PlatformVotePayload {
+    pub data: PlatformVoteData,
     #[serde(rename = "type")]
     pub type_: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGData {
-    pub project: TopGGProject,
-    pub user: TopGGUser,
+pub struct PlatformVoteData {
+    pub project: PlatformProject,
+    pub user: PlatformUser,
     pub weight: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGProject {
+pub struct PlatformProject {
     pub platform: String,
     pub platform_id: String,
     #[serde(rename = "type")]
@@ -63,7 +63,7 @@ pub struct TopGGProject {
 }
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
-pub struct TopGGUser {
+pub struct PlatformUser {
     pub name: String,
     pub platform_id: String,
 }

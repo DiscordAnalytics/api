@@ -2,17 +2,17 @@ use std::{collections::HashMap, str::from_utf8};
 
 use actix_web::http::header::HeaderMap;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-use ring::hmac::{HMAC_SHA256, Key, sign};
+use ring::hmac::{HMAC_SHA256, Key, verify};
 use serde_json::{Value, from_value};
 
 use crate::{
     domain::{
         error::{ApiError, ApiResult},
-        models::Bot,
+        models::{Bot, PlatformProvider},
     },
     openapi::schemas::{
         BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload,
-        DiscordsComPayload, TopGGPayload,
+        DiscordsComPayload, PlatformVotePayload,
     },
     utils::logger::LogCode,
 };
@@ -28,7 +28,7 @@ pub enum ProviderResponse {
     Ignored,
 }
 
-struct TopGGSignature {
+struct WebhookSignature {
     timestamp: String,
     signature: String,
 }
@@ -49,30 +49,30 @@ fn extract_discordlist_payload(secret: &str, body_bytes: &[u8]) -> Option<Discor
     Some(token_data.claims)
 }
 
-fn extract_topgg_signature(headers: &HeaderMap) -> Option<TopGGSignature> {
-    let signature_str = headers.get("x-topgg-signature")?.to_str().ok()?;
+fn extract_signature(headers: &HeaderMap, header_name: &str) -> Option<WebhookSignature> {
+    let signature_str = headers.get(header_name)?.to_str().ok()?;
     let (t_part, v1_part) = signature_str.split_once(',')?;
     let timestamp = t_part.trim().strip_prefix("t=")?;
     let signature = v1_part.trim().strip_prefix("v1=")?;
 
-    Some(TopGGSignature {
+    Some(WebhookSignature {
         timestamp: timestamp.to_string(),
         signature: signature.to_string(),
     })
 }
 
-fn compute_topgg_signature(secret: &str, timestamp: &str, body: &[u8]) -> String {
-    let mac = Key::new(HMAC_SHA256, secret.as_bytes());
+fn verify_signature(secret: &str, timestamp: &str, body: &[u8], signature: &str) -> bool {
+    let Ok(provided) = hex::decode(signature) else {
+        return false;
+    };
+
+    let key = Key::new(HMAC_SHA256, secret.as_bytes());
     let mut data = Vec::with_capacity(timestamp.len() + 1 + body.len());
     data.extend_from_slice(timestamp.as_bytes());
     data.push(b'.');
     data.extend_from_slice(body);
-    let signature = sign(&mac, &data);
-    hex::encode(signature.as_ref())
-}
 
-fn verify_topgg_signature(signature: &str, computed_signature: &str) -> bool {
-    signature == computed_signature
+    verify(&key, &data, &provided).is_ok()
 }
 
 pub fn get_provider_info(provider: &str) -> Option<ProviderInfo> {
@@ -95,6 +95,7 @@ pub fn get_provider_info(provider: &str) -> Option<ProviderInfo> {
             ),
         ),
         ("topgg", ("top.gg", "https://support.top.gg")),
+        ("botillon", ("Botillon", "https://discord.gg/sYzAWp6VWa")),
         ("test", ("Test", "https://discordanalytics.xyz/support")),
     ]);
 
@@ -112,13 +113,16 @@ pub async fn handle_provider(
     bot: &Bot,
     headers: &HeaderMap,
 ) -> ApiResult<ProviderResponse> {
+    if let Some(spec) = PlatformProvider::from_key(provider) {
+        return handle_platform_provider(&spec, body, body_bytes, bot, headers).await;
+    }
+
     match provider {
         "botlistme" => handle_botlistme(body, bot, authorization).await,
         "dblist" => handle_dblist(body, bot, authorization).await,
         "discordlist" => handle_discordlist(body_bytes, bot).await,
         "discordplace" => handle_discordplace(body, bot, authorization).await,
         "discordscom" => handle_discordscom(body, bot, authorization).await,
-        "topgg" => handle_topgg(body, body_bytes, bot, headers).await,
         "test" => Ok(ProviderResponse::TestWebhook),
         _ => {
             info!(
@@ -334,14 +338,18 @@ async fn handle_discordscom(
     }
 }
 
-async fn handle_topgg(
+async fn handle_platform_provider(
+    spec: &PlatformProvider,
     body: Value,
     body_bytes: &[u8],
     bot: &Bot,
     headers: &HeaderMap,
 ) -> ApiResult<ProviderResponse> {
-    let webhook_config = bot.webhooks_config.providers.get("topgg").ok_or_else(|| {
-        ApiError::WebhookError("Bot does not have webhook configured for top.gg".to_string())
+    let webhook_config = bot.webhooks_config.providers.get(spec.key).ok_or_else(|| {
+        ApiError::WebhookError(format!(
+            "Bot does not have webhook configured for {}",
+            spec.key
+        ))
     })?;
 
     let webhook_secret = match &webhook_config.webhook_secret {
@@ -349,18 +357,23 @@ async fn handle_topgg(
         _ => return Ok(ProviderResponse::Ignored),
     };
 
-    let signature = extract_topgg_signature(headers).ok_or_else(|| {
-        ApiError::WebhookError("Missing or invalid TopGG signature header".to_string())
+    let signature = extract_signature(headers, spec.signature_header).ok_or_else(|| {
+        ApiError::WebhookError(format!(
+            "Missing or invalid {} signature header",
+            spec.signature_header
+        ))
     })?;
-    let computed_signature =
-        compute_topgg_signature(webhook_secret, &signature.timestamp, body_bytes);
-
-    if !verify_topgg_signature(&signature.signature, &computed_signature) {
+    if !verify_signature(
+        webhook_secret,
+        &signature.timestamp,
+        body_bytes,
+        &signature.signature,
+    ) {
         return Ok(ProviderResponse::Ignored);
     }
 
-    let payload = from_value::<TopGGPayload>(body)
-        .map_err(|_| ApiError::InvalidInput("Invalid TopGG payload".to_string()))?;
+    let payload = from_value::<PlatformVotePayload>(body)
+        .map_err(|_| ApiError::InvalidInput(format!("Invalid {} payload", spec.key)))?;
 
     let project = payload.data.project;
 
@@ -383,5 +396,68 @@ async fn handle_topgg(
         })),
         "webhook.test" => Ok(ProviderResponse::TestWebhook),
         _ => Ok(ProviderResponse::Ignored),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use actix_web::http::header::{HeaderName, HeaderValue};
+
+    use super::*;
+
+    const SECRET: &str = "whs_test_secret";
+    const BODY: &[u8] = br#"{"type":"vote.create"}"#;
+    const TIMESTAMP: &str = "1756900000";
+    // HMAC-SHA256 of "1756900000.{BODY}" keyed with SECRET, per both providers' docs.
+    const SIGNATURE: &str = "53975733543fea9a420f0066ee0b5941dda08f1ca02327a82ed48d2f34248920";
+
+    fn headers(name: &'static str, value: &str) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static(name),
+            HeaderValue::from_str(value).unwrap(),
+        );
+        headers
+    }
+
+    #[test]
+    fn extracts_signature_for_every_platform_provider() {
+        for provider in ["topgg", "botillon"] {
+            let spec = PlatformProvider::from_key(provider).unwrap();
+            let headers = headers(spec.signature_header, "t=1756900000,v1=abcdef");
+            let signature = extract_signature(&headers, spec.signature_header).unwrap();
+
+            assert_eq!(signature.timestamp, "1756900000");
+            assert_eq!(signature.signature, "abcdef");
+        }
+    }
+
+    #[test]
+    fn rejects_malformed_signature_headers() {
+        for value in ["", "abcdef", "t=1,abcdef", "1756900000,v1=abcdef"] {
+            let headers = headers("x-topgg-signature", value);
+            assert!(extract_signature(&headers, "x-topgg-signature").is_none());
+        }
+
+        let headers = headers("x-topgg-signature", "t=1,v1=abcdef");
+        assert!(extract_signature(&headers, "x-botillon-signature").is_none());
+    }
+
+    #[test]
+    fn accepts_a_valid_signature() {
+        assert!(verify_signature(SECRET, TIMESTAMP, BODY, SIGNATURE));
+    }
+
+    #[test]
+    fn rejects_tampered_input() {
+        assert!(!verify_signature(
+            "other_secret",
+            TIMESTAMP,
+            BODY,
+            SIGNATURE
+        ));
+        assert!(!verify_signature(SECRET, "1756900001", BODY, SIGNATURE));
+        assert!(!verify_signature(SECRET, TIMESTAMP, br#"{}"#, SIGNATURE));
+        assert!(!verify_signature(SECRET, TIMESTAMP, BODY, "not hex"));
     }
 }

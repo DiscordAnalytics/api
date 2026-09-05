@@ -35,7 +35,7 @@ impl R2Repository {
         self.client
             .objects()
             .list_v2(&self.bucket_name)
-            .max_keys(1)
+            .max_keys(1)?
             .send()
             .await?;
         Ok(())
@@ -45,7 +45,7 @@ impl R2Repository {
         self.client
             .objects()
             .put(&self.bucket_name, key)
-            .content_type(content_type)
+            .content_type(content_type)?
             .body_bytes(body.to_vec())
             .send()
             .await?;

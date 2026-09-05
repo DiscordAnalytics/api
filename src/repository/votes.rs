@@ -84,7 +84,7 @@ impl VotesRepository {
         self.collection
             .find_one_and_update(
                 doc! { "botId": bot_id, "date": date },
-                doc! { "$inc": { provider: increment_by } },
+                doc! { "$inc": { format!("votes.{}", provider): increment_by } },
             )
             .with_options(options)
             .await

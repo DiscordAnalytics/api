@@ -51,8 +51,17 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
 
     for bot in not_configured {
         let owner = match repos.users.find_by_id(&bot.owner_id).await {
-            Ok(Some(user)) => user,
-            _ => continue,
+            Ok(user_opt) => user_opt,
+            Err(e) => {
+                warn!(
+                    code = %LogCode::BotExpiration,
+                    bot_id = %bot.bot_id,
+                    owner_id = %bot.owner_id,
+                    error = %e,
+                    "Failed to load owner; continuing lifecycle without notifications"
+                );
+                None
+            }
         };
 
         let watched_since = bot.watched_since;
@@ -60,36 +69,45 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
         let warned_at = bot.warned_at;
 
         if watched_since < six_days_ago && warn_level == 0 {
-            if let Err(e) = services
-                .discord
-                .send_dm(
-                    &owner.user_id,
-                    Some(DiscordNotification::create(
-                        NotificationType::BotConfigurationWarning {
-                            bot_username: bot.username.clone(),
-                            bot_id: bot.bot_id.clone(),
-                        },
-                    )),
-                )
-                .await
-            {
-                error!(
-                    code = %LogCode::BotExpiration,
-                    owner_id = %owner.user_id,
-                    bot_id = %bot.bot_id,
-                    error = %e,
-                    "Failed to warn owner for not configuring the bot",
-                );
-            }
+            if let Some(owner) = &owner {
+                if let Err(e) = services
+                    .discord
+                    .send_dm(
+                        &owner.user_id,
+                        Some(DiscordNotification::create(
+                            NotificationType::BotConfigurationWarning {
+                                bot_username: bot.username.clone(),
+                                bot_id: bot.bot_id.clone(),
+                            },
+                        )),
+                    )
+                    .await
+                {
+                    error!(
+                        code = %LogCode::BotExpiration,
+                        owner_id = %owner.user_id,
+                        bot_id = %bot.bot_id,
+                        error = %e,
+                        "Failed to warn owner for not configuring the bot",
+                    );
+                }
 
-            #[cfg(feature = "mails")]
-            if let Err(e) = services.mail.send_bot_configuration_warning(&owner, &bot) {
-                error!(
-                    code = %LogCode::Mail,
+                #[cfg(feature = "mails")]
+                if let Err(e) = services.mail.send_bot_configuration_warning(&owner, &bot) {
+                    error!(
+                        code = %LogCode::Mail,
+                        bot_id = %bot.bot_id,
+                        user_id = %owner.user_id,
+                        error = %e,
+                        "Failed to send bot configuration warning email to user",
+                    );
+                }
+            } else {
+                warn!(
+                    code = %LogCode::BotExpiration,
                     bot_id = %bot.bot_id,
-                    user_id = %owner.user_id,
-                    error = %e,
-                    "Failed to send bot configuration warning email to user",
+                    owner_id = %bot.owner_id,
+                    "Owner missing; skipping notification but still applying warn_level update"
                 );
             }
 
@@ -114,32 +132,40 @@ async fn handle_not_configured(repos: &Repositories, services: &Services) {
             let one_day_ago = DateTime::from_millis(one_day_ago.timestamp_millis());
 
             if warned_at.is_some_and(|t| t < one_day_ago) {
-                if let Err(e) = services
-                    .discord
-                    .send_dm(
-                        &owner.user_id,
-                        Some(DiscordNotification::create(
-                            NotificationType::BotConfigurationDeletion {
-                                bot_username: bot.username.clone(),
-                                bot_id: bot.bot_id.clone(),
-                            },
-                        )),
-                    )
-                    .await
-                {
-                    error!(
-                        code = %LogCode::BotExpiration,
-                        error = %e,
-                        "Failed to send non-configured bot deletion DM"
-                    );
-                }
+                if let Some(owner) = &owner {
+                    if let Err(e) = services
+                        .discord
+                        .send_dm(
+                            &owner.user_id,
+                            Some(DiscordNotification::create(
+                                NotificationType::BotConfigurationDeletion {
+                                    bot_username: bot.username.clone(),
+                                    bot_id: bot.bot_id.clone(),
+                                },
+                            )),
+                        )
+                        .await
+                    {
+                        error!(
+                            code = %LogCode::BotExpiration,
+                            error = %e,
+                            "Failed to send non-configured bot deletion DM"
+                        );
+                    }
 
-                #[cfg(feature = "mails")]
-                if let Err(e) = services.mail.send_bot_configuration_deletion(&owner, &bot) {
-                    error!(
+                    #[cfg(feature = "mails")]
+                    if let Err(e) = services.mail.send_bot_configuration_deletion(&owner, &bot) {
+                        error!(
+                            code = %LogCode::BotExpiration,
+                            error = %e,
+                            "Failed to send non-configured bot deletion email"
+                        );
+                    }
+                } else {
+                    warn!(
                         code = %LogCode::BotExpiration,
-                        error = %e,
-                        "Failed to send non-configured bot deletion email"
+                        bot_id = %bot.bot_id,
+                        "Owner missing; skipping notification but still deleting bot"
                     );
                 }
 

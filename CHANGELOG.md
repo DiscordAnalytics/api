@@ -1,3 +1,12 @@
+## [1.2.1](https://github.com/DiscordAnalytics/api/compare/v1.2.0...v1.2.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate apistos to 0.7.0 ([#103](https://github.com/DiscordAnalytics/api/issues/103)) ([03603b7](https://github.com/DiscordAnalytics/api/commit/03603b7ef743259417a69bda048aed00fe0a4cb8))
+* **tasks:** Continue bot lifecycle when owner lookup fails ([447b722](https://github.com/DiscordAnalytics/api/commit/447b7229ab5f23392a06691dd0c89a6f5772c7d7))
+* **tasks:** Send Discord alerts without requiring owner lookup ([a13ec87](https://github.com/DiscordAnalytics/api/commit/a13ec87f2adf22e14f956c5e945156d0ebc10134))
+
 # [1.2.0](https://github.com/DiscordAnalytics/api/compare/v1.1.8...v1.2.0) (2026-09-05)
 
 

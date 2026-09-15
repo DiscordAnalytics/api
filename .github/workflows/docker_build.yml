@@ -170,7 +170,7 @@ jobs:
     steps:
       - name: Trigger cloud deployment
         run: |
-          curl --fail -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" --header 'Authorization: Bearer ${{ secrets.COOLIFY_WEBHOOK_SECRET }}'
+          curl --fail -X POST "${{ secrets.COOLIFY_WEBHOOK_URL }}" --header 'Authorization: Bearer ${{ secrets.COOLIFY_WEBHOOK_SECRET }}'
 
   notify:
     runs-on: ubuntu-latest

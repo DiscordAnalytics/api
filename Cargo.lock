@@ -367,9 +367,9 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "apistos"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbea640d9f6acafe7271aeb886009b16765292a06e33f13d93af31e31ec4612d"
+checksum = "0a113a14696c829b2812c12f0307bd11898a6aa3f008c71e119c23307c075944"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -390,9 +390,9 @@ dependencies = [
 
 [[package]]
 name = "apistos-core"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bee29d38fc3dc93c46ad495284ef1735740a36620c993a404855a737b7200be"
+checksum = "8d146eab7f6b6a5370c501aaee918bf5f70c9e7e3c302590efc9ae7a5aec4975"
 dependencies = [
  "actix-web",
  "apistos-models",
@@ -402,9 +402,9 @@ dependencies = [
 
 [[package]]
 name = "apistos-gen"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30f22adf084bdfba9f2beb81dc0179d6d5fcfd852d86ad31b68c1e95b4e1d3e9"
+checksum = "dfe31fa0850d7861150ff3d0f1a44bf11c81225be467be161eee8f52077e3008"
 dependencies = [
  "actix-web",
  "convert_case 0.8.0",
@@ -416,9 +416,9 @@ dependencies = [
 
 [[package]]
 name = "apistos-models"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b664b0e5ff7de3a29ecd2c0a5b7b00c91d396cef06bd772e5f0b19763b0cf522"
+checksum = "7cdaa2a9b22b27239f3890f27b806977a6780dd9a45e830abf41fd9dc60dd04d"
 dependencies = [
  "apistos-schemars",
  "indexmap",
@@ -428,9 +428,9 @@ dependencies = [
 
 [[package]]
 name = "apistos-plugins"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1c492545db29d00aa300dfb72fe869074f739ab4aa020ec392e082a193088d0"
+checksum = "44887fd1133c860825ce39dd0de81e0c90392b3840674d708a034a8c26f36cb8"
 dependencies = [
  "actix-web",
 ]
@@ -4267,7 +4267,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

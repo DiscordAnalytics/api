@@ -799,9 +799,9 @@ dependencies = [
 
 [[package]]
 name = "charts-rs"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "345df58e125d09449010e16c1569994610543dc293f32454c1306d5d6e4623ce"
+checksum = "785f86d03bbbbd629c25eb15e69783aaa5efb4475f337c971949bd7add878796"
 dependencies = [
  "arc-swap",
  "fontdue",
@@ -4268,7 +4268,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.52.0",

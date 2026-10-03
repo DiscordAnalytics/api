@@ -1,3 +1,15 @@
+## [1.2.2](https://github.com/DiscordAnalytics/api/compare/v1.2.1...v1.2.2) (2026-10-03)
+
+
+### Bug Fixes
+
+* **ci:** Use POST for Coolify deployment webhook ([64386c8](https://github.com/DiscordAnalytics/api/commit/64386c80dd67cc0c05b681ebfa8d5af83da65443))
+* **deps:** update opentelemetry-rust monorepo to 0.33.0 ([#111](https://github.com/DiscordAnalytics/api/issues/111)) ([3c87823](https://github.com/DiscordAnalytics/api/commit/3c878235d4fbcb47d361cd02590dc86127f63168))
+* **deps:** update rust crate apistos to 0.8.0 ([#108](https://github.com/DiscordAnalytics/api/issues/108)) ([e89fe14](https://github.com/DiscordAnalytics/api/commit/e89fe140d2c621eec8b70d8ccc43bdbe83b95a32))
+* **deps:** update rust crate apistos to 0.9.0 ([#109](https://github.com/DiscordAnalytics/api/issues/109)) ([61bb2ad](https://github.com/DiscordAnalytics/api/commit/61bb2ad2445634d82d35eedab4f644fd98d2591e))
+* prevent multiple inactive warnings by not resetting warn_level on bot metadata update ([80dbf64](https://github.com/DiscordAnalytics/api/commit/80dbf649274326b50f34e09abccad482e2c7be2a))
+* prevent multiple inactive warnings by not resetting warn_level on bot metadata update ([#114](https://github.com/DiscordAnalytics/api/issues/114)) ([a9511d0](https://github.com/DiscordAnalytics/api/commit/a9511d0f42ee6e910d5d6452028810a4debf5f40))
+
 ## [1.2.1](https://github.com/DiscordAnalytics/api/compare/v1.2.0...v1.2.1) (2026-09-15)
 
 

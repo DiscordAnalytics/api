@@ -19,7 +19,7 @@ jobs:
       - name: Install Rust toolchain
         run: rustup update stable && rustup default stable
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v6
+        uses: cycjimmy/semantic-release-action@1989a0fefc4aea321e07f717680ed8e345925dc1 # v7.1.2
         with:
           extra_plugins: |
             @semantic-release/changelog

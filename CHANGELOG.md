@@ -1,3 +1,11 @@
+## [1.2.3](https://github.com/DiscordAnalytics/api/compare/v1.2.2...v1.2.3) (2026-10-19)
+
+
+### Bug Fixes
+
+* **auth:** return JSON error responses from authentication extractors ([#126](https://github.com/DiscordAnalytics/api/issues/126)) ([1f75da0](https://github.com/DiscordAnalytics/api/commit/1f75da0a983b583bddc73115d55f9f388f535682))
+* Preserve API error responses in admin auth middleware ([41c23ae](https://github.com/DiscordAnalytics/api/commit/41c23ae430970fb6ce4fe40887318766bfe1976b))
+
 ## [1.2.2](https://github.com/DiscordAnalytics/api/compare/v1.2.1...v1.2.2) (2026-10-03)
 
 

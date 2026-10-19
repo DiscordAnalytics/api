@@ -1,9 +1,9 @@
 use std::ops::Deref;
 
 use actix_web::{
-    Error, FromRequest, HttpMessage, HttpRequest,
+    Error, FromRequest, HttpMessage, HttpRequest, ResponseError,
     dev::Payload,
-    error::{ErrorForbidden, ErrorUnauthorized},
+    error::{ErrorForbidden, ErrorUnauthorized, InternalError},
 };
 use apistos::{ApiComponent, ApiSecurity};
 use futures::{
@@ -105,7 +105,13 @@ impl FromRequest for RequireAdmin {
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         let ctx = match req.extensions().get::<AuthContext>() {
             Some(ctx) => ctx.clone(),
-            None => return ready(Err(ErrorUnauthorized(ApiError::Unauthorized))),
+            None => {
+                return ready(Err(InternalError::from_response(
+                    ApiError::Unauthorized,
+                    ApiError::Unauthorized.error_response(),
+                )
+                .into()));
+            }
         };
 
         let is_admin = match ctx.user_id.as_deref() {
@@ -116,7 +122,11 @@ impl FromRequest for RequireAdmin {
         if is_admin {
             ready(Ok(RequireAdmin(ctx)))
         } else {
-            ready(Err(ErrorForbidden(ApiError::Forbidden)))
+            ready(Err(InternalError::from_response(
+                ApiError::Forbidden,
+                ApiError::Forbidden.error_response(),
+            )
+            .into()))
         }
     }
 }

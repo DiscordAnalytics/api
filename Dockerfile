@@ -1,5 +1,5 @@
 # ── Chef Stage ────────────
-FROM rust:1-alpine@sha256:a10e64dd139b7387337c7fbe8aca31b959b57b2fd4c8ae20a02cf1d6ea424dce AS chef
+FROM rust:1-alpine@sha256:7e9e2d068a107a2adafd19930011178d14a78326053cd4c3a9f7ad3fd049557d AS chef
 
 RUN apk add --no-cache \
     pkgconfig \

@@ -27,8 +27,8 @@ pub fn draw_chart(
         "shadcn",
     );
 
-    chart.legend_category = LegendCategory::Circle;
-    chart.series_smooth = true;
+    chart.legend.category = LegendCategory::Circle;
+    chart.series.smooth = true;
     chart.margin = Box {
         bottom: 20.0,
         left: 20.0,
@@ -36,12 +36,12 @@ pub fn draw_chart(
         top: 20.0,
     };
 
-    chart.y_axis_configs[0].axis_min = Some(if min.is_finite() {
+    chart.y_axis_configs[0].min = Some(if min.is_finite() {
         (min - 10.0).max(0.0)
     } else {
         0.0
     });
-    chart.y_axis_configs[0].axis_formatter = Some("{t}".to_string());
+    chart.y_axis_configs[0].formatter = Some("{t}".to_string());
 
     let file_path = format!("reports/charts/{}.png", generate_random_id());
 

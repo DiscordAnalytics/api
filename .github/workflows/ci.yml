@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
@@ -9,65 +12,64 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
+
 jobs:
-  clippy_check:
-    if: github.event.pull_request.draft == false
+  rustfmt:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Install rust stable toolchain
-        run: rustup update stable && rustup default stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: rustfmt
+      - name: Run Rustfmt
+        run: cargo fmt --check
+
+  clippy_check:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
-        env:
-          RUSTFLAGS: "-Dwarnings"
 
   unused_deps:
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Check for unused crates
         uses: bnjbvr/cargo-machete@734317a34f6ca0ea1e1faa11a7dbc31a3f414ed6 # main
-        env:
-          RUSTFLAGS: "-Dwarnings"
-
-  rustfmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Install rust stable toolchain
-        run: rustup update stable && rustup default stable && rustup component add rustfmt
-      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      - name: Run Rustfmt
-        run: cargo fmt --check
-        env:
-          RUSTFLAGS: "-Dwarnings"
 
   cargo_check:
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Install rust stable toolchain
-        run: rustup update stable && rustup default stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      - name: Run Cargo Build
-        run: cargo check
-        env:
-          RUSTFLAGS: "-Dwarnings"
+      - name: Run Cargo Check
+        run: cargo check --all-targets
 
   cargo_tests:
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Install rust stable toolchain
-        run: rustup update stable && rustup default stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Install cargo-nextest
-        run: cargo install --locked cargo-nextest
+        uses: taiki-e/install-action@42b98ff034a377bb5e4aa99118b5b160f96a8ef2 # nextest
       - name: Run Tests
         run: cargo nextest run --all-features --no-fail-fast

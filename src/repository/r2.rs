@@ -1,7 +1,7 @@
 use anyhow::Result;
 use s3::{
     Auth, Client, Credentials,
-    providers::{R2Endpoint, R2Jurisdiction, cloudflare_r2},
+    providers::{R2Endpoint, cloudflare_r2},
 };
 
 use crate::app_env;
@@ -17,13 +17,10 @@ impl R2Repository {
         let credentials =
             Credentials::new(&app_env!().cloudflare_id, &app_env!().cloudflare_token)?;
 
-        let client = cloudflare_r2(
-            &app_env!().r2_account_id,
-            R2Endpoint::Jurisdiction(R2Jurisdiction::Eu),
-        )?
-        .async_client_builder()?
-        .auth(Auth::Static(credentials))
-        .build()?;
+        let client = cloudflare_r2(&app_env!().r2_account_id, R2Endpoint::Eu)?
+            .async_client_builder()?
+            .auth(Auth::Static(credentials))
+            .build()?;
 
         Ok(Self {
             client,

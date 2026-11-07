@@ -6,6 +6,7 @@ mod custom_event;
 mod session;
 #[cfg(feature = "reports")]
 mod stats_report;
+mod status;
 mod team_invitation;
 mod user;
 mod vote;

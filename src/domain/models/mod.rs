@@ -20,6 +20,10 @@ pub use custom_event::CustomEvent;
 pub use session::Session;
 #[cfg(feature = "reports")]
 pub use stats_report::{StatsReport, StatsReportFrequency};
+pub use status::{
+    BotDeploymentMode, OverallStatus, ShardCurrentStatus, ShardStatus, ShardStatusSnapshot,
+    StatusCheck, StatusCurrent, StoredStatusCheck,
+};
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;

@@ -1,4 +1,7 @@
-use mongodb::bson::{DateTime, oid::ObjectId};
+use apistos::ApiComponent;
+use bson::oid::ObjectId;
+use mongodb::bson::DateTime;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 // Collections
@@ -6,27 +9,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusCurrent {
-    #[serde(rename = "_id")]
-    pub id: ObjectId,
     pub bot_id: String,
     pub deployment_mode: BotDeploymentMode,
     pub status: OverallStatus,
     pub total_shards: u32,
     pub shards: Vec<ShardCurrentStatus>,
+    pub latency_ms: Option<u32>,
+    pub guild_count: Option<i64>,
+    pub last_heartbeat_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub last_evaluated_at: DateTime,
 }
 
+#[derive(Deserialize)]
+pub struct StoredStatusCheck {
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    pub check: StatusCheck,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusCheck {
-    #[serde(rename = "_id")]
-    pub id: ObjectId,
     pub bot_id: String,
     pub deployment_mode: BotDeploymentMode,
     pub timestamp: DateTime,
     pub status: OverallStatus,
+    pub latency_ms: Option<u32>,
+    pub guild_count: Option<i64>,
     pub total_shards: u32,
     pub shards: Vec<ShardStatusSnapshot>,
 }
@@ -34,8 +45,6 @@ pub struct StatusCheck {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusIncident {
-    #[serde(rename = "_id")]
-    pub id: ObjectId,
     pub bot_id: String,
     pub title: String,
     pub description: String,
@@ -87,14 +96,14 @@ pub struct IncidentUpdate {
 
 // Enums
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq, Eq, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum BotDeploymentMode {
     Single,
     Sharded,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum OverallStatus {
     Operational,
@@ -104,7 +113,7 @@ pub enum OverallStatus {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum ShardStatus {
     Operational,

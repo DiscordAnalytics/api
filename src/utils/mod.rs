@@ -6,3 +6,4 @@ pub mod macros;
 pub mod mail;
 #[cfg(feature = "reports")]
 pub mod reports;
+pub mod status;

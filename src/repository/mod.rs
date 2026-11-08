@@ -10,6 +10,8 @@ mod r2;
 mod sessions;
 #[cfg(feature = "reports")]
 mod stats_reports;
+mod status_check;
+mod status_current;
 mod team_invitations;
 mod users;
 mod votes;
@@ -35,6 +37,8 @@ pub struct Repositories {
     pub r2: r2::R2Repository,
     #[cfg(feature = "reports")]
     pub stats_reports: stats_reports::StatsReportsRepository,
+    pub status_check: status_check::StatusCheckRepository,
+    pub status_current: status_current::StatusCurrentRepository,
     pub team_invitations: team_invitations::TeamInvitationsRepository,
     pub users: users::UsersRepository,
     pub votes: votes::VotesRepository,
@@ -57,6 +61,8 @@ impl Repositories {
             r2: r2::R2Repository::new()?,
             #[cfg(feature = "reports")]
             stats_reports: stats_reports::StatsReportsRepository::new(db).await?,
+            status_check: status_check::StatusCheckRepository::new(db).await?,
+            status_current: status_current::StatusCurrentRepository::new(db).await?,
             team_invitations: team_invitations::TeamInvitationsRepository::new(db).await?,
             users: users::UsersRepository::new(db).await?,
             votes: votes::VotesRepository::new(db).await?,

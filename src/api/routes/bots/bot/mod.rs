@@ -4,6 +4,7 @@ mod events;
 mod reports;
 mod settings;
 mod stats;
+mod status;
 mod suspend;
 mod team;
 mod token;
@@ -508,6 +509,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
             )
             .configure(settings::configure)
             .configure(stats::configure)
+            .configure(status::configure)
             .configure(suspend::configure)
             .configure(team::configure)
             .configure(token::configure),

@@ -5,6 +5,7 @@ mod bots;
 mod health;
 mod integrations;
 mod invitations;
+mod status;
 mod users;
 mod webhooks;
 mod websocket;
@@ -19,6 +20,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
         .configure(health::configure)
         .configure(integrations::configure)
         .configure(invitations::configure)
+        .configure(status::configure)
         .configure(users::configure)
         .configure(webhooks::configure)
         .configure(websocket::configure);

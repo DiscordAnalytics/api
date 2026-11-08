@@ -10,6 +10,7 @@ mod invitation;
 mod session;
 #[cfg(feature = "reports")]
 mod stat_report;
+mod status;
 mod team;
 mod user;
 mod vote;
@@ -39,6 +40,15 @@ pub use invitation::{InvitationAcceptBody, InvitationAcceptResponse, InvitationR
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 #[cfg(feature = "reports")]
 pub use stat_report::StatsReportSubPayload;
+pub use status::{
+    config::{BotStatusConfigResponse, UpdateBotStatusConfigRequest},
+    heartbeat::{HeartbeatRequest, HeartbeatResponse},
+    history::{
+        HistoryCursor, HistoryPage, PaginationResponse, PublicStatusHistoryResponse,
+        PublicStatusSnapshot, StatusHistoryQuery,
+    },
+    public::PublicBotStatusResponse,
+};
 pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};
 pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateRequest};
 pub use vote::VoteResponse;

@@ -47,6 +47,10 @@ pub use status::{
         HistoryCursor, HistoryPage, PaginationResponse, PublicStatusHistoryResponse,
         PublicStatusSnapshot, StatusHistoryQuery,
     },
+    incidents::{
+        IncidentCursor, IncidentListQuery, IncidentPage, PublicIncidentListResponse,
+        PublicIncidentResponse,
+    },
     public::PublicBotStatusResponse,
 };
 pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};

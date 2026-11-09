@@ -27,6 +27,7 @@ pub const SESSIONS_COLLECTION: &str = "Sessions";
 pub const STATS_REPORTS_COLLECTION: &str = "StatsReports";
 pub const STATUS_CHECKS_COLLECTION: &str = "StatusChecks";
 pub const STATUS_CURRENT_COLLECTION: &str = "StatusCurrent";
+pub const STATUS_INCIDENTS_COLLECTION: &str = "StatusIncidents";
 pub const TEAM_INVITATIONS_COLLECTION: &str = "TeamInvitations";
 pub const USERS_COLLECTION: &str = "Users";
 pub const VOTES_COLLECTION: &str = "Votes";

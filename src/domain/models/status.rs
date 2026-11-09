@@ -42,6 +42,14 @@ pub struct StatusCheck {
     pub shards: Vec<ShardStatusSnapshot>,
 }
 
+#[derive(Deserialize)]
+pub struct StoredStatusIncident {
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    #[serde(flatten)]
+    pub incident: StatusIncident,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusIncident {
@@ -122,14 +130,14 @@ pub enum ShardStatus {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum AnnouncementType {
     Incident,
     Maintenance,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum AnnouncementStatus {
     Investigating,
@@ -142,7 +150,7 @@ pub enum AnnouncementStatus {
     Cancelled,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum IncidentSeverity {
     Minor,

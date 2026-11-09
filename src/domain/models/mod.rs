@@ -21,8 +21,9 @@ pub use session::Session;
 #[cfg(feature = "reports")]
 pub use stats_report::{StatsReport, StatsReportFrequency};
 pub use status::{
-    BotDeploymentMode, OverallStatus, ShardCurrentStatus, ShardStatus, ShardStatusSnapshot,
-    StatusCheck, StatusCurrent, StoredStatusCheck,
+    AnnouncementStatus, AnnouncementType, BotDeploymentMode, IncidentSeverity, IncidentUpdate,
+    OverallStatus, ShardCurrentStatus, ShardStatus, ShardStatusSnapshot, StatusCheck,
+    StatusCurrent, StatusIncident, StoredStatusCheck, StoredStatusIncident,
 };
 pub use team_invitation::TeamInvitation;
 pub use user::User;

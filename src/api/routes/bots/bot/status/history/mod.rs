@@ -9,12 +9,13 @@ use chrono::{Duration, Utc};
 use crate::{
     domain::error::{ApiError, ApiResult},
     openapi::schemas::{
-        PaginationResponse, PublicStatusHistoryResponse, PublicStatusSnapshot, StatusHistoryQuery,
+        HistoryCursor, PaginationResponse, PublicStatusHistoryResponse, PublicStatusSnapshot,
+        StatusHistoryQuery,
     },
     repository::Repositories,
     utils::{
         discord::Snowflake,
-        status::{decode_history_cursor, encode_history_cursor},
+        status::{decode_status_cursor, encode_status_cursor},
     },
 };
 
@@ -72,7 +73,7 @@ async fn get_public_history(
         )));
     }
 
-    let cursor = cursor.as_deref().map(decode_history_cursor).transpose()?;
+    let cursor: Option<HistoryCursor> = cursor.as_deref().map(decode_status_cursor).transpose()?;
 
     let history = repos
         .status_check
@@ -89,7 +90,7 @@ async fn get_public_history(
         history
             .checks
             .last()
-            .map(|last| encode_history_cursor(last.check.timestamp, last.id))
+            .map(|last| encode_status_cursor(last.check.timestamp, last.id))
     } else {
         None
     };

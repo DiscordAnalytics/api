@@ -12,6 +12,7 @@ mod sessions;
 mod stats_reports;
 mod status_check;
 mod status_current;
+mod status_incidents;
 mod team_invitations;
 mod users;
 mod votes;
@@ -39,6 +40,7 @@ pub struct Repositories {
     pub stats_reports: stats_reports::StatsReportsRepository,
     pub status_check: status_check::StatusCheckRepository,
     pub status_current: status_current::StatusCurrentRepository,
+    pub status_incidents: status_incidents::StatusIncidentsRepository,
     pub team_invitations: team_invitations::TeamInvitationsRepository,
     pub users: users::UsersRepository,
     pub votes: votes::VotesRepository,
@@ -63,6 +65,7 @@ impl Repositories {
             stats_reports: stats_reports::StatsReportsRepository::new(db).await?,
             status_check: status_check::StatusCheckRepository::new(db).await?,
             status_current: status_current::StatusCurrentRepository::new(db).await?,
+            status_incidents: status_incidents::StatusIncidentsRepository::new(db).await?,
             team_invitations: team_invitations::TeamInvitationsRepository::new(db).await?,
             users: users::UsersRepository::new(db).await?,
             votes: votes::VotesRepository::new(db).await?,

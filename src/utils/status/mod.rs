@@ -1,3 +1,3 @@
 mod cursor;
 
-pub use cursor::{decode_history_cursor, encode_history_cursor};
+pub use cursor::{decode_status_cursor, encode_status_cursor};

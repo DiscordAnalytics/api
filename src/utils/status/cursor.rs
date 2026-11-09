@@ -2,7 +2,10 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use bson::{DateTime, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
-use crate::{domain::error::ApiError, openapi::schemas::HistoryCursor};
+use crate::{
+    domain::error::ApiError,
+    openapi::schemas::{HistoryCursor, IncidentCursor},
+};
 
 #[derive(Deserialize, Serialize)]
 struct CursorPayload {
@@ -10,7 +13,7 @@ struct CursorPayload {
     id: String,
 }
 
-pub fn encode_history_cursor(timestamp: DateTime, id: ObjectId) -> String {
+pub fn encode_status_cursor(timestamp: DateTime, id: ObjectId) -> String {
     let payload = CursorPayload {
         timestamp: timestamp.timestamp_millis(),
         id: id.to_hex(),
@@ -21,7 +24,26 @@ pub fn encode_history_cursor(timestamp: DateTime, id: ObjectId) -> String {
     URL_SAFE_NO_PAD.encode(json)
 }
 
-pub fn decode_history_cursor(cursor: &str) -> Result<HistoryCursor, ApiError> {
+pub trait StatusCursor: Sized {
+    fn new(timestamp: DateTime, id: ObjectId) -> Self;
+}
+
+impl StatusCursor for IncidentCursor {
+    fn new(timestamp: DateTime, id: ObjectId) -> Self {
+        Self {
+            created_at: timestamp,
+            id,
+        }
+    }
+}
+
+impl StatusCursor for HistoryCursor {
+    fn new(timestamp: DateTime, id: ObjectId) -> Self {
+        Self { timestamp, id }
+    }
+}
+
+pub fn decode_status_cursor<T: StatusCursor>(cursor: &str) -> Result<T, ApiError> {
     let decoded = URL_SAFE_NO_PAD
         .decode(cursor)
         .map_err(|_| ApiError::BadRequest("Invalid history cursor".into()))?;
@@ -34,5 +56,5 @@ pub fn decode_history_cursor(cursor: &str) -> Result<HistoryCursor, ApiError> {
 
     let timestamp = DateTime::from_millis(payload.timestamp);
 
-    Ok(HistoryCursor { timestamp, id })
+    Ok(T::new(timestamp, id))
 }

@@ -92,18 +92,18 @@ fn validate_update_incident(
     request: &UpdateIncidentRequest,
     incident: &StatusIncident,
 ) -> ApiResult<()> {
-    if let Some(title) = &request.title {
-        if title.trim().is_empty() {
-            return Err(ApiError::InvalidInput("title cannot be empty".to_string()));
-        }
+    if let Some(title) = &request.title
+        && title.trim().is_empty()
+    {
+        return Err(ApiError::InvalidInput("title cannot be empty".to_string()));
     }
 
-    if let Some(description) = &request.description {
-        if description.trim().is_empty() {
-            return Err(ApiError::InvalidInput(
-                "description cannot be empty".to_string(),
-            ));
-        }
+    if let Some(description) = &request.description
+        && description.trim().is_empty()
+    {
+        return Err(ApiError::InvalidInput(
+            "description cannot be empty".to_string(),
+        ));
     }
 
     match incident.incident_type {
@@ -127,12 +127,12 @@ fn validate_update_incident(
         .map(mongodb::bson::DateTime::from_chrono)
         .or(incident.scheduled_end_at);
 
-    if let (Some(start), Some(end)) = (start, end) {
-        if start > end {
-            return Err(ApiError::InvalidInput(
-                "scheduledStartAt must be less than or equal to scheduledEndAt".to_string(),
-            ));
-        }
+    if let (Some(start), Some(end)) = (start, end)
+        && start > end
+    {
+        return Err(ApiError::InvalidInput(
+            "scheduledStartAt must be less than or equal to scheduledEndAt".to_string(),
+        ));
     }
 
     if let Some(shard_ids) = &request.affected_shard_ids {

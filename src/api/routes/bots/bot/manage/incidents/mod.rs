@@ -167,12 +167,12 @@ fn validate_incident_request(request: &mut CreateIncidentRequest) -> ApiResult<(
         }
     }
 
-    if let (Some(start), Some(end)) = (request.scheduled_start_at, request.scheduled_end_at) {
-        if start > end {
-            return Err(ApiError::InvalidInput(
-                "scheduledStartAt must be less than or equal to scheduledEndAt".to_string(),
-            ));
-        }
+    if let (Some(start), Some(end)) = (request.scheduled_start_at, request.scheduled_end_at)
+        && start > end
+    {
+        return Err(ApiError::InvalidInput(
+            "scheduledStartAt must be less than or equal to scheduledEndAt".to_string(),
+        ));
     }
 
     let mut shard_ids = request.affected_shard_ids.clone();

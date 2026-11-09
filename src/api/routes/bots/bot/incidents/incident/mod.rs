@@ -59,7 +59,7 @@ async fn get_incident(
 
     let incident = repos
         .status_incidents
-        .find_public_by_id(&bot_id, incident_id)
+        .find_by_id(&bot_id, incident_id, true)
         .await?
         .ok_or_else(|| {
             info!(

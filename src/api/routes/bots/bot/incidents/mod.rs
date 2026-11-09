@@ -20,7 +20,11 @@ use crate::{
     },
 };
 
-#[api_operation(summary = "", description = "", tag = "Status")]
+#[api_operation(
+    summary = "Get Public Incidents",
+    description = "Get a list of public incidents for a bot.",
+    tag = "Status"
+)]
 async fn get_incidents(
     repos: Data<Repositories>,
     path: Path<String>,
@@ -74,7 +78,7 @@ async fn get_incidents(
 
     let page = repos
         .status_incidents
-        .find_public_incidents(&bot_id, incident_type, status, limit, cursor)
+        .find_incidents(&bot_id, incident_type, status, limit, cursor, true)
         .await?;
 
     let next_cursor = if page.has_more {

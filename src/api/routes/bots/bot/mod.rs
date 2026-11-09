@@ -1,6 +1,7 @@
 mod achievements;
 mod events;
 mod incidents;
+mod manage;
 #[cfg(feature = "reports")]
 mod reports;
 mod settings;
@@ -499,6 +500,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .configure(achievements::configure)
             .configure(events::configure)
             .configure(incidents::configure)
+            .configure(manage::configure)
             .configure(
                 #[cfg(feature = "reports")]
                 {

@@ -4,9 +4,12 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::models::{
-    BotDeploymentMode, OverallStatus, ShardStatus, ShardStatusSnapshot, StatusCheck,
-    StoredStatusCheck,
+use crate::{
+    domain::models::{
+        BotDeploymentMode, OverallStatus, ShardStatus, ShardStatusSnapshot, StatusCheck,
+        StoredStatusCheck,
+    },
+    openapi::schemas::PaginationResponse,
 };
 
 #[derive(Deserialize, ApiComponent, JsonSchema)]
@@ -70,13 +73,6 @@ impl From<ShardStatusSnapshot> for PublicShardSnapshot {
             guild_count: status.guild_count,
         }
     }
-}
-
-#[derive(Serialize, ApiComponent, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct PaginationResponse {
-    pub limit: u32,
-    pub next_cursor: Option<String>,
 }
 
 pub struct HistoryCursor {

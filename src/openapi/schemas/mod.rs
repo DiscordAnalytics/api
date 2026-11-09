@@ -44,12 +44,16 @@ pub use status::{
     config::{BotStatusConfigResponse, UpdateBotStatusConfigRequest},
     heartbeat::{HeartbeatRequest, HeartbeatResponse},
     history::{
-        HistoryCursor, HistoryPage, PaginationResponse, PublicStatusHistoryResponse,
-        PublicStatusSnapshot, StatusHistoryQuery,
+        HistoryCursor, HistoryPage, PublicStatusHistoryResponse, PublicStatusSnapshot,
+        StatusHistoryQuery,
     },
     incidents::{
-        IncidentCursor, IncidentListQuery, IncidentPage, PublicIncidentListResponse,
-        PublicIncidentResponse,
+        IncidentCursor, IncidentListQuery, IncidentPage, IncidentUpdateResponse,
+        PublicIncidentListResponse, PublicIncidentResponse,
+    },
+    manage::{
+        CreateIncidentRequest, CreateIncidentUpdateRequest, CreateIncidentUpdateResponse,
+        ManagedIncidentListResponse, ManagedIncidentResponse, UpdateIncidentRequest,
     },
     public::PublicBotStatusResponse,
 };
@@ -60,6 +64,13 @@ pub use webhook::{
     BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
     PlatformVotePayload,
 };
+
+#[derive(Serialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PaginationResponse {
+    pub limit: u32,
+    pub next_cursor: Option<String>,
+}
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct MessageResponse {

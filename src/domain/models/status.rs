@@ -130,14 +130,14 @@ pub enum ShardStatus {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum AnnouncementType {
     Incident,
     Maintenance,
 }
 
-#[derive(Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum AnnouncementStatus {
     Investigating,
@@ -150,7 +150,7 @@ pub enum AnnouncementStatus {
     Cancelled,
 }
 
-#[derive(Deserialize, Serialize, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum IncidentSeverity {
     Minor,

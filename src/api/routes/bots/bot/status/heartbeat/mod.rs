@@ -23,45 +23,31 @@ fn calculate_overall_status(shards: &[ShardCurrentStatus]) -> OverallStatus {
         return OverallStatus::Unknown;
     }
 
-    let mut has_offline = false;
-    let mut has_degraded = false;
-    let mut all_offline = true;
-    let mut all_unknown = true;
-    let mut all_operational = true;
+    let mut offline = 0;
+    let mut degraded = 0;
+    let mut operational = 0;
+    let mut unknown = 0;
 
     for shard in shards {
         match shard.status {
-            ShardStatus::Offline => {
-                has_offline = true;
-                all_unknown = false;
-                all_operational = false;
-            }
-            ShardStatus::Degraded => {
-                has_degraded = true;
-                all_offline = false;
-                all_unknown = false;
-                all_operational = false;
-            }
-            ShardStatus::Operational => {
-                all_offline = false;
-                all_unknown = false;
-            }
-            ShardStatus::Unknown => {
-                all_offline = false;
-                all_operational = false;
-            }
+            ShardStatus::Offline => offline += 1,
+            ShardStatus::Degraded => degraded += 1,
+            ShardStatus::Operational => operational += 1,
+            ShardStatus::Unknown => unknown += 1,
         }
     }
 
-    if all_unknown {
+    let total = shards.len();
+
+    if unknown == total {
         OverallStatus::Unknown
-    } else if all_offline {
+    } else if offline == total {
         OverallStatus::MajorOutage
-    } else if has_offline {
+    } else if offline > 0 {
         OverallStatus::PartialOutage
-    } else if has_degraded {
+    } else if degraded > 0 {
         OverallStatus::Degraded
-    } else if all_operational {
+    } else if operational == total {
         OverallStatus::Operational
     } else {
         OverallStatus::Unknown
@@ -118,13 +104,15 @@ async fn update_heartbeat(
             ApiError::NotFound("No status configuration found".into())
         })?;
 
-    match current_status.deployment_mode {
+    let shard_id = match current_status.deployment_mode {
         BotDeploymentMode::Single => {
             if payload.shard_id.is_some() || payload.total_shards.is_some_and(|count| count != 1) {
                 return Err(ApiError::BadRequest(
                     "Invalid shard configuration for single deployment".into(),
                 ));
             }
+
+            0
         }
         BotDeploymentMode::Sharded => {
             let (Some(shard_id), Some(total_shards)) = (payload.shard_id, payload.total_shards)
@@ -151,47 +139,38 @@ async fn update_heartbeat(
                     "shardId must be lower than totalShards".into(),
                 ));
             }
-        }
-    }
 
-    let received_at = match current_status.deployment_mode {
-        BotDeploymentMode::Single => {
-            repos
-                .status_current
-                .update_single_heartbeat(&bot.bot_id, payload.latency_ms, payload.guild_count)
-                .await?
+            shard_id
         }
-        BotDeploymentMode::Sharded => {
-            repos
-                .status_current
-                .update_shard_heartbeat(
-                    &bot.bot_id,
-                    payload.shard_id.unwrap(),
-                    payload.latency_ms,
-                    payload.guild_count,
-                )
-                .await?
-        }
-    }
-    .ok_or(ApiError::NotFound(
-        "Status configuration or shard not found".into(),
-    ))?;
+    };
 
     let updated_status = repos
         .status_current
-        .find_by_bot_id(&bot.bot_id)
+        .update_shard_heartbeat(
+            &bot.bot_id,
+            shard_id,
+            payload.latency_ms,
+            payload.guild_count,
+        )
         .await?
-        .ok_or(ApiError::NotFound("Status configuration not found".into()))?;
+        .ok_or(ApiError::NotFound(
+            "Status configuration or shard not found".into(),
+        ))?;
 
-    let overall_status = match updated_status.deployment_mode {
-        BotDeploymentMode::Single => OverallStatus::Operational,
-        BotDeploymentMode::Sharded => calculate_overall_status(&updated_status.shards),
-    };
+    let received_at = updated_status
+        .last_heartbeat_at
+        .ok_or(ApiError::NotFound("Heartbeat timestamp not found".into()))?;
 
-    repos
+    let overall_status = calculate_overall_status(&updated_status.shards);
+
+    let updated = repos
         .status_current
         .update_overall_status(&bot.bot_id, overall_status)
         .await?;
+
+    if !updated {
+        return Err(ApiError::NotFound("Status configuration not found".into()));
+    }
 
     let check = StatusCheck {
         bot_id: bot.bot_id.clone(),
@@ -209,8 +188,6 @@ async fn update_heartbeat(
                 guild_count: shard.guild_count,
             })
             .collect(),
-        latency_ms: updated_status.latency_ms,
-        guild_count: updated_status.guild_count,
     };
 
     repos.status_check.create_check(check).await?;

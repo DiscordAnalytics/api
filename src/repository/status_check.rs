@@ -1,8 +1,12 @@
 use std::time::Duration;
 
-use bson::DateTime;
 use futures::StreamExt;
-use mongodb::{Collection, Database, IndexModel, bson::doc, error::Result, options::IndexOptions};
+use mongodb::{
+    Collection, Database, IndexModel,
+    bson::{DateTime, doc},
+    error::Result,
+    options::IndexOptions,
+};
 
 use crate::{
     domain::models::{StatusCheck, StoredStatusCheck},

@@ -1,6 +1,6 @@
 use apistos::ApiComponent;
-use bson::{DateTime as BsonDateTime, oid::ObjectId};
 use chrono::{DateTime, Utc};
+use mongodb::bson::{DateTime as BsonDateTime, oid::ObjectId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

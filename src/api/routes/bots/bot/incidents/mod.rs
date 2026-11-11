@@ -47,7 +47,7 @@ async fn get_incidents(
 
     let limit = limit.unwrap_or(10);
 
-    if !(1..=100).contains(&limit) {
+    if !matches!(limit, 1..=100) {
         return Err(ApiError::InvalidInput(
             "limit must be between 1 and 100".to_string(),
         ));

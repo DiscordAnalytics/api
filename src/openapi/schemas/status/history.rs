@@ -1,6 +1,6 @@
 use apistos::ApiComponent;
-use bson::{DateTime as BsonDateTime, oid::ObjectId};
 use chrono::{DateTime, Utc};
+use mongodb::bson::{DateTime as BsonDateTime, oid::ObjectId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -36,8 +36,6 @@ pub struct PublicStatusSnapshot {
     pub status: OverallStatus,
     pub deployment_mode: BotDeploymentMode,
     pub total_shards: u32,
-    pub latency_ms: Option<u32>,
-    pub guild_count: Option<i64>,
     pub shards: Vec<PublicShardSnapshot>,
 }
 
@@ -48,8 +46,6 @@ impl From<StatusCheck> for PublicStatusSnapshot {
             status: check.status,
             deployment_mode: check.deployment_mode,
             total_shards: check.total_shards,
-            latency_ms: check.latency_ms,
-            guild_count: check.guild_count,
             shards: check.shards.into_iter().map(|s| s.into()).collect(),
         }
     }

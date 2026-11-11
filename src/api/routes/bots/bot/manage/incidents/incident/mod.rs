@@ -5,7 +5,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, patch, scope},
 };
-use bson::{Bson, DateTime as BsonDateTime, oid::ObjectId, serialize_to_bson};
+use mongodb::bson::{Bson, DateTime as BsonDateTime, oid::ObjectId, serialize_to_bson};
 
 use crate::{
     api::middleware::Authenticated,

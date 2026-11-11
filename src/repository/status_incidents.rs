@@ -1,8 +1,7 @@
-use bson::{DateTime, oid::ObjectId, serialize_to_bson};
 use futures::StreamExt;
 use mongodb::{
     Collection, Database, IndexModel,
-    bson::{Document, doc},
+    bson::{DateTime, Document, doc, oid::ObjectId, serialize_to_bson},
     error::Result,
     options::ReturnDocument,
 };

@@ -1,6 +1,5 @@
 use apistos::ApiComponent;
-use bson::oid::ObjectId;
-use mongodb::bson::DateTime;
+use mongodb::bson::{DateTime, oid::ObjectId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -14,8 +13,6 @@ pub struct StatusCurrent {
     pub status: OverallStatus,
     pub total_shards: u32,
     pub shards: Vec<ShardCurrentStatus>,
-    pub latency_ms: Option<u32>,
-    pub guild_count: Option<i64>,
     pub last_heartbeat_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
@@ -37,8 +34,6 @@ pub struct StatusCheck {
     pub deployment_mode: BotDeploymentMode,
     pub timestamp: DateTime,
     pub status: OverallStatus,
-    pub latency_ms: Option<u32>,
-    pub guild_count: Option<i64>,
     pub total_shards: u32,
     pub shards: Vec<ShardStatusSnapshot>,
 }
@@ -112,7 +107,7 @@ pub enum BotDeploymentMode {
     Sharded,
 }
 
-#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq, Eq, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum OverallStatus {
     Operational,
@@ -122,7 +117,7 @@ pub enum OverallStatus {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq, Eq, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum ShardStatus {
     Operational,
@@ -131,14 +126,14 @@ pub enum ShardStatus {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq, Eq, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum AnnouncementType {
     Incident,
     Maintenance,
 }
 
-#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq, Eq, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum AnnouncementStatus {
     Investigating,
@@ -151,7 +146,7 @@ pub enum AnnouncementStatus {
     Cancelled,
 }
 
-#[derive(Deserialize, Serialize, Clone, Copy, ApiComponent, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq, Eq, ApiComponent, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub enum IncidentSeverity {
     Minor,

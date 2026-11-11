@@ -4,7 +4,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, post},
 };
-use bson::{DateTime as BsonDateTime, oid::ObjectId};
+use mongodb::bson::{DateTime as BsonDateTime, oid::ObjectId};
 
 use crate::{
     api::middleware::Authenticated,

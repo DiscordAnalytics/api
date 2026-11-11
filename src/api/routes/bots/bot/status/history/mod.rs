@@ -3,8 +3,8 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get},
 };
-use bson::DateTime as BsonDateTime;
 use chrono::{Duration, Utc};
+use mongodb::bson::DateTime as BsonDateTime;
 
 use crate::{
     domain::error::{ApiError, ApiResult},
@@ -51,7 +51,7 @@ async fn get_public_history(
 
     let limit = limit.unwrap_or(100);
 
-    if !(1..=500).contains(&limit) {
+    if !matches!(limit, 1..=500) {
         return Err(ApiError::BadRequest(
             "limit must be between 1 and 500".to_string(),
         ));

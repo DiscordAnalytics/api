@@ -3,7 +3,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get},
 };
-use bson::oid::ObjectId;
+use mongodb::bson::oid::ObjectId;
 
 use crate::{
     domain::error::{ApiError, ApiResult},

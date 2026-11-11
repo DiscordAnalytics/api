@@ -2,7 +2,7 @@ use mongodb::{
     Collection, Database, IndexModel,
     bson::{DateTime, doc, serialize_to_bson},
     error::Result,
-    options::IndexOptions,
+    options::{IndexOptions, ReturnDocument},
 };
 
 use crate::{
@@ -45,21 +45,7 @@ impl StatusCurrentRepository {
         total_shards: u32,
     ) -> Result<DateTime> {
         let now = DateTime::now();
-
-        let shards = if deployment_mode == BotDeploymentMode::Sharded {
-            (0..total_shards)
-                .map(|shard_id| ShardCurrentStatus {
-                    shard_id,
-                    status: ShardStatus::Unknown,
-                    latency_ms: None,
-                    guild_count: None,
-                    last_heartbeat_at: None,
-                    updated_at: now,
-                })
-                .collect()
-        } else {
-            Vec::new()
-        };
+        let shards = Self::initialize_shards(total_shards, now);
 
         self.collection
             .insert_one(StatusCurrent {
@@ -68,8 +54,6 @@ impl StatusCurrentRepository {
                 status: OverallStatus::Unknown,
                 total_shards,
                 shards,
-                latency_ms: None,
-                guild_count: None,
                 last_heartbeat_at: None,
                 created_at: now,
                 updated_at: now,
@@ -85,35 +69,34 @@ impl StatusCurrentRepository {
         bot_id: &str,
         deployment_mode: BotDeploymentMode,
         total_shards: u32,
-    ) -> Result<DateTime> {
+    ) -> Result<Option<DateTime>> {
         let now = DateTime::now();
+        let shards = Self::initialize_shards(total_shards, now);
 
-        let shards = if deployment_mode == BotDeploymentMode::Sharded {
-            (0..total_shards)
-                .map(|shard_id| ShardCurrentStatus {
-                    shard_id,
-                    status: ShardStatus::Unknown,
-                    latency_ms: None,
-                    guild_count: None,
-                    last_heartbeat_at: None,
-                    updated_at: now,
-                })
-                .collect()
-        } else {
-            Vec::new()
-        };
-
-        self.collection
+        let result = self
+            .collection
             .update_one(
-                doc! { "botId": bot_id },
+                doc! {
+                    "botId": bot_id,
+                    "$or": [
+                        {
+                            "deploymentMode": {
+                                "$ne": serialize_to_bson(&deployment_mode)?
+                            }
+                        },
+                        {
+                            "totalShards": {
+                                "$ne": total_shards
+                            }
+                        }
+                    ]
+                },
                 doc! {
                     "$set": {
                         "deploymentMode": serialize_to_bson(&deployment_mode)?,
                         "totalShards": total_shards,
                         "status": serialize_to_bson(&OverallStatus::Unknown)?,
                         "shards": serialize_to_bson(&shards)?,
-                        "latencyMs": None::<i64>,
-                        "guildCount": None::<i64>,
                         "lastHeartbeatAt": None::<DateTime>,
                         "updatedAt": now,
                         "lastEvaluatedAt": now,
@@ -122,7 +105,17 @@ impl StatusCurrentRepository {
             )
             .await?;
 
-        Ok(now)
+        if result.matched_count > 0 {
+            return Ok(Some(now));
+        }
+
+        let exists = self
+            .collection
+            .find_one(doc! { "botId": bot_id })
+            .await?
+            .is_some();
+
+        Ok(exists.then_some(now))
     }
 
     pub async fn update_shard_heartbeat(
@@ -131,13 +124,14 @@ impl StatusCurrentRepository {
         shard_id: u32,
         latency_ms: Option<u32>,
         guild_count: Option<i64>,
-    ) -> Result<Option<DateTime>> {
+    ) -> Result<Option<StatusCurrent>> {
         let now = DateTime::now();
 
         let mut set = doc! {
           "shards.$.status": serialize_to_bson(&ShardStatus::Operational)?,
           "shards.$.lastHeartbeatAt": now,
           "shards.$.updatedAt": now,
+          "lastHeartbeatAt": now,
           "updatedAt": now,
         };
 
@@ -150,7 +144,7 @@ impl StatusCurrentRepository {
 
         let result = self
             .collection
-            .update_one(
+            .find_one_and_update(
                 doc! {
                   "botId": bot_id,
                   "shards.shardId": shard_id
@@ -159,21 +153,13 @@ impl StatusCurrentRepository {
                     "$set": set,
                 },
             )
+            .return_document(ReturnDocument::After)
             .await?;
 
-        if result.matched_count == 0 {
-            return Ok(None);
-        }
-
-        Ok(Some(now))
+        Ok(result)
     }
 
-    pub async fn update_single_heartbeat(
-        &self,
-        bot_id: &str,
-        latency_ms: Option<u32>,
-        guild_count: Option<i64>,
-    ) -> Result<Option<DateTime>> {
+    pub async fn update_overall_status(&self, bot_id: &str, status: OverallStatus) -> Result<bool> {
         let now = DateTime::now();
 
         let result = self
@@ -182,36 +168,27 @@ impl StatusCurrentRepository {
                 doc! { "botId": bot_id },
                 doc! {
                     "$set": {
-                        "status": serialize_to_bson(&OverallStatus::Operational)?,
-                        "latencyMs": latency_ms.map(i64::from),
-                        "guildCount": guild_count,
-                        "lastHeartbeatAt": now,
+                        "status": serialize_to_bson(&status)?,
                         "updatedAt": now,
+                        "lastEvaluatedAt": now,
                     }
                 },
             )
             .await?;
 
-        if result.matched_count == 0 {
-            return Ok(None);
-        }
-
-        Ok(Some(now))
+        Ok(result.matched_count > 0)
     }
 
-    pub async fn update_overall_status(&self, bot_id: &str, status: OverallStatus) -> Result<()> {
-        self.collection
-            .update_one(
-                doc! { "botId": bot_id },
-                doc! {
-                    "$set": {
-                        "status": serialize_to_bson(&status)?,
-                        "updatedAt": DateTime::now(),
-                    }
-                },
-            )
-            .await?;
-
-        Ok(())
+    fn initialize_shards(total_shards: u32, now: DateTime) -> Vec<ShardCurrentStatus> {
+        (0..total_shards)
+            .map(|shard_id| ShardCurrentStatus {
+                shard_id,
+                status: ShardStatus::Unknown,
+                latency_ms: None,
+                guild_count: None,
+                last_heartbeat_at: None,
+                updated_at: now,
+            })
+            .collect()
     }
 }

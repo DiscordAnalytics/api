@@ -6,13 +6,10 @@ use apistos::{
 
 use crate::{
     api::middleware::Authenticated,
-    domain::{
-        error::{ApiError, ApiResult},
-        models::BotDeploymentMode,
-    },
+    domain::error::{ApiError, ApiResult},
     openapi::schemas::{BotStatusConfigResponse, UpdateBotStatusConfigRequest},
     repository::Repositories,
-    utils::{discord::Snowflake, logger::LogCode},
+    utils::{discord::Snowflake, logger::LogCode, status::validate_status_config},
 };
 
 #[api_operation(
@@ -82,16 +79,6 @@ async fn update_config(
 
     let current_status = repos.status_current.find_by_bot_id(&bot_id).await?;
 
-    let is_sharded = payload.deployment_mode == BotDeploymentMode::Sharded;
-
-    let total_shards = if is_sharded { payload.total_shards } else { 1 };
-
-    if is_sharded && total_shards == 0 {
-        return Err(ApiError::BadRequest(
-            "A sharded deployment must have at least one shard".into(),
-        ));
-    }
-
     let updated_at = match current_status {
         None => {
             info!(
@@ -100,36 +87,38 @@ async fn update_config(
                 "Creating initial bot status document",
             );
 
+            validate_status_config(payload.deployment_mode, payload.total_shards)?;
+
             repos
                 .status_current
-                .create_status(&bot_id, payload.deployment_mode, total_shards)
+                .create_status(&bot_id, payload.deployment_mode, payload.total_shards)
                 .await?
         }
-        Some(current) => {
-            let config_changed = current.deployment_mode != payload.deployment_mode
-                || current.total_shards != total_shards;
+        Some(current)
+            if current.deployment_mode != payload.deployment_mode
+                || current.total_shards != payload.total_shards =>
+        {
+            info!(
+                code = %LogCode::Status,
+                bot_id = %bot_id,
+                "Updating bot status deployment configuration",
+            );
 
-            if config_changed {
-                info!(
-                    code = %LogCode::Status,
-                    bot_id = %bot_id,
-                    "Updating bot status deployment configuration",
-                );
+            validate_status_config(payload.deployment_mode, payload.total_shards)?;
 
-                repos
-                    .status_current
-                    .update_status_config(&bot_id, payload.deployment_mode, total_shards)
-                    .await?
-            } else {
-                current.updated_at
-            }
+            repos
+                .status_current
+                .update_status_config(&bot_id, payload.deployment_mode, payload.total_shards)
+                .await?
+                .unwrap_or(current.updated_at)
         }
+        Some(current) => current.updated_at,
     };
 
     Ok(Json(BotStatusConfigResponse {
         bot_id: bot_id.to_string(),
         deployment_mode: payload.deployment_mode,
-        total_shards,
+        total_shards: payload.total_shards,
         updated_at: updated_at.to_chrono(),
     }))
 }

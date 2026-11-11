@@ -1,4 +1,5 @@
 mod config;
+mod heartbeat;
 mod history;
 
 use actix_web::web::{Data, Json, Path};
@@ -73,6 +74,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
         scope("/status")
             .route("", get().to(get_public_status))
             .configure(config::configure)
+            .configure(heartbeat::configure)
             .configure(history::configure),
     );
 }

@@ -229,5 +229,5 @@ async fn update_heartbeat(
 }
 
 pub fn configure(cfg: &mut ServiceConfig) {
-    cfg.route("/status/heartbeat", post().to(update_heartbeat));
+    cfg.route("/heartbeat", post().to(update_heartbeat));
 }

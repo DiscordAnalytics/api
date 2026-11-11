@@ -38,7 +38,7 @@ async fn get_incident(
         code = %LogCode::Status,
         bot_id = %bot_id,
         incident_id = %incident_id,
-        "Attempting to retireve managed incident",
+        "Attempting to retrieve managed incident",
     );
 
     let bot = repos

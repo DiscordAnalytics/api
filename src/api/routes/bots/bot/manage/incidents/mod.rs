@@ -248,8 +248,8 @@ async fn create_incident(
     let now = BsonDateTime::now();
 
     let started_at = match (request.incident_type, request.status) {
-        (AnnouncementType::Incident, _) => Some(now),
-        (AnnouncementType::Maintenance, AnnouncementStatus::InProgress)
+        (AnnouncementType::Incident, _)
+        | (AnnouncementType::Maintenance, AnnouncementStatus::InProgress)
         | (AnnouncementType::Maintenance, AnnouncementStatus::Completed) => Some(now),
         _ => None,
     };

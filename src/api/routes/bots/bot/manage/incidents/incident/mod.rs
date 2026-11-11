@@ -19,7 +19,7 @@ use crate::{
 };
 
 #[api_operation(
-    summary = "Get managed incident",
+    summary = "Get incident",
     description = "Get the details of an incident for a bot.",
     tag = "Status"
 )]
@@ -38,7 +38,7 @@ async fn get_incident(
         code = %LogCode::Status,
         bot_id = %bot_id,
         incident_id = %incident_id,
-        "Attempting to retrieve managed incident",
+        "Attempting to retrieve incident",
     );
 
     let bot = repos
@@ -56,7 +56,7 @@ async fn get_incident(
         info!(
             code = %LogCode::AdminAction,
             bot_id = %bot_id,
-            "Admin retrieving managed incident",
+            "Admin retrieving incident",
         );
     } else if ctx.is_bot() {
         if ctx.token.as_deref() != Some(&bot.token) {
@@ -151,7 +151,7 @@ fn validate_update_incident(
 }
 
 #[api_operation(
-    summary = "Update managed incident",
+    summary = "Update incident",
     description = "Update an incident for a bot.",
     tag = "Status"
 )]

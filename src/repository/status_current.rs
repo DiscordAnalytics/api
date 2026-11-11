@@ -1,6 +1,6 @@
 use mongodb::{
     Collection, Database, IndexModel,
-    bson::{DateTime, doc, serialize_to_bson},
+    bson::{Bson, DateTime, doc, serialize_to_bson},
     error::Result,
     options::{IndexOptions, ReturnDocument},
 };
@@ -127,20 +127,102 @@ impl StatusCurrentRepository {
     ) -> Result<Option<StatusCurrent>> {
         let now = DateTime::now();
 
-        let mut set = doc! {
-          "shards.$.status": serialize_to_bson(&ShardStatus::Operational)?,
-          "shards.$.lastHeartbeatAt": now,
-          "shards.$.updatedAt": now,
-          "lastHeartbeatAt": now,
-          "updatedAt": now,
+        let mut shard_update = doc! {
+            "status": serialize_to_bson(&ShardStatus::Operational)?,
+            "lastHeartbeatAt": now,
+            "updatedAt": now,
         };
 
         if let Some(latency_ms) = latency_ms {
-            set.insert("shards.$.latencyMs", i64::from(latency_ms));
+            shard_update.insert("latencyMs", i64::from(latency_ms));
         }
         if let Some(guild_count) = guild_count {
-            set.insert("shards.$.guildCount", guild_count);
+            shard_update.insert("guildCount", guild_count);
         }
+
+        let updated_shards = doc! {
+            "$map": {
+                "input": "$shards",
+                "as": "shard",
+                "in": {
+                    "$cond": [
+                        {
+                            "$eq": [
+                                "$$shard.shardId",
+                                i64::from(shard_id),
+                            ]
+                        },
+                        {
+                            "$mergeObjects": [
+                                "$$shard",
+                                shard_update
+                            ]
+                        },
+                        "$$shard"
+                    ]
+                }
+            }
+        };
+
+        let update_shard_stage = doc! {
+            "$set": {
+                "shards": updated_shards,
+                "lastHeartbeatAt": now,
+                "updatedAt": now,
+            }
+        };
+
+        let unknown = serialize_to_bson(&OverallStatus::Unknown)?;
+        let operational = serialize_to_bson(&ShardStatus::Operational)?;
+        let degraded = serialize_to_bson(&ShardStatus::Degraded)?;
+        let offline = serialize_to_bson(&ShardStatus::Offline)?;
+
+        let overall_status = doc! {
+            "$let": {
+                "vars": {
+                    "shards": "$shards",
+                },
+                "in": {
+                    "$switch": {
+                        "branches": [
+                            {
+                                "case": {
+                                    "$and": [
+                                        { "$gt": [{ "$size": "$$shards" }, 0] },
+                                        Self::all_shards_match_status(unknown.clone()),
+                                    ]
+                                },
+                                "then": unknown.clone(),
+                            },
+                            {
+                                "case": Self::all_shards_match_status(offline.clone()),
+                                "then": serialize_to_bson(&OverallStatus::MajorOutage)?,
+                            },
+                            {
+                                "case": Self::any_shard_matches_status(offline),
+                                "then": serialize_to_bson(&OverallStatus::PartialOutage)?,
+                            },
+                            {
+                                "case": Self::any_shard_matches_status(degraded),
+                                "then": serialize_to_bson(&OverallStatus::Degraded)?,
+                            },
+                            {
+                                "case": Self::all_shards_match_status(operational),
+                                "then": serialize_to_bson(&OverallStatus::Operational)?,
+                            },
+                        ],
+                        "default": unknown,
+                    }
+                }
+            }
+        };
+
+        let update_status_stage = doc! {
+            "$set": {
+                "status": overall_status,
+                "lastEvaluatedAt": now,
+            }
+        };
 
         let result = self
             .collection
@@ -149,34 +231,12 @@ impl StatusCurrentRepository {
                   "botId": bot_id,
                   "shards.shardId": shard_id
                 },
-                doc! {
-                    "$set": set,
-                },
+                vec![update_shard_stage, update_status_stage],
             )
             .return_document(ReturnDocument::After)
             .await?;
 
         Ok(result)
-    }
-
-    pub async fn update_overall_status(&self, bot_id: &str, status: OverallStatus) -> Result<bool> {
-        let now = DateTime::now();
-
-        let result = self
-            .collection
-            .update_one(
-                doc! { "botId": bot_id },
-                doc! {
-                    "$set": {
-                        "status": serialize_to_bson(&status)?,
-                        "updatedAt": now,
-                        "lastEvaluatedAt": now,
-                    }
-                },
-            )
-            .await?;
-
-        Ok(result.matched_count > 0)
     }
 
     fn initialize_shards(total_shards: u32, now: DateTime) -> Vec<ShardCurrentStatus> {
@@ -190,5 +250,45 @@ impl StatusCurrentRepository {
                 updated_at: now,
             })
             .collect()
+    }
+
+    fn all_shards_match_status(status: Bson) -> Bson {
+        doc! {
+            "$allElementsTrue": [
+                {
+                    "$map": {
+                        "input": "$$shards",
+                        "as": "shard",
+                        "in": {
+                            "$eq": [
+                                "$$shard.status",
+                                status
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+        .into()
+    }
+
+    fn any_shard_matches_status(status: Bson) -> Bson {
+        doc! {
+            "$anyElementTrue": [
+                {
+                    "$map": {
+                        "input": "$$shards",
+                        "as": "shard",
+                        "in": {
+                            "$eq": [
+                                "$$shard.status",
+                                status,
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+        .into()
     }
 }

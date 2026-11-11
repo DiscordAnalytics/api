@@ -8,51 +8,12 @@ use crate::{
     api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
-        models::{
-            BotDeploymentMode, OverallStatus, ShardCurrentStatus, ShardStatus, ShardStatusSnapshot,
-            StatusCheck,
-        },
+        models::{BotDeploymentMode, ShardStatusSnapshot, StatusCheck},
     },
     openapi::schemas::{HeartbeatRequest, HeartbeatResponse},
     repository::Repositories,
     utils::logger::LogCode,
 };
-
-fn calculate_overall_status(shards: &[ShardCurrentStatus]) -> OverallStatus {
-    if shards.is_empty() {
-        return OverallStatus::Unknown;
-    }
-
-    let mut offline = 0;
-    let mut degraded = 0;
-    let mut operational = 0;
-    let mut unknown = 0;
-
-    for shard in shards {
-        match shard.status {
-            ShardStatus::Offline => offline += 1,
-            ShardStatus::Degraded => degraded += 1,
-            ShardStatus::Operational => operational += 1,
-            ShardStatus::Unknown => unknown += 1,
-        }
-    }
-
-    let total = shards.len();
-
-    if unknown == total {
-        OverallStatus::Unknown
-    } else if offline == total {
-        OverallStatus::MajorOutage
-    } else if offline > 0 {
-        OverallStatus::PartialOutage
-    } else if degraded > 0 {
-        OverallStatus::Degraded
-    } else if operational == total {
-        OverallStatus::Operational
-    } else {
-        OverallStatus::Unknown
-    }
-}
 
 #[api_operation(
     summary = "Receive an SDK heartbeat",
@@ -161,22 +122,11 @@ async fn update_heartbeat(
         .last_heartbeat_at
         .ok_or(ApiError::NotFound("Heartbeat timestamp not found".into()))?;
 
-    let overall_status = calculate_overall_status(&updated_status.shards);
-
-    let updated = repos
-        .status_current
-        .update_overall_status(&bot.bot_id, overall_status)
-        .await?;
-
-    if !updated {
-        return Err(ApiError::NotFound("Status configuration not found".into()));
-    }
-
     let check = StatusCheck {
         bot_id: bot.bot_id.clone(),
         deployment_mode: updated_status.deployment_mode,
         timestamp: received_at,
-        status: overall_status,
+        status: updated_status.status,
         total_shards: updated_status.total_shards,
         shards: updated_status
             .shards

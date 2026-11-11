@@ -26,6 +26,7 @@ pub struct StatusCurrent {
 pub struct StoredStatusCheck {
     #[serde(rename = "_id")]
     pub id: ObjectId,
+    #[serde(flatten)]
     pub check: StatusCheck,
 }
 

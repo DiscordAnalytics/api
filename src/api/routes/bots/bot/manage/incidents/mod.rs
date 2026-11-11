@@ -255,7 +255,9 @@ async fn create_incident(
     };
 
     let resolved_at = match request.status {
-        AnnouncementStatus::Resolved | AnnouncementStatus::Completed => Some(now),
+        AnnouncementStatus::Cancelled
+        | AnnouncementStatus::Resolved
+        | AnnouncementStatus::Completed => Some(now),
         _ => None,
     };
 

@@ -187,7 +187,9 @@ impl StatusIncidentsRepository {
         };
 
         match next_status {
-            AnnouncementStatus::Resolved | AnnouncementStatus::Completed => {
+            AnnouncementStatus::Cancelled
+            | AnnouncementStatus::Resolved
+            | AnnouncementStatus::Completed => {
                 set.insert("resolvedAt", now);
             }
             AnnouncementStatus::InProgress => {

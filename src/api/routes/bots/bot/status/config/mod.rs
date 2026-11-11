@@ -86,7 +86,7 @@ async fn update_config(
 
     let total_shards = if is_sharded { payload.total_shards } else { 1 };
 
-    if is_sharded && total_shards <= 0 {
+    if is_sharded && total_shards == 0 {
         return Err(ApiError::BadRequest(
             "A sharded deployment must have at least one shard".into(),
         ));

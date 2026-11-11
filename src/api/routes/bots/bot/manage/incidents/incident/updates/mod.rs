@@ -71,7 +71,11 @@ fn validate_incident_update(message: &str) -> ApiResult<()> {
     Ok(())
 }
 
-#[api_operation(summary = "", description = "", tag = "Status")]
+#[api_operation(
+    summary = "Create an incident update",
+    description = "Creates a new update for an incident, including a status transition. Requires authorization to manage the bot's incidents.",
+    tag = "Status"
+)]
 async fn create_update(
     auth: Authenticated,
     repos: Data<Repositories>,

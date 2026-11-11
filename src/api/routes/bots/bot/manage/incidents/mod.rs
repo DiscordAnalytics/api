@@ -26,7 +26,11 @@ use crate::{
     },
 };
 
-#[api_operation(summary = "", description = "", tag = "Status")]
+#[api_operation(
+    summary = "Get bot incidents",
+    description = "Retrieves all incidents for a bot, including private incidents. Supports filtering by incident type and status, with cursor-based pagination. Requires authorization to manage the bot's incidents.",
+    tag = "Status"
+)]
 async fn get_incidents(
     auth: Authenticated,
     repos: Data<Repositories>,

@@ -20,8 +20,8 @@ use crate::{
 };
 
 #[api_operation(
-    summary = "Get public status history",
-    description = "Get the public status history of the bot.",
+    summary = "Get status history",
+    description = "Get the status history of the bot.",
     tag = "Status"
 )]
 async fn get_public_history(

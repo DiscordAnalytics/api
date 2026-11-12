@@ -214,4 +214,11 @@ impl StatusIncidentsRepository {
             .return_document(ReturnDocument::After)
             .await
     }
+
+    pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<()> {
+        self.collection
+            .delete_many(doc! { "botId": bot_id })
+            .await?;
+        Ok(())
+    }
 }

@@ -18,6 +18,7 @@ pub struct PublicIncidentResponse {
     pub incident_id: String,
     pub title: String,
     pub description: String,
+    #[serde(rename = "type")]
     pub incident_type: AnnouncementType,
     pub status: AnnouncementStatus,
     pub severity: Option<IncidentSeverity>,

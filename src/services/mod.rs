@@ -4,8 +4,11 @@ mod discord;
 mod invitations;
 #[cfg(feature = "mails")]
 mod mail;
+mod status;
 mod users;
 mod webhooks;
+
+pub(crate) use status::reconcile_stale_heartbeats;
 
 #[derive(Clone)]
 pub struct Services {

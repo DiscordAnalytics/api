@@ -172,50 +172,7 @@ impl StatusCurrentRepository {
             }
         };
 
-        let unknown = serialize_to_bson(&OverallStatus::Unknown)?;
-        let operational = serialize_to_bson(&ShardStatus::Operational)?;
-        let degraded = serialize_to_bson(&ShardStatus::Degraded)?;
-        let offline = serialize_to_bson(&ShardStatus::Offline)?;
-
-        let overall_status = doc! {
-            "$let": {
-                "vars": {
-                    "shards": "$shards",
-                },
-                "in": {
-                    "$switch": {
-                        "branches": [
-                            {
-                                "case": {
-                                    "$and": [
-                                        { "$gt": [{ "$size": "$$shards" }, 0] },
-                                        Self::all_shards_match_status(unknown.clone()),
-                                    ]
-                                },
-                                "then": unknown.clone(),
-                            },
-                            {
-                                "case": Self::all_shards_match_status(offline.clone()),
-                                "then": serialize_to_bson(&OverallStatus::MajorOutage)?,
-                            },
-                            {
-                                "case": Self::any_shard_matches_status(offline),
-                                "then": serialize_to_bson(&OverallStatus::PartialOutage)?,
-                            },
-                            {
-                                "case": Self::any_shard_matches_status(degraded),
-                                "then": serialize_to_bson(&OverallStatus::Degraded)?,
-                            },
-                            {
-                                "case": Self::all_shards_match_status(operational),
-                                "then": serialize_to_bson(&OverallStatus::Operational)?,
-                            },
-                        ],
-                        "default": unknown,
-                    }
-                }
-            }
-        };
+        let overall_status = Self::overall_status_expression()?;
 
         let update_status_stage = doc! {
             "$set": {
@@ -237,6 +194,116 @@ impl StatusCurrentRepository {
             .await?;
 
         Ok(result)
+    }
+
+    pub async fn expire_stale_heartbeats(&self, cutoff: DateTime) -> Result<Vec<StatusCurrent>> {
+        let now = DateTime::now();
+        let offline = serialize_to_bson(&ShardStatus::Offline)?;
+
+        let stale_shard_filter = doc! {
+            "lastHeartbeatAt": {
+                "$lte": cutoff,
+            },
+            "status": {
+                "$ne": offline.clone(),
+            },
+        };
+
+        let bot_ids = self
+            .collection
+            .distinct(
+                "botId",
+                doc! {
+                  "shards": {
+                    "$elemMatch": stale_shard_filter.clone(),
+                  }
+                },
+            )
+            .await?;
+
+        let mut updated_statuses = Vec::new();
+
+        for bot_id in bot_ids {
+            let Bson::String(bot_id) = bot_id else {
+                continue;
+            };
+
+            let updated_shards = doc! {
+                "$map": {
+                    "input": "$shards",
+                    "as": "shard",
+                    "in": {
+                        "$cond": [
+                            {
+                                "$and": [
+                                    {
+                                        "$ne": [
+                                            "$$shard.lastHeartbeatAt",
+                                            Bson::Null,
+                                        ]
+                                    },
+                                    {
+                                        "$lte": [
+                                            "$$shard.lastHeartbeatAt",
+                                            cutoff,
+                                        ]
+                                    },
+                                    {
+                                        "$ne": [
+                                            "$$shard.status",
+                                            offline.clone(),
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "$mergeObjects": [
+                                    "$$shard",
+                                    {
+                                        "status": offline.clone(),
+                                        "updatedAt": now,
+                                    }
+                                ]
+                            },
+                            "$$shard"
+                        ]
+                    }
+                }
+            };
+
+            let result = self
+                .collection
+                .find_one_and_update(
+                    doc! {
+                        "botId": &bot_id,
+                        "shards": {
+                            "$elemMatch": stale_shard_filter.clone(),
+                        }
+                    },
+                    vec![
+                        doc! {
+                            "$set": {
+                                "shards": updated_shards,
+                            }
+                        },
+                        doc! {
+                            "$set": {
+                                "status": Self::overall_status_expression()?,
+                                "updatedAt": now,
+                                "lastEvaluatedAt": now,
+                            }
+                        },
+                    ],
+                )
+                .return_document(ReturnDocument::After)
+                .await?;
+
+            if let Some(status) = result {
+                updated_statuses.push(status);
+            }
+        }
+
+        Ok(updated_statuses)
     }
 
     fn initialize_shards(total_shards: u32, now: DateTime) -> Vec<ShardCurrentStatus> {
@@ -290,6 +357,54 @@ impl StatusCurrentRepository {
             ]
         }
         .into()
+    }
+
+    fn overall_status_expression() -> Result<Bson> {
+        let unknown = serialize_to_bson(&OverallStatus::Unknown)?;
+        let operational = serialize_to_bson(&ShardStatus::Operational)?;
+        let degraded = serialize_to_bson(&ShardStatus::Degraded)?;
+        let offline = serialize_to_bson(&ShardStatus::Offline)?;
+
+        Ok(doc! {
+            "$let": {
+                "vars": {
+                    "shards": "$shards",
+                },
+                "in": {
+                    "$switch": {
+                        "branches": [
+                            {
+                                "case": {
+                                    "$and": [
+                                        { "$gt": [{ "$size": "$$shards" }, 0] },
+                                        Self::all_shards_match_status(unknown.clone())
+                                    ]
+                                },
+                                "then": unknown.clone(),
+                            },
+                            {
+                                "case": Self::all_shards_match_status(offline.clone()),
+                                "then": serialize_to_bson(&OverallStatus::MajorOutage)?,
+                            },
+                            {
+                                "case": Self::any_shard_matches_status(offline),
+                                "then": serialize_to_bson(&OverallStatus::PartialOutage)?,
+                            },
+                            {
+                                "case": Self::any_shard_matches_status(degraded),
+                                "then": serialize_to_bson(&OverallStatus::Degraded)?,
+                            },
+                            {
+                                "case": Self::all_shards_match_status(operational),
+                                "then": serialize_to_bson(&OverallStatus::Operational)?,
+                            },
+                        ],
+                        "default": unknown
+                    }
+                }
+            }
+        }
+        .into())
     }
 
     pub async fn delete_by_bot_id(&self, bot_id: &str) -> Result<()> {

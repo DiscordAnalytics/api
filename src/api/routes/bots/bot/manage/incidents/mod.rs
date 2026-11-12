@@ -22,7 +22,7 @@ use crate::{
     utils::{
         discord::Snowflake,
         logger::LogCode,
-        status::{decode_status_cursor, encode_status_cursor},
+        status::{decode_status_cursor, encode_status_cursor, is_valid_announcement_status},
     },
 };
 
@@ -150,6 +150,12 @@ fn validate_incident_request(request: &mut CreateIncidentRequest) -> ApiResult<(
 
     if request.description.trim().is_empty() {
         return Err(ApiError::InvalidInput("description cannot be empty".into()));
+    }
+
+    if !is_valid_announcement_status(request.status, request.incident_type) {
+        return Err(ApiError::InvalidInput(
+            "invalid status for announcement type".to_string(),
+        ));
     }
 
     match request.incident_type {

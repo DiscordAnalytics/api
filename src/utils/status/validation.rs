@@ -1,6 +1,6 @@
 use crate::domain::{
     error::{ApiError, ApiResult},
-    models::BotDeploymentMode,
+    models::{AnnouncementStatus, AnnouncementType, BotDeploymentMode},
 };
 
 pub(crate) const MAX_TOTAL_SHARDS: u32 = 1000;
@@ -20,5 +20,28 @@ pub(crate) fn validate_status_config(
             format!("Sharded deployments must have at most {MAX_TOTAL_SHARDS} shards"),
         )),
         _ => Ok(()),
+    }
+}
+
+pub(crate) fn is_valid_announcement_status(
+    status: AnnouncementStatus,
+    incident_type: AnnouncementType,
+) -> bool {
+    match (status, incident_type) {
+        (
+            AnnouncementStatus::Investigating
+            | AnnouncementStatus::Identified
+            | AnnouncementStatus::Monitoring
+            | AnnouncementStatus::Resolved,
+            AnnouncementType::Incident,
+        ) => true,
+        (
+            AnnouncementStatus::Scheduled
+            | AnnouncementStatus::InProgress
+            | AnnouncementStatus::Completed
+            | AnnouncementStatus::Cancelled,
+            AnnouncementType::Maintenance,
+        ) => true,
+        (_, _) => false,
     }
 }

@@ -16,7 +16,7 @@ use crate::{
         CreateIncidentUpdateRequest, CreateIncidentUpdateResponse, IncidentUpdateResponse,
     },
     repository::Repositories,
-    utils::{discord::Snowflake, logger::LogCode},
+    utils::{discord::Snowflake, logger::LogCode, status::is_valid_announcement_status},
 };
 
 fn validate_status_transition(
@@ -25,6 +25,14 @@ fn validate_status_transition(
     next: AnnouncementStatus,
 ) -> ApiResult<()> {
     use AnnouncementStatus::*;
+
+    if !is_valid_announcement_status(current, incident_type)
+        || !is_valid_announcement_status(next, incident_type)
+    {
+        return Err(ApiError::InvalidInput(
+            "Invalid status for announcement type".to_string(),
+        ));
+    }
 
     let valid = match incident_type {
         AnnouncementType::Incident => matches!(

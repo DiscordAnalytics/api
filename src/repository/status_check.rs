@@ -93,7 +93,7 @@ impl StatusCheckRepository {
         let mut cursor = collection
             .find(filter)
             .sort(doc! {
-              "timestamp": 1,
+              "timestamp": -1,
               "_id": -1,
             })
             .limit(i64::from(limit) + 1)

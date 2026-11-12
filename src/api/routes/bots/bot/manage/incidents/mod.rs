@@ -152,6 +152,12 @@ fn validate_incident_request(request: &mut CreateIncidentRequest) -> ApiResult<(
         return Err(ApiError::InvalidInput("description cannot be empty".into()));
     }
 
+    if request.scheduled_end_at.is_some() && request.scheduled_start_at.is_none() {
+        return Err(ApiError::InvalidInput(
+            "scheduledStartAt is required when scheduledEndAt is provided".into(),
+        ));
+    }
+
     if !is_valid_announcement_status(request.status, request.incident_type) {
         return Err(ApiError::InvalidInput(
             "invalid status for announcement type".to_string(),
@@ -174,6 +180,14 @@ fn validate_incident_request(request: &mut CreateIncidentRequest) -> ApiResult<(
         }
         AnnouncementType::Maintenance => {
             request.severity = None;
+
+            if request.scheduled_start_at.is_none()
+                && request.status == AnnouncementStatus::Scheduled
+            {
+                return Err(ApiError::InvalidInput(
+                    "scheduledStartAt is required for scheduled maintenance".to_string(),
+                ));
+            }
         }
     }
 

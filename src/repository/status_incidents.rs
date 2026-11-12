@@ -99,7 +99,7 @@ impl StatusIncidentsRepository {
         }
 
         if let Some(incident_type) = incident_type {
-            filter.insert("incidentType", serialize_to_bson(&incident_type)?);
+            filter.insert("type", serialize_to_bson(&incident_type)?);
         }
 
         if let Some(status) = status {

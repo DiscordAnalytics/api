@@ -12,7 +12,7 @@ use crate::{
     },
     openapi::schemas::{HeartbeatRequest, HeartbeatResponse},
     repository::Repositories,
-    utils::logger::LogCode,
+    utils::{logger::LogCode, status::MAX_TOTAL_SHARDS},
 };
 
 #[api_operation(
@@ -87,6 +87,12 @@ async fn update_heartbeat(
                 return Err(ApiError::BadRequest(
                     "totalShards must be greater than zero".into(),
                 ));
+            }
+
+            if total_shards > MAX_TOTAL_SHARDS {
+                return Err(ApiError::BadRequest(format!(
+                    "totalShards must be less than or equal to {MAX_TOTAL_SHARDS}"
+                )));
             }
 
             if total_shards != current_status.total_shards {

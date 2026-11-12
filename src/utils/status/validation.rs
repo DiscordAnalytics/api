@@ -3,6 +3,8 @@ use crate::domain::{
     models::BotDeploymentMode,
 };
 
+pub(crate) const MAX_TOTAL_SHARDS: u32 = 1000;
+
 pub(crate) fn validate_status_config(
     deployment_mode: BotDeploymentMode,
     total_shards: u32,
@@ -13,6 +15,9 @@ pub(crate) fn validate_status_config(
         )),
         BotDeploymentMode::Sharded if total_shards == 0 => Err(ApiError::BadRequest(
             "Sharded deployments must have at least one shard".into(),
+        )),
+        BotDeploymentMode::Sharded if total_shards > MAX_TOTAL_SHARDS => Err(ApiError::BadRequest(
+            format!("Sharded deployments must have at most {MAX_TOTAL_SHARDS} shards"),
         )),
         _ => Ok(()),
     }

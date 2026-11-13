@@ -17,13 +17,14 @@ mod team_invitations;
 mod users;
 mod votes;
 
+use anyhow::{Context, Result, bail};
+use mongodb::{Client, Database, bson::doc};
+
 pub use achievements::AchievementUpdate;
-use anyhow::Result;
 pub use blog_articles::BlogArticleUpdate;
 pub use bot_stats::BotStatsUpdate;
 pub use bots::BotUpdate;
 pub use custom_events::CustomEventUpdate;
-use mongodb::Client;
 pub use users::UserUpdate;
 
 #[derive(Clone)]
@@ -54,6 +55,8 @@ impl Repositories {
         let connection = connection::DbConnection::init().await?;
         let db = connection.database();
         let client = db.client().clone();
+
+        Self::ensure_transaction_support(db).await?;
 
         Ok(Self {
             client,
@@ -88,6 +91,25 @@ impl Repositories {
             .ping()
             .await
             .map_err(|e| anyhow::anyhow!("R2 ping failed: {}", e))?;
+
+        Ok(())
+    }
+
+    async fn ensure_transaction_support(db: &Database) -> Result<()> {
+        let hello = db
+            .run_command(doc! { "hello": 1})
+            .await
+            .context("Failed to check MongoDB deployment capabilities")?;
+
+        let support_transactions = hello.contains_key("setName")
+            || hello.get_str("msg").ok() == Some("isdbgrid")
+            || hello.contains_key("serviceId");
+
+        if !support_transactions {
+            bail!(
+                "Mongodb deployment does not support transactions. A replica set or sharded cluster is required."
+            );
+        }
 
         Ok(())
     }

@@ -277,10 +277,16 @@ async fn update_incident(
 
     let incident = repos
         .status_incidents
-        .update_incident(&bot_id, incident_id, update)
+        .update_incident(
+            &bot_id,
+            incident_id,
+            update,
+            existing.scheduled_start_at,
+            existing.scheduled_end_at,
+        )
         .await?
-        .ok_or(ApiError::NotFound(format!(
-            "Incident with ID {} not found",
+        .ok_or(ApiError::Conflict(format!(
+            "Incident {} was modified by another request. Please retry",
             incident_id
         )))?;
 

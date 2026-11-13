@@ -155,12 +155,16 @@ impl StatusIncidentsRepository {
         bot_id: &str,
         incident_id: ObjectId,
         update: Document,
+        expected_start: Option<DateTime>,
+        expected_end: Option<DateTime>,
     ) -> Result<Option<StatusIncident>> {
         self.collection
             .find_one_and_update(
                 doc! {
                   "_id": incident_id,
                   "botId": bot_id,
+                  "scheduledStartAt": expected_start,
+                  "scheduledEndAt": expected_end,
                 },
                 doc! {
                   "$set": update

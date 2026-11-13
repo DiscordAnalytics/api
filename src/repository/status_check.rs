@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use futures::StreamExt;
 use mongodb::{
-    Collection, Database, IndexModel,
+    ClientSession, Collection, Database, IndexModel,
     bson::{DateTime, doc},
     error::Result,
     options::IndexOptions,
@@ -50,6 +50,18 @@ impl StatusCheckRepository {
 
     pub async fn create_check(&self, check: StatusCheck) -> Result<()> {
         self.collection.insert_one(check).await?;
+        Ok(())
+    }
+
+    pub async fn create_check_with_session(
+        &self,
+        check: StatusCheck,
+        session: &mut ClientSession,
+    ) -> Result<()> {
+        self.collection
+            .insert_one(check)
+            .session(&mut *session)
+            .await?;
         Ok(())
     }
 

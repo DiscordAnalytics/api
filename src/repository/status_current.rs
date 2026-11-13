@@ -1,5 +1,5 @@
 use mongodb::{
-    Collection, Database, IndexModel,
+    ClientSession, Collection, Database, IndexModel,
     bson::{Bson, DateTime, doc, serialize_to_bson},
     error::Result,
     options::{IndexOptions, ReturnDocument},
@@ -196,13 +196,13 @@ impl StatusCurrentRepository {
         Ok(result)
     }
 
-    pub async fn expire_stale_heartbeats(&self, cutoff: DateTime) -> Result<Vec<StatusCurrent>> {
-        let now = DateTime::now();
+    pub async fn find_bots_with_stale_heartbeats(&self, cutoff: DateTime) -> Result<Vec<String>> {
         let offline = serialize_to_bson(&ShardStatus::Offline)?;
 
         let stale_shard_filter = doc! {
             "lastHeartbeatAt": {
                 "$lte": cutoff,
+                "$ne": Bson::Null,
             },
             "status": {
                 "$ne": offline.clone(),
@@ -214,96 +214,113 @@ impl StatusCurrentRepository {
             .distinct(
                 "botId",
                 doc! {
-                  "shards": {
-                    "$elemMatch": stale_shard_filter.clone(),
-                  }
+                    "shards": {
+                        "$elemMatch": stale_shard_filter,
+                    }
                 },
             )
             .await?;
 
-        let mut updated_statuses = Vec::new();
+        Ok(bot_ids
+            .into_iter()
+            .filter_map(|id| match id {
+                Bson::String(id) => Some(id),
+                _ => None,
+            })
+            .collect())
+    }
 
-        for bot_id in bot_ids {
-            let Bson::String(bot_id) = bot_id else {
-                continue;
-            };
+    pub async fn expire_stale_heartbeats(
+        &self,
+        bot_id: &str,
+        cutoff: DateTime,
+        session: &mut ClientSession,
+    ) -> Result<Option<StatusCurrent>> {
+        let now = DateTime::now();
+        let offline = serialize_to_bson(&ShardStatus::Offline)?;
 
-            let updated_shards = doc! {
-                "$map": {
-                    "input": "$shards",
-                    "as": "shard",
-                    "in": {
-                        "$cond": [
-                            {
-                                "$and": [
-                                    {
-                                        "$ne": [
-                                            "$$shard.lastHeartbeatAt",
-                                            Bson::Null,
-                                        ]
-                                    },
-                                    {
-                                        "$lte": [
-                                            "$$shard.lastHeartbeatAt",
-                                            cutoff,
-                                        ]
-                                    },
-                                    {
-                                        "$ne": [
-                                            "$$shard.status",
-                                            offline.clone(),
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                "$mergeObjects": [
-                                    "$$shard",
-                                    {
-                                        "status": offline.clone(),
-                                        "updatedAt": now,
-                                    }
-                                ]
-                            },
-                            "$$shard"
-                        ]
-                    }
+        let stale_shard_filter = doc! {
+            "lastHeartbeatAt": {
+                "$lte": cutoff,
+                "$ne": Bson::Null,
+            },
+            "status": {
+                "$ne": offline.clone(),
+            },
+        };
+
+        let updated_shards = doc! {
+            "$map": {
+                "input": "$shards",
+                "as": "shard",
+                "in": {
+                    "$cond": [
+                        {
+                            "$and": [
+                                {
+                                    "$ne": [
+                                        "$$shard.lastHeartbeatAt",
+                                        Bson::Null,
+                                    ]
+                                },
+                                {
+                                    "$lte": [
+                                        "$$shard.lastHeartbeatAt",
+                                        cutoff,
+                                    ]
+                                },
+                                {
+                                    "$ne": [
+                                        "$$shard.status",
+                                        offline.clone(),
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "$mergeObjects": [
+                                "$$shard",
+                                {
+                                    "status": offline.clone(),
+                                    "updatedAt": now,
+                                }
+                            ]
+                        },
+                        "$$shard"
+                    ]
                 }
-            };
+            }
+        };
 
-            let result = self
-                .collection
-                .find_one_and_update(
+        let result = self
+            .collection
+            .find_one_and_update(
+                doc! {
+                    "botId": bot_id,
+                    "shards": {
+                        "$elemMatch": stale_shard_filter,
+                    }
+                },
+                vec![
                     doc! {
-                        "botId": &bot_id,
-                        "shards": {
-                            "$elemMatch": stale_shard_filter.clone(),
+                        "$set": {
+                            "shards": updated_shards,
                         }
                     },
-                    vec![
-                        doc! {
-                            "$set": {
-                                "shards": updated_shards,
-                            }
-                        },
-                        doc! {
-                            "$set": {
-                                "status": Self::overall_status_expression()?,
-                                "updatedAt": now,
-                                "lastEvaluatedAt": now,
-                            }
-                        },
-                    ],
-                )
-                .return_document(ReturnDocument::After)
-                .await?;
+                    doc! {
+                        "$set": {
+                            "status": Self::overall_status_expression()?,
+                            "updatedAt": now,
+                            "lastEvaluatedAt": now,
+                        }
+                    },
+                ],
+            )
+            .session(&mut *session)
+            .return_document(ReturnDocument::After)
+            .await?;
 
-            if let Some(status) = result {
-                updated_statuses.push(status);
-            }
-        }
-
-        Ok(updated_statuses)
+        Ok(result)
     }
 
     fn initialize_shards(total_shards: u32, now: DateTime) -> Vec<ShardCurrentStatus> {

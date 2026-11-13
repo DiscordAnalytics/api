@@ -23,10 +23,13 @@ pub use blog_articles::BlogArticleUpdate;
 pub use bot_stats::BotStatsUpdate;
 pub use bots::BotUpdate;
 pub use custom_events::CustomEventUpdate;
+use mongodb::Client;
 pub use users::UserUpdate;
 
 #[derive(Clone)]
 pub struct Repositories {
+    pub client: Client,
+
     pub achievements: achievements::AchievementsRepository,
     pub blog_articles: blog_articles::BlogArticlesRepository,
     pub bots: bots::BotsRepository,
@@ -50,8 +53,11 @@ impl Repositories {
     pub async fn init() -> Result<Self> {
         let connection = connection::DbConnection::init().await?;
         let db = connection.database();
+        let client = db.client().clone();
 
         Ok(Self {
+            client,
+
             achievements: achievements::AchievementsRepository::new(db).await?,
             blog_articles: blog_articles::BlogArticlesRepository::new(db).await?,
             bots: bots::BotsRepository::new(db).await?,

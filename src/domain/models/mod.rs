@@ -6,6 +6,7 @@ mod custom_event;
 mod session;
 #[cfg(feature = "reports")]
 mod stats_report;
+mod status;
 mod team_invitation;
 mod user;
 mod vote;
@@ -19,6 +20,11 @@ pub use custom_event::CustomEvent;
 pub use session::Session;
 #[cfg(feature = "reports")]
 pub use stats_report::{StatsReport, StatsReportFrequency};
+pub use status::{
+    AnnouncementStatus, AnnouncementType, BotDeploymentMode, IncidentSeverity, IncidentUpdate,
+    OverallStatus, ShardCurrentStatus, ShardStatus, ShardStatusSnapshot, StatusCheck,
+    StatusCurrent, StatusIncident, StoredStatusCheck, StoredStatusIncident,
+};
 pub use team_invitation::TeamInvitation;
 pub use user::User;
 pub use vote::Vote;

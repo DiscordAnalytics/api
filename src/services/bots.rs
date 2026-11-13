@@ -21,6 +21,9 @@ impl BotsService {
         #[cfg(feature = "reports")]
         self.repos.stats_reports.delete_by_bot(bot_id).await?;
         self.repos.custom_events.delete_by_bot_id(bot_id).await?;
+        self.repos.status_current.delete_by_bot_id(bot_id).await?;
+        self.repos.status_check.delete_by_bot_id(bot_id).await?;
+        self.repos.status_incidents.delete_by_bot_id(bot_id).await?;
 
         Ok(())
     }

@@ -10,6 +10,7 @@ mod invitation;
 mod session;
 #[cfg(feature = "reports")]
 mod stat_report;
+mod status;
 mod team;
 mod user;
 mod vote;
@@ -39,6 +40,23 @@ pub use invitation::{InvitationAcceptBody, InvitationAcceptResponse, InvitationR
 pub use session::{RefreshTokenRequest, SessionResponse, TokenResponse};
 #[cfg(feature = "reports")]
 pub use stat_report::StatsReportSubPayload;
+pub use status::{
+    config::{BotStatusConfigResponse, UpdateBotStatusConfigRequest},
+    heartbeat::{HeartbeatRequest, HeartbeatResponse},
+    history::{
+        HistoryCursor, HistoryPage, PublicStatusHistoryResponse, PublicStatusSnapshot,
+        StatusHistoryQuery,
+    },
+    incidents::{
+        IncidentCursor, IncidentListQuery, IncidentPage, IncidentUpdateResponse,
+        PublicIncidentListResponse, PublicIncidentResponse,
+    },
+    manage::{
+        CreateIncidentRequest, CreateIncidentUpdateRequest, CreateIncidentUpdateResponse,
+        ManagedIncidentListResponse, ManagedIncidentResponse, UpdateIncidentRequest,
+    },
+    public::PublicBotStatusResponse,
+};
 pub use team::{NewInvitationResponse, TeamRequestBody, TeamResponse};
 pub use user::{UserBotsResponse, UserResponse, UserSuspendRequest, UserUpdateRequest};
 pub use vote::VoteResponse;
@@ -46,6 +64,13 @@ pub use webhook::{
     BotListMePayload, DBListPayload, DiscordListPayload, DiscordPlacePayload, DiscordsComPayload,
     PlatformVotePayload,
 };
+
+#[derive(Serialize, ApiComponent, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PaginationResponse {
+    pub limit: u32,
+    pub next_cursor: Option<String>,
+}
 
 #[derive(Deserialize, Serialize, Clone, ApiComponent, JsonSchema)]
 pub struct MessageResponse {

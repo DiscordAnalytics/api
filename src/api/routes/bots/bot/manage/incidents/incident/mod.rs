@@ -5,7 +5,7 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, get, patch, scope},
 };
-use mongodb::bson::{Bson, DateTime as BsonDateTime, oid::ObjectId, serialize_to_bson};
+use mongodb::bson::{Bson, DateTime as BsonDateTime, Document, oid::ObjectId, serialize_to_bson};
 
 use crate::{
     api::middleware::Authenticated,
@@ -210,7 +210,21 @@ async fn update_incident(
 
     validate_update_incident(&payload, &existing)?;
 
-    let mut update = mongodb::bson::Document::new();
+    let mut update = Document::new();
+
+    let has_updates = payload.title.is_some()
+        || payload.description.is_some()
+        || payload.severity.is_some()
+        || payload.affected_shard_ids.is_some()
+        || payload.is_public.is_some()
+        || payload.scheduled_start_at.is_some()
+        || payload.scheduled_end_at.is_some();
+
+    if !has_updates {
+        return Err(ApiError::InvalidInput(
+            "At least one field must be provided".to_string(),
+        ));
+    }
 
     if let Some(title) = payload.title {
         update.insert("title", title.trim());

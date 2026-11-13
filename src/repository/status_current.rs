@@ -121,6 +121,8 @@ impl StatusCurrentRepository {
     pub async fn update_shard_heartbeat(
         &self,
         bot_id: &str,
+        expected_deployment_mode: BotDeploymentMode,
+        expected_total_shards: u32,
         shard_id: u32,
         latency_ms: Option<u32>,
         guild_count: Option<i64>,
@@ -186,6 +188,8 @@ impl StatusCurrentRepository {
             .find_one_and_update(
                 doc! {
                   "botId": bot_id,
+                  "deploymentMode": serialize_to_bson(&expected_deployment_mode)?,
+                  "totalShards": expected_total_shards,
                   "shards.shardId": shard_id
                 },
                 vec![update_shard_stage, update_status_stage],

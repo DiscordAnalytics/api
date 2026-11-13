@@ -115,13 +115,15 @@ async fn update_heartbeat(
         .status_current
         .update_shard_heartbeat(
             &bot.bot_id,
+            current_status.deployment_mode,
+            current_status.total_shards,
             shard_id,
             payload.latency_ms,
             payload.guild_count,
         )
         .await?
-        .ok_or(ApiError::NotFound(
-            "Status configuration or shard not found".into(),
+        .ok_or(ApiError::Conflict(
+            "Bot status configuration changed while processing heartbeat. Please retry".into(),
         ))?;
 
     let received_at = updated_status

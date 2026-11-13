@@ -210,8 +210,6 @@ async fn update_incident(
 
     validate_update_incident(&payload, &existing)?;
 
-    let mut update = Document::new();
-
     let has_updates = payload.title.is_some()
         || payload.description.is_some()
         || payload.severity.is_some()
@@ -225,6 +223,8 @@ async fn update_incident(
             "At least one field must be provided".to_string(),
         ));
     }
+
+    let mut update = Document::new();
 
     if let Some(title) = payload.title {
         update.insert("title", title.trim());

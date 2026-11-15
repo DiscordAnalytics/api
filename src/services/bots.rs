@@ -23,6 +23,14 @@ impl BotsService {
         self.repos.custom_events.delete_by_bot_id(bot_id).await?;
         self.repos.status_current.delete_by_bot_id(bot_id).await?;
         self.repos.status_check.delete_by_bot_id(bot_id).await?;
+        self.repos
+            .status_check_hourly
+            .delete_by_bot_id(bot_id)
+            .await?;
+        self.repos
+            .status_pending_bucket
+            .delete_by_bot_id(bot_id)
+            .await?;
         self.repos.status_incidents.delete_by_bot_id(bot_id).await?;
 
         Ok(())

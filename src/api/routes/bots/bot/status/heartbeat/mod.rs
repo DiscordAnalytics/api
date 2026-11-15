@@ -3,15 +3,16 @@ use apistos::{
     api_operation,
     web::{ServiceConfig, post},
 };
+use chrono::Utc;
 
 use crate::{
     api::middleware::Authenticated,
     domain::{
         error::{ApiError, ApiResult},
-        models::{BotDeploymentMode, ShardStatusSnapshot, StatusCheck},
+        models::{BotDeploymentMode, ShardStatus, ShardStatusSnapshot},
     },
     openapi::schemas::{HeartbeatRequest, HeartbeatResponse},
-    repository::Repositories,
+    repository::{Repositories, status_pending_bucket::StatusPendingBucketRepository},
     utils::{logger::LogCode, status::MAX_TOTAL_SHARDS},
 };
 
@@ -72,7 +73,6 @@ async fn update_heartbeat(
                     "Invalid shard configuration for single deployment".into(),
                 ));
             }
-
             0
         }
         BotDeploymentMode::Sharded => {
@@ -111,6 +111,7 @@ async fn update_heartbeat(
         }
     };
 
+    // Update the live status (latency, guild_count, shard status).
     let updated_status = repos
         .status_current
         .update_shard_heartbeat(
@@ -130,25 +131,33 @@ async fn update_heartbeat(
         .last_heartbeat_at
         .ok_or(ApiError::NotFound("Heartbeat timestamp not found".into()))?;
 
-    let check = StatusCheck {
-        bot_id: bot.bot_id.clone(),
-        deployment_mode: updated_status.deployment_mode,
-        timestamp: received_at,
-        status: updated_status.status,
-        total_shards: updated_status.total_shards,
-        shards: updated_status
+    // Write into the pending bucket for the current 5-min window.
+    // The sealing task will finalize it into StatusChecks + StatusChecksHourly.
+    let now_ms = Utc::now().timestamp_millis();
+    let bucket_ts = StatusPendingBucketRepository::bucket_timestamp(now_ms);
+
+    let shard_snapshot = ShardStatusSnapshot {
+        shard_id,
+        status: updated_status
             .shards
             .iter()
-            .map(|shard| ShardStatusSnapshot {
-                shard_id: shard.shard_id,
-                status: shard.status,
-                latency_ms: shard.latency_ms,
-                guild_count: shard.guild_count,
-            })
-            .collect(),
+            .find(|s| s.shard_id == shard_id)
+            .map(|s| s.status)
+            .unwrap_or(ShardStatus::Unknown),
+        latency_ms: payload.latency_ms,
+        guild_count: payload.guild_count,
     };
 
-    repos.status_check.create_check(check).await?;
+    repos
+        .status_pending_bucket
+        .upsert_shard(
+            &bot.bot_id,
+            updated_status,
+            bucket_ts,
+            shard_snapshot,
+            received_at,
+        )
+        .await?;
 
     info!(
         code = %LogCode::Status,

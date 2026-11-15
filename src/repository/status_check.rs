@@ -12,7 +12,7 @@ use crate::{
     domain::models::{StatusCheck, StoredStatusCheck},
     openapi::schemas::{HistoryCursor, HistoryPage},
     repository::common::ensure_collection,
-    utils::constants::STATUS_CHECKS_COLLECTION,
+    utils::constants::{STATUS_CHECK_TTL_SECS, STATUS_CHECKS_COLLECTION},
 };
 
 #[derive(Clone)]
@@ -38,7 +38,7 @@ impl StatusCheckRepository {
                     .keys(doc! { "timestamp": 1 })
                     .options(
                         IndexOptions::builder()
-                            .expire_after(Duration::from_secs(7776000))
+                            .expire_after(Duration::from_secs(STATUS_CHECK_TTL_SECS))
                             .build(),
                     )
                     .build(),

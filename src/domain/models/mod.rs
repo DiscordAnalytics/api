@@ -22,8 +22,9 @@ pub use session::Session;
 pub use stats_report::{StatsReport, StatsReportFrequency};
 pub use status::{
     AnnouncementStatus, AnnouncementType, BotDeploymentMode, IncidentSeverity, IncidentUpdate,
-    OverallStatus, ShardCurrentStatus, ShardStatus, ShardStatusSnapshot, StatusCheck,
-    StatusCurrent, StatusIncident, StoredStatusCheck, StoredStatusIncident,
+    OverallStatus, ShardCurrentStatus, ShardHourlySnapshot, ShardStatus, ShardStatusSnapshot,
+    StatusCheck, StatusCheckHourly, StatusCurrent, StatusIncident, StatusPendingBucket,
+    StoredStatusCheck, StoredStatusCheckHourly, StoredStatusIncident,
 };
 pub use team_invitation::TeamInvitation;
 pub use user::User;

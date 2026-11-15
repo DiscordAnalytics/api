@@ -44,8 +44,9 @@ pub use status::{
     config::{BotStatusConfigResponse, UpdateBotStatusConfigRequest},
     heartbeat::{HeartbeatRequest, HeartbeatResponse},
     history::{
-        HistoryCursor, HistoryPage, PublicStatusHistoryResponse, PublicStatusSnapshot,
-        StatusHistoryQuery,
+        HistoryCursor, HistoryPage, HistoryResolution, HourlyHistoryCursor, HourlyHistoryPage,
+        PublicHourlyHistoryResponse, PublicHourlySnapshot, PublicStatusHistoryResponse,
+        PublicStatusSnapshot, StatusHistoryQuery, StatusHistoryResponse,
     },
     incidents::{
         IncidentCursor, IncidentListQuery, IncidentPage, IncidentUpdateResponse,

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     domain::error::ApiError,
-    openapi::schemas::{HistoryCursor, IncidentCursor},
+    openapi::schemas::{HistoryCursor, HourlyHistoryCursor, IncidentCursor},
 };
 
 #[derive(Deserialize, Serialize)]
@@ -38,6 +38,12 @@ impl StatusCursor for IncidentCursor {
 }
 
 impl StatusCursor for HistoryCursor {
+    fn new(timestamp: DateTime, id: ObjectId) -> Self {
+        Self { timestamp, id }
+    }
+}
+
+impl StatusCursor for HourlyHistoryCursor {
     fn new(timestamp: DateTime, id: ObjectId) -> Self {
         Self { timestamp, id }
     }

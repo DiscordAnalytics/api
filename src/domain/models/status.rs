@@ -27,7 +27,7 @@ pub struct StoredStatusCheck {
     pub check: StatusCheck,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusCheck {
     pub bot_id: String,
@@ -36,6 +36,59 @@ pub struct StatusCheck {
     pub status: OverallStatus,
     pub total_shards: u32,
     pub shards: Vec<ShardStatusSnapshot>,
+}
+
+/// One document per (botId, bucket_timestamp) - transient, sealed by background task.
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StatusPendingBucket {
+    pub bot_id: String,
+    pub deployment_mode: BotDeploymentMode,
+    pub bucket_timestamp: DateTime,
+    pub status: OverallStatus,
+    pub total_shards: u32,
+    /// Sparse map: shard_id -> snapshot. Stored as array for MongoDB compat.
+    pub shards: Vec<ShardStatusSnapshot>,
+    pub sealed: bool,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
+}
+
+impl From<StatusPendingBucket> for StatusCheck {
+    fn from(bucket: StatusPendingBucket) -> Self {
+        Self {
+            bot_id: bucket.bot_id,
+            deployment_mode: bucket.deployment_mode,
+            timestamp: bucket.bucket_timestamp,
+            status: bucket.status,
+            total_shards: bucket.total_shards,
+            shards: bucket.shards,
+        }
+    }
+}
+
+/// One document per (botId, hour) - long-lived downsampled history.
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StatusCheckHourly {
+    pub bot_id: String,
+    pub hour_timestamp: DateTime,
+    pub deployment_mode: BotDeploymentMode,
+    pub total_shards: u32,
+    /// Worst-case overall status observed in this hour.
+    pub status: OverallStatus,
+    /// Per-shard aggregated data for the hour.
+    pub shards: Vec<ShardHourlySnapshot>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
+}
+
+#[derive(Deserialize)]
+pub struct StoredStatusCheckHourly {
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    #[serde(flatten)]
+    pub check: StatusCheckHourly,
 }
 
 #[derive(Deserialize)]
@@ -69,6 +122,22 @@ pub struct StatusIncident {
 }
 // Data objects
 
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShardHourlySnapshot {
+    pub shard_id: u32,
+    /// Worst-case status seen during the hour.
+    pub worst_status: ShardStatus,
+    /// Cumulative latency across all samples in the hour (ms).
+    pub cumulative_latency_ms: Option<u32>,
+    /// Number of latency samples contributing to this shard's data.
+    pub latency_sample_count: Option<u32>,
+    /// Last known guild count in the hour.
+    pub last_guild_count: Option<i64>,
+    /// Number of samples contributing to this shard's data.
+    pub sample_count: u32,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShardCurrentStatus {
@@ -80,7 +149,7 @@ pub struct ShardCurrentStatus {
     pub updated_at: DateTime,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShardStatusSnapshot {
     pub shard_id: u32,

@@ -8,7 +8,7 @@ mod status;
 mod users;
 mod webhooks;
 
-pub(crate) use status::reconcile_stale_heartbeats;
+pub(crate) use status::{reconcile_stale_heartbeats, seal_expired_buckets};
 
 #[derive(Clone)]
 pub struct Services {

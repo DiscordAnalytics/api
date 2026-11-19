@@ -3803,9 +3803,9 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "s3"
-version = "0.1.38"
+version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9800b8924930589944d9f44bd0842b614804a5396e72da047a5e8d67f9ace737"
+checksum = "a25b4d1a49779a7b824950779bfb955000ac222e4cfcd33bd6f6075dcb746ac8"
 dependencies = [
  "base64 0.23.1",
  "bytes",
@@ -4266,7 +4266,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

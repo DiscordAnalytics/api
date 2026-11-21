@@ -195,6 +195,10 @@ impl BotsRepository {
         self.collection.find_one(doc! { "botId": bot_id }).await
     }
 
+    pub async fn find_by_token(&self, token: &str) -> Result<Option<Bot>> {
+        self.collection.find_one(doc! { "token": token }).await
+    }
+
     pub async fn find_by_user_id(&self, user_id: &str) -> Result<Vec<Bot>> {
         let cursor = self
             .collection

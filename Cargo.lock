@@ -75,14 +75,12 @@ dependencies = [
 
 [[package]]
 name = "actix-limitation"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92bff47d4fc59d98133e61640c1fe3bdd8cb98d76e7fe8573fc596f818ed6df3"
+checksum = "f9243f1bafeb126652c1053236a2e205f523d57f0a843f4b48ed92e9cbc9eb1d"
 dependencies = [
- "actix-session",
- "actix-utils",
+ "actix-session 0.12.0",
  "actix-web",
- "chrono",
  "derive_more",
  "log",
  "redis",
@@ -163,6 +161,22 @@ dependencies = [
  "anyhow",
  "derive_more",
  "rand 0.9.5",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "actix-session"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a90513d33f07fa3c2d8394d3ad9cc3aade99584dde765b794547f0758be91835"
+dependencies = [
+ "actix-service",
+ "actix-web",
+ "anyhow",
+ "derive_more",
+ "rand 0.10.3",
  "serde",
  "serde_json",
  "tracing",
@@ -828,10 +842,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
 dependencies = [
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-link",
 ]
 
@@ -1240,7 +1252,7 @@ version = "3.0.0"
 dependencies = [
  "actix-cors",
  "actix-limitation",
- "actix-session",
+ "actix-session 0.11.0",
  "actix-web",
  "actix-ws",
  "anyhow",

@@ -37,6 +37,8 @@ pub enum LogCode {
     #[cfg(feature = "reports")]
     /// Reports events
     Report,
+    /// Status check events
+    Status,
 }
 
 impl LogCode {
@@ -60,6 +62,7 @@ impl LogCode {
             LogCode::Task => "TASK",
             #[cfg(feature = "reports")]
             LogCode::Report => "REPORT",
+            LogCode::Status => "STATUS",
         }
     }
 }

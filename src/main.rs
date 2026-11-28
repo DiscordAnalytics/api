@@ -36,7 +36,7 @@ use crate::{
     openapi::build_spec,
     repository::Repositories,
     services::Services,
-    tasks::{invitations_task, sessions_task, warnings_task},
+    tasks::{invitations_task, sessions_task, status_task, warnings_task},
     utils::logger::{LogCode, Logger},
 };
 
@@ -78,6 +78,7 @@ async fn main() -> Result<()> {
     #[cfg(feature = "reports")]
     reports_task(repos.clone(), services.clone());
     sessions_task(repos.clone());
+    status_task(repos.clone());
     warnings_task(repos.clone(), services.clone());
     info!(
         code = %LogCode::Server,
